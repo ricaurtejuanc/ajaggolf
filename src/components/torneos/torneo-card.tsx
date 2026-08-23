@@ -63,7 +63,7 @@ export function TorneoCard({ torneo }: { torneo: Torneo }) {
           </span>
           <span className="font-display text-base font-semibold text-ajag-verde-900">
             {torneo.precio_socio_cents != null
-              ? `Desde ${formatearPrecio(Math.min(torneo.precio_socio_cents, torneo.precio_cents))}`
+              ? `Desde ${formatearPrecio(Math.max(torneo.precio_socio_cents, torneo.precio_cents))}`
               : formatearPrecio(torneo.precio_cents)}
           </span>
         </div>

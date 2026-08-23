@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { CalendarDays, MapPin, Flag, Coins, Users } from "lucide-react";
+import { CalendarDays, MapPin, Flag, Coins, Users, Trophy } from "lucide-react";
 import { obtenerTorneoPorSlug } from "@/lib/data/torneos";
 import { createClient } from "@/lib/supabase/server";
 import { formatearFecha, formatearHora, formatearPrecio } from "@/lib/format";
@@ -95,7 +95,7 @@ export default async function TorneoDetallePage({
         <p className="text-ajag-gris-500">{formatearFecha(torneo.fecha)}</p>
       </div>
 
-      <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
+      <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-5">
         <InfoPill icon={<MapPin size={16} />} label="Campo" value={torneo.campo_golf} />
         <InfoPill
           icon={<Flag size={16} />}
@@ -108,6 +108,11 @@ export default async function TorneoDetallePage({
           value={formatearHora(torneo.hora_inicio) ?? "Por confirmar"}
         />
         <InfoPill icon={<Coins size={16} />} label="Precio" value={textoPrecio} />
+        <InfoPill
+          icon={<Trophy size={16} />}
+          label="Formato"
+          value={etiquetaFormato[torneo.formato_puntuacion]}
+        />
       </div>
 
       {torneo.descripcion ? (
@@ -169,14 +174,6 @@ export default async function TorneoDetallePage({
           </Link>
         ) : null}
       </div>
-
-      <p className="mt-8">
-        <span className="text-xs uppercase tracking-wide text-ajag-gris-500">Formato</span>
-        <br />
-        <span className="text-sm font-medium text-ajag-verde-900">
-          {etiquetaFormato[torneo.formato_puntuacion]}
-        </span>
-      </p>
     </div>
   );
 }
