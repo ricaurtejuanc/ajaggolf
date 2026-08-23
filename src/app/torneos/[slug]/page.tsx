@@ -66,6 +66,11 @@ export default async function TorneoDetallePage({
   const inscritos = cupo?.inscritos ?? 0;
   const cerrado = torneo.estado !== "publicado";
   const lleno = torneo.cupo_maximo != null && inscritos >= torneo.cupo_maximo;
+  const partesTees = [
+    torneo.tees_masculino.length ? `Caballeros: ${torneo.tees_masculino.join(", ")}` : null,
+    torneo.tees_femenino.length ? `Damas: ${torneo.tees_femenino.join(", ")}` : null,
+  ].filter((p): p is string => p != null);
+  const textoTees = partesTees.length ? partesTees.join(" · ") : "Por confirmar";
   const textoPrecio =
     (torneo.precio_socio_cents != null
       ? `${formatearPrecio(torneo.precio_socio_cents)} socios · ${formatearPrecio(torneo.precio_cents)} no socios`
@@ -98,11 +103,7 @@ export default async function TorneoDetallePage({
 
       <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-5">
         <InfoPill icon={<MapPin size={16} />} label="Campo" value={torneo.campo_golf} />
-        <InfoPill
-          icon={<Flag size={16} />}
-          label="Tees"
-          value={torneo.tees.length ? torneo.tees.join(", ") : "Por confirmar"}
-        />
+        <InfoPill icon={<Flag size={16} />} label="Tees" value={textoTees} />
         <InfoPill
           icon={<CalendarDays size={16} />}
           label="Hora"

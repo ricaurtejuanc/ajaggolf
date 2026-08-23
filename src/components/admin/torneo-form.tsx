@@ -36,28 +36,41 @@ export function TorneoForm({
         />
       </div>
 
+      <div>
+        <label htmlFor="campo_golf" className="block text-sm font-medium text-ajag-verde-900">
+          Campo de golf *
+        </label>
+        <input
+          id="campo_golf"
+          name="campo_golf"
+          required
+          defaultValue={torneo?.campo_golf}
+          className="mt-1 w-full rounded-xl border border-ajag-gris-200 px-4 py-2.5 text-sm outline-none focus:border-ajag-verde-600"
+        />
+      </div>
+
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
-          <label htmlFor="campo_golf" className="block text-sm font-medium text-ajag-verde-900">
-            Campo de golf *
+          <label htmlFor="tees_masculino" className="block text-sm font-medium text-ajag-verde-900">
+            Tees caballeros (separados por coma)
           </label>
           <input
-            id="campo_golf"
-            name="campo_golf"
-            required
-            defaultValue={torneo?.campo_golf}
+            id="tees_masculino"
+            name="tees_masculino"
+            placeholder="Tee 54"
+            defaultValue={torneo?.tees_masculino.join(", ")}
             className="mt-1 w-full rounded-xl border border-ajag-gris-200 px-4 py-2.5 text-sm outline-none focus:border-ajag-verde-600"
           />
         </div>
         <div>
-          <label htmlFor="tees" className="block text-sm font-medium text-ajag-verde-900">
-            Tees (separados por coma)
+          <label htmlFor="tees_femenino" className="block text-sm font-medium text-ajag-verde-900">
+            Tees damas (separados por coma)
           </label>
           <input
-            id="tees"
-            name="tees"
-            placeholder="Amarillas, Blancas"
-            defaultValue={torneo?.tees.join(", ")}
+            id="tees_femenino"
+            name="tees_femenino"
+            placeholder="Tee 51"
+            defaultValue={torneo?.tees_femenino.join(", ")}
             className="mt-1 w-full rounded-xl border border-ajag-gris-200 px-4 py-2.5 text-sm outline-none focus:border-ajag-verde-600"
           />
         </div>

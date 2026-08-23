@@ -28,10 +28,11 @@ function leerCamposTorneo(formData: FormData) {
   const precioEuros = String(formData.get("precio_euros") ?? "0").replace(",", ".");
   const precioSocioEuros = String(formData.get("precio_socio_euros") ?? "").trim().replace(",", ".");
   const cupoRaw = String(formData.get("cupo_maximo") ?? "").trim();
-  const tees = String(formData.get("tees") ?? "")
-    .split(",")
-    .map((t) => t.trim())
-    .filter(Boolean);
+  const separarTees = (campo: string) =>
+    String(formData.get(campo) ?? "")
+      .split(",")
+      .map((t) => t.trim())
+      .filter(Boolean);
   const extras = formData.getAll("extras").map((v) => String(v));
 
   return {
@@ -39,7 +40,8 @@ function leerCamposTorneo(formData: FormData) {
     descripcion: String(formData.get("descripcion") ?? "").trim() || null,
     info_adicional: String(formData.get("info_adicional") ?? "").trim() || null,
     campo_golf: String(formData.get("campo_golf") ?? "").trim(),
-    tees,
+    tees_masculino: separarTees("tees_masculino"),
+    tees_femenino: separarTees("tees_femenino"),
     fecha: String(formData.get("fecha") ?? ""),
     hora_inicio: String(formData.get("hora_inicio") ?? "").trim() || null,
     poster_url: String(formData.get("poster_url") ?? "").trim() || null,
@@ -113,7 +115,7 @@ export async function actualizarTorneo(
   revalidatePath(`/admin/torneos/${torneoId}/editar`);
   revalidatePath("/torneos");
   if (data) revalidatePath(`/torneos/${data.slug}`);
-  return { ok: true, error: null };
+  redirect("/admin/torneos");
 }
 
 export async function eliminarTorneo(torneoId: string) {

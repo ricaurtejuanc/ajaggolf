@@ -75,7 +75,8 @@ export type Torneo = {
   descripcion: string | null;
   info_adicional: string | null;
   campo_golf: string;
-  tees: string[];
+  tees_masculino: string[];
+  tees_femenino: string[];
   fecha: string;
   hora_inicio: string | null;
   poster_url: string | null;
