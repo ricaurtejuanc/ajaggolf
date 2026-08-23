@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { GoogleButton } from "./google-button";
-import { EmailForm } from "./email-form";
+import { PasswordForm } from "./password-form";
 import { GuestButton } from "./guest-button";
 
 export const metadata: Metadata = { title: "Iniciar sesión" };
@@ -39,7 +39,7 @@ export default async function LoginPage({
           <div className="h-px flex-1 bg-ajag-gris-200" />
         </div>
 
-        <EmailForm />
+        <PasswordForm next={next} />
 
         <div className="flex items-center gap-3">
           <div className="h-px flex-1 bg-ajag-gris-200" />
