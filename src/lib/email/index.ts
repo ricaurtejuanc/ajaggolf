@@ -1,15 +1,36 @@
-import { Resend } from "resend";
+import nodemailer from "nodemailer";
 import { formatearPrecio, formatearFecha } from "@/lib/format";
 
-const FROM = process.env.RESEND_FROM_EMAIL || "AJAG Golf <onboarding@resend.dev>";
+const FROM = process.env.SMTP_FROM || "AJAG Golf <no-reply@localhost>";
 
-function obtenerCliente(): Resend | null {
-  const apiKey = process.env.RESEND_API_KEY;
-  if (!apiKey) {
-    console.error("RESEND_API_KEY no configurada: no se envían emails de inscripción.");
+function obtenerTransporte() {
+  const host = process.env.SMTP_HOST;
+  const port = process.env.SMTP_PORT;
+  const user = process.env.SMTP_USER;
+  const pass = process.env.SMTP_PASSWORD;
+  if (!host || !port || !user || !pass) {
+    console.error(
+      "SMTP no configurado (faltan SMTP_HOST/SMTP_PORT/SMTP_USER/SMTP_PASSWORD): no se envían emails de inscripción.",
+    );
     return null;
   }
-  return new Resend(apiKey);
+  const puerto = Number(port);
+  return nodemailer.createTransport({
+    host,
+    port: puerto,
+    secure: puerto === 465, // 465 = SSL implícito; 587/25 = STARTTLS
+    auth: { user, pass },
+  });
+}
+
+async function enviar(destinatario: string, asunto: string, html: string) {
+  const transporte = obtenerTransporte();
+  if (!transporte) return;
+  try {
+    await transporte.sendMail({ from: FROM, to: destinatario, subject: asunto, html });
+  } catch (err) {
+    console.error("Error enviando email:", err);
+  }
 }
 
 type ItemInscripcion = { torneoNombre: string; torneoFecha: string; precioCents: number };
@@ -65,9 +86,6 @@ export async function enviarEmailInscripcionRecibida(args: {
   nombre: string;
   items: ItemInscripcion[];
 }) {
-  const resend = obtenerCliente();
-  if (!resend) return;
-
   const asunto =
     args.items.length === 1
       ? `Hemos recibido tu inscripción a ${args.items[0].torneoNombre}`
@@ -90,17 +108,7 @@ export async function enviarEmailInscripcionRecibida(args: {
     `,
   );
 
-  try {
-    const { error } = await resend.emails.send({
-      from: FROM,
-      to: args.destinatario,
-      subject: asunto,
-      html,
-    });
-    if (error) console.error("Error enviando email de inscripción recibida:", error);
-  } catch (err) {
-    console.error("Error inesperado enviando email de inscripción recibida:", err);
-  }
+  await enviar(args.destinatario, asunto, html);
 }
 
 export async function enviarEmailInscripcionConfirmada(args: {
@@ -108,9 +116,6 @@ export async function enviarEmailInscripcionConfirmada(args: {
   nombre: string;
   items: ItemInscripcion[];
 }) {
-  const resend = obtenerCliente();
-  if (!resend) return;
-
   const asunto =
     args.items.length === 1
       ? `Tu inscripción a ${args.items[0].torneoNombre} está confirmada`
@@ -128,15 +133,5 @@ export async function enviarEmailInscripcionConfirmada(args: {
     `,
   );
 
-  try {
-    const { error } = await resend.emails.send({
-      from: FROM,
-      to: args.destinatario,
-      subject: asunto,
-      html,
-    });
-    if (error) console.error("Error enviando email de inscripción confirmada:", error);
-  } catch (err) {
-    console.error("Error inesperado enviando email de inscripción confirmada:", err);
-  }
+  await enviar(args.destinatario, asunto, html);
 }
