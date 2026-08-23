@@ -44,15 +44,7 @@ export default async function AdminDashboardPage() {
 
   return (
     <div>
-      <div className="flex items-center justify-between">
-        <h1 className="font-display text-2xl font-semibold text-ajag-verde-900">Resumen</h1>
-        <Link
-          href="/admin/torneos/nuevo"
-          className="rounded-full bg-ajag-verde-700 px-4 py-2 text-sm font-medium text-white transition hover:bg-ajag-verde-600"
-        >
-          + Nuevo torneo
-        </Link>
-      </div>
+      <h1 className="font-display text-2xl font-semibold text-ajag-verde-900">Resumen</h1>
 
       <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
         {stats.map((stat) => {
