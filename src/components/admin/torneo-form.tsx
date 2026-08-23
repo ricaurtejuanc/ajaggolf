@@ -3,6 +3,7 @@
 import { useActionState, useState } from "react";
 import { PosterUploader } from "./poster-uploader";
 import { TeesInput } from "./tees-input";
+import { CampoGolfInput } from "./campo-golf-input";
 import { CATEGORIAS_EXTRAS } from "@/lib/extras-torneo";
 import type { EstadoTorneoForm } from "@/app/admin/torneos/actions";
 import type { LigaPool, ModoSalida, Torneo } from "@/types/database";
@@ -10,11 +11,13 @@ import type { LigaPool, ModoSalida, Torneo } from "@/types/database";
 export function TorneoForm({
   torneo,
   ligas,
+  camposGolf,
   action,
   textoBoton,
 }: {
   torneo?: Torneo;
   ligas: LigaPool[];
+  camposGolf: { nombre: string; recorrido: string }[];
   action: (prevState: EstadoTorneoForm, formData: FormData) => Promise<EstadoTorneoForm>;
   textoBoton: string;
 }) {
@@ -45,18 +48,11 @@ export function TorneoForm({
         />
       </div>
 
-      <div>
-        <label htmlFor="campo_golf" className="block text-sm font-medium text-ajag-verde-900">
-          Campo de golf *
-        </label>
-        <input
-          id="campo_golf"
-          name="campo_golf"
-          required
-          defaultValue={torneo?.campo_golf}
-          className="mt-1 w-full rounded-xl border border-ajag-gris-200 px-4 py-2.5 text-sm outline-none focus:border-ajag-verde-600"
-        />
-      </div>
+      <CampoGolfInput
+        campos={camposGolf}
+        campoInicial={torneo?.campo_golf}
+        recorridoInicial={torneo?.recorrido}
+      />
 
       <div className="grid gap-4 sm:grid-cols-2">
         <TeesInput

@@ -47,6 +47,7 @@ function leerCamposTorneo(formData: FormData) {
     descripcion: String(formData.get("descripcion") ?? "").trim() || null,
     info_adicional: String(formData.get("info_adicional") ?? "").trim() || null,
     campo_golf: String(formData.get("campo_golf") ?? "").trim(),
+    recorrido: String(formData.get("recorrido") ?? "").trim() || null,
     tees_masculino: leerTees("tees_masculino"),
     tees_femenino: leerTees("tees_femenino"),
     fecha: String(formData.get("fecha") ?? ""),
@@ -70,6 +71,17 @@ function leerCamposTorneo(formData: FormData) {
   };
 }
 
+async function guardarCampoGolfSiNuevo(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  nombre: string,
+  recorrido: string | null,
+) {
+  if (!nombre || !recorrido) return;
+  await supabase
+    .from("campos_golf")
+    .upsert({ nombre, recorrido }, { onConflict: "nombre,recorrido", ignoreDuplicates: true });
+}
+
 export async function crearTorneo(
   _prevState: EstadoTorneoForm,
   formData: FormData,
@@ -90,6 +102,8 @@ export async function crearTorneo(
     .single();
 
   if (error || !data) return { ok: false, error: error?.message ?? "Error al crear el torneo." };
+
+  await guardarCampoGolfSiNuevo(supabase, campos.campo_golf, campos.recorrido);
 
   revalidatePath("/admin/torneos");
   revalidatePath("/torneos");
@@ -120,6 +134,8 @@ export async function actualizarTorneo(
     .single();
 
   if (error) return { ok: false, error: error.message };
+
+  await guardarCampoGolfSiNuevo(supabase, campos.campo_golf, campos.recorrido);
 
   revalidatePath("/admin/torneos");
   revalidatePath(`/admin/torneos/${torneoId}/editar`);

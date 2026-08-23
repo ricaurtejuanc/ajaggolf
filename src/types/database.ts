@@ -68,6 +68,13 @@ export type LigaPool = {
   created_at: string;
 };
 
+export type CampoGolf = {
+  id: string;
+  nombre: string;
+  recorrido: string;
+  created_at: string;
+};
+
 export type Torneo = {
   id: string;
   nombre: string;
@@ -75,6 +82,7 @@ export type Torneo = {
   descripcion: string | null;
   info_adicional: string | null;
   campo_golf: string;
+  recorrido: string | null;
   tees_masculino: string[];
   tees_femenino: string[];
   fecha: string;
@@ -285,6 +293,7 @@ export type Database = {
       clasificacion_global: TableDef<ClasificacionGlobal>;
       visitas_web: TableDef<VisitaWeb>;
       consultas_contacto: TableDef<ConsultaContacto>;
+      campos_golf: TableDef<CampoGolf>;
     };
     Views: {
       salidas_publicadas: ViewDef<SalidaPublicada>;

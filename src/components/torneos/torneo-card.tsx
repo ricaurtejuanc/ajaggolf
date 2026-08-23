@@ -70,7 +70,9 @@ export function TorneoCard({
           {torneo.nombre}
         </h3>
         <p className="flex items-center gap-1.5 text-sm text-ajag-gris-500">
-          <MapPin size={15} /> {torneo.campo_golf}
+          <MapPin size={15} />
+          {torneo.campo_golf}
+          {torneo.recorrido ? ` · ${torneo.recorrido}` : ""}
         </p>
         {plazasDisponibles != null ? (
           <p className="flex items-center gap-1.5 text-sm text-ajag-gris-500">

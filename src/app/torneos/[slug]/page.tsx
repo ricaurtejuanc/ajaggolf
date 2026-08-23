@@ -107,7 +107,11 @@ export default async function TorneoDetallePage({
       </div>
 
       <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-5">
-        <InfoPill icon={<MapPin size={16} />} label="Campo" value={torneo.campo_golf} />
+        <InfoPill
+          icon={<MapPin size={16} />}
+          label="Campo"
+          value={torneo.recorrido ? `${torneo.campo_golf} · ${torneo.recorrido}` : torneo.campo_golf}
+        />
         <InfoPill icon={<Flag size={16} />} label="Tees" value={textoTees} />
         <InfoPill
           icon={<CalendarDays size={16} />}
