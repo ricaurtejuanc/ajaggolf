@@ -27,6 +27,38 @@ export default async function InscripcionPage({
 
   const jugador = await asegurarJugadorParaUsuario(supabase, user);
 
+  let lleno = false;
+  if (torneo.cupo_maximo != null) {
+    const [{ data: cupo }, { data: yaInscrito }] = await Promise.all([
+      supabase.from("torneos_cupo").select("inscritos").eq("torneo_id", torneo.id).maybeSingle(),
+      supabase
+        .from("inscripciones")
+        .select("id")
+        .eq("torneo_id", torneo.id)
+        .eq("jugador_id", jugador.id)
+        .maybeSingle(),
+    ]);
+    lleno = !yaInscrito && (cupo?.inscritos ?? 0) >= torneo.cupo_maximo;
+  }
+
+  if (lleno) {
+    return (
+      <div className="mx-auto max-w-lg px-4 py-10">
+        <Link href={`/torneos/${slug}`} className="text-sm text-ajag-gris-500 hover:underline">
+          ← Volver al torneo
+        </Link>
+        <div className="card-ajag mt-6 p-8 text-center">
+          <h1 className="font-display text-xl font-semibold text-ajag-verde-900">
+            Cupo completo
+          </h1>
+          <p className="mt-2 text-sm text-ajag-gris-500">
+            Ya no quedan plazas disponibles para {torneo.nombre}.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="mx-auto max-w-lg px-4 py-10">
       <Link href={`/torneos/${slug}`} className="text-sm text-ajag-gris-500 hover:underline">

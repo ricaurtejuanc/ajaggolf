@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import { listarTorneosPublicos } from "@/lib/data/torneos";
+import { listarTorneosPublicos, obtenerInscritosPorTorneo } from "@/lib/data/torneos";
+import { createClient } from "@/lib/supabase/server";
 import { TorneoCard } from "@/components/torneos/torneo-card";
 import type { Torneo } from "@/types/database";
 
@@ -31,6 +32,12 @@ export default async function TorneosPage() {
   const pasados = torneos.filter((t) => t.estado !== "publicado");
   const proximosPorMes = agruparPorMes(proximos);
 
+  const supabase = await createClient();
+  const inscritosPorTorneo = await obtenerInscritosPorTorneo(
+    supabase,
+    proximos.map((t) => t.id),
+  );
+
   return (
     <div className="mx-auto max-w-6xl px-4 py-10">
       <h1 className="font-display text-3xl font-semibold text-ajag-verde-900">
@@ -56,7 +63,11 @@ export default async function TorneosPage() {
                   </h2>
                   <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
                     {grupo.torneos.map((torneo) => (
-                      <TorneoCard key={torneo.id} torneo={torneo} />
+                      <TorneoCard
+                        key={torneo.id}
+                        torneo={torneo}
+                        inscritos={inscritosPorTorneo[torneo.id] ?? 0}
+                      />
                     ))}
                   </div>
                 </div>

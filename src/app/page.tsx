@@ -1,10 +1,16 @@
 import Link from "next/link";
 import Image from "next/image";
-import { listarProximosTorneos } from "@/lib/data/torneos";
+import { listarProximosTorneos, obtenerInscritosPorTorneo } from "@/lib/data/torneos";
+import { createClient } from "@/lib/supabase/server";
 import { TorneoCard } from "@/components/torneos/torneo-card";
 
 export default async function Home() {
   const proximos = await listarProximosTorneos(3);
+  const supabase = await createClient();
+  const inscritosPorTorneo = await obtenerInscritosPorTorneo(
+    supabase,
+    proximos.map((t) => t.id),
+  );
 
   return (
     <div>
@@ -63,7 +69,11 @@ export default async function Home() {
         ) : (
           <div className="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {proximos.map((torneo) => (
-              <TorneoCard key={torneo.id} torneo={torneo} />
+              <TorneoCard
+                key={torneo.id}
+                torneo={torneo}
+                inscritos={inscritosPorTorneo[torneo.id] ?? 0}
+              />
             ))}
           </div>
         )}

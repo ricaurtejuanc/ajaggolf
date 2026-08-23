@@ -255,6 +255,11 @@ export type ClasificacionPublica = {
   eventos_jugados: number;
 };
 
+export type TorneoCupo = {
+  torneo_id: string;
+  inscritos: number;
+};
+
 export type Database = {
   public: {
     Tables: {
@@ -277,6 +282,7 @@ export type Database = {
     Views: {
       salidas_publicadas: ViewDef<SalidaPublicada>;
       clasificacion_publica: ViewDef<ClasificacionPublica>;
+      torneos_cupo: ViewDef<TorneoCupo>;
     };
     Functions: Record<string, never>;
   };

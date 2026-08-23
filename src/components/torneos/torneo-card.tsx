@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { MapPin, CalendarDays } from "lucide-react";
+import { MapPin, CalendarDays, Users } from "lucide-react";
 import { formatearFecha, formatearPrecio } from "@/lib/format";
 import type { Torneo } from "@/types/database";
 
@@ -16,7 +16,19 @@ const etiquetaEstado: Record<Torneo["estado"], string> = {
   finalizado: "Finalizado",
 };
 
-export function TorneoCard({ torneo }: { torneo: Torneo }) {
+export function TorneoCard({
+  torneo,
+  inscritos,
+}: {
+  torneo: Torneo;
+  inscritos?: number;
+}) {
+  const plazasDisponibles =
+    torneo.cupo_maximo != null
+      ? Math.max(torneo.cupo_maximo - (inscritos ?? 0), 0)
+      : null;
+  const lleno = plazasDisponibles === 0;
+
   return (
     <Link
       href={`/torneos/${torneo.slug}`}
@@ -38,12 +50,14 @@ export function TorneoCard({ torneo }: { torneo: Torneo }) {
         )}
         <span
           className={`absolute right-3 top-3 rounded-full px-3 py-1 text-xs font-medium ${
-            torneo.estado === "publicado"
+            torneo.estado === "publicado" && !lleno
               ? "bg-ajag-verde-700 text-white"
               : "bg-white/90 text-ajag-gris-500"
           }`}
         >
-          {etiquetaEstado[torneo.estado]}
+          {torneo.estado === "publicado" && lleno
+            ? "Cupo completo"
+            : etiquetaEstado[torneo.estado]}
         </span>
       </div>
 
@@ -57,6 +71,12 @@ export function TorneoCard({ torneo }: { torneo: Torneo }) {
         <p className="flex items-center gap-1.5 text-sm text-ajag-gris-500">
           <MapPin size={15} /> {torneo.campo_golf}
         </p>
+        {plazasDisponibles != null ? (
+          <p className="flex items-center gap-1.5 text-sm text-ajag-gris-500">
+            <Users size={15} />
+            {lleno ? "Sin plazas disponibles" : `${plazasDisponibles} plazas disponibles`}
+          </p>
+        ) : null}
         <div className="mt-auto flex items-center justify-between pt-2">
           <span className="rounded-full bg-ajag-verde-50 px-2.5 py-1 text-xs font-medium text-ajag-verde-700">
             {etiquetaFormato[torneo.formato_puntuacion]}

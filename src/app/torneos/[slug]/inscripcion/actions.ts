@@ -56,18 +56,22 @@ export async function inscribirse(
   const precioAplicable =
     esSocio && torneo.precio_socio_cents != null ? torneo.precio_socio_cents : torneo.precio_cents;
 
+  const jugador = await asegurarJugadorParaUsuario(supabase, user);
+
   if (torneo.cupo_maximo != null) {
-    const { count } = await supabase
-      .from("inscripciones")
-      .select("id", { count: "exact", head: true })
-      .eq("torneo_id", torneo.id)
-      .in("estado", ["pendiente_pago", "confirmada"]);
-    if ((count ?? 0) >= torneo.cupo_maximo) {
+    const [{ data: cupo }, { data: yaInscrito }] = await Promise.all([
+      supabase.from("torneos_cupo").select("inscritos").eq("torneo_id", torneo.id).maybeSingle(),
+      supabase
+        .from("inscripciones")
+        .select("id")
+        .eq("torneo_id", torneo.id)
+        .eq("jugador_id", jugador.id)
+        .maybeSingle(),
+    ]);
+    if (!yaInscrito && (cupo?.inscritos ?? 0) >= torneo.cupo_maximo) {
       return { ok: false, error: "El cupo de este torneo ya está completo." };
     }
   }
-
-  const jugador = await asegurarJugadorParaUsuario(supabase, user);
 
   await supabase
     .from("jugadores")

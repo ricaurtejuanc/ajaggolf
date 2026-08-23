@@ -37,10 +37,10 @@ export default async function TorneoDetallePage({
     ? supabase.from("ligas_pool").select("nombre, slug").eq("id", torneo.liga_pool_id).maybeSingle()
     : Promise.resolve({ data: null });
   const cupoPromise = supabase
-    .from("inscripciones")
-    .select("id", { count: "exact", head: true })
+    .from("torneos_cupo")
+    .select("inscritos")
     .eq("torneo_id", torneo.id)
-    .in("estado", ["pendiente_pago", "confirmada"]);
+    .maybeSingle();
   const salidaPromise = supabase
     .from("salidas")
     .select("id")
@@ -59,12 +59,12 @@ export default async function TorneoDetallePage({
         .eq("torneo_id", torneo.id)
         .eq("estado", "publicado");
 
-  const [{ data: liga }, { count: inscritos }, { data: salidaPublicada }, { count: nResultados }] =
+  const [{ data: liga }, { data: cupo }, { data: salidaPublicada }, { count: nResultados }] =
     await Promise.all([ligaPromise, cupoPromise, salidaPromise, clasificacionPromise]);
 
+  const inscritos = cupo?.inscritos ?? 0;
   const cerrado = torneo.estado !== "publicado";
-  const lleno =
-    torneo.cupo_maximo != null && (inscritos ?? 0) >= torneo.cupo_maximo;
+  const lleno = torneo.cupo_maximo != null && inscritos >= torneo.cupo_maximo;
   const textoPrecio =
     torneo.precio_socio_cents != null
       ? `${formatearPrecio(torneo.precio_socio_cents)} socios · ${formatearPrecio(torneo.precio_cents)} no socios`
@@ -133,8 +133,11 @@ export default async function TorneoDetallePage({
       <div className="mt-8 flex items-center justify-between rounded-2xl border border-ajag-gris-100 bg-white p-5">
         <p className="flex items-center gap-1 text-sm text-ajag-gris-500">
           <Users size={15} />
-          {inscritos ?? 0}
+          {inscritos}
           {torneo.cupo_maximo ? ` / ${torneo.cupo_maximo}` : ""} inscritos
+          {torneo.cupo_maximo != null
+            ? ` · ${Math.max(torneo.cupo_maximo - inscritos, 0)} plazas disponibles`
+            : ""}
         </p>
 
         {cerrado || lleno ? (
