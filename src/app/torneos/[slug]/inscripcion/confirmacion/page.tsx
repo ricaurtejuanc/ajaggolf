@@ -54,6 +54,8 @@ export default async function ConfirmacionInscripcionPage({
         </h1>
         <p className="mt-2 text-sm text-ajag-gris-500">
           Tu inscripción a {torneo.nombre} está guardada. Solo falta el pago.
+          Te hemos enviado un email: no será válida hasta que recibas el
+          email de confirmación.
         </p>
       </div>
 

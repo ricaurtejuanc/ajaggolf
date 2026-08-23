@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { asegurarJugadorParaUsuario } from "@/lib/data/jugadores";
+import { enviarEmailInscripcionRecibida } from "@/lib/email";
 
 export type EstadoInscripcionForm = { ok: boolean; error: string | null };
 
@@ -40,7 +41,7 @@ export async function inscribirse(
 
   const { data: torneo } = await supabase
     .from("torneos")
-    .select("id, precio_cents, precio_socio_cents, estado, cupo_maximo")
+    .select("id, nombre, fecha, precio_cents, precio_socio_cents, estado, cupo_maximo")
     .eq("slug", torneoSlug)
     .maybeSingle();
 
@@ -190,6 +191,12 @@ export async function inscribirse(
       console.error("Error creando inscripción de invitado:", errorInscripcion);
       return { ok: false, error: "No se ha podido guardar la inscripción. Inténtalo de nuevo." };
     }
+
+    await enviarEmailInscripcionRecibida({
+      destinatario: email,
+      nombre,
+      items: [{ torneoNombre: torneo.nombre, torneoFecha: torneo.fecha, precioCents: precioAplicable }],
+    });
 
     urlConfirmacion = `/torneos/${torneoSlug}/inscripcion/confirmacion?pedido=${pedido.id}`;
   } catch (err) {
