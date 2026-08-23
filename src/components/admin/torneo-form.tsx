@@ -306,7 +306,7 @@ export function TorneoForm({
         <span className="text-sm font-medium text-ajag-verde-900">
           Extras que se mostrarán en la ficha del torneo
         </span>
-        <div className="mt-2 grid gap-4 sm:grid-cols-3">
+        <div className="mt-2 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {CATEGORIAS_EXTRAS.map((cat) => (
             <div key={cat.categoria}>
               <p className="text-xs font-medium uppercase tracking-wide text-ajag-gris-500">

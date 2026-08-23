@@ -11,6 +11,7 @@ export const CATEGORIAS_EXTRAS = [
     categoria: "Ceremonia",
     opciones: [
       { value: "ceremonia_entrega_premios", label: "Entrega de premios" },
+      { value: "ceremonia_sorteo_regalos", label: "Sorteo de regalos" },
       { value: "ceremonia_cocktail", label: "Cóctel" },
       { value: "ceremonia_comida", label: "Comida" },
       { value: "ceremonia_bebida", label: "Bebida" },
@@ -19,6 +20,14 @@ export const CATEGORIAS_EXTRAS = [
   {
     categoria: "Inscripción",
     opciones: [{ value: "inscripcion_welcome_pack", label: "Welcome pack" }],
+  },
+  {
+    categoria: "Avituallamiento",
+    opciones: [
+      { value: "avituallamiento_durante_recorrido", label: "Durante el recorrido" },
+      { value: "avituallamiento_antes_torneo", label: "Antes del torneo" },
+      { value: "avituallamiento_despues_torneo", label: "Después del torneo" },
+    ],
   },
 ] as const;
 

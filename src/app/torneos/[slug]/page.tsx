@@ -137,7 +137,7 @@ export default async function TorneoDetallePage({
           <h2 className="mb-3 font-display text-base font-semibold text-ajag-verde-900">
             Qué incluye
           </h2>
-          <div className="grid gap-4 sm:grid-cols-3">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {CATEGORIAS_EXTRAS.map((cat) => {
               const seleccionados = cat.opciones.filter((o) => torneo.extras.includes(o.value));
               if (seleccionados.length === 0) return null;
