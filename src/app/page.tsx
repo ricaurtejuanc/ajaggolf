@@ -36,7 +36,7 @@ export default async function Home() {
               href="/ligas"
               className="rounded-full border border-white/40 px-6 py-3 text-sm font-medium text-white transition hover:bg-white/10"
             >
-              Ligas y Pool
+              Clasificaciones
             </Link>
           </div>
         </div>

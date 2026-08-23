@@ -3,7 +3,7 @@ import Link from "next/link";
 import { Trophy } from "lucide-react";
 import { listarLigasActivas } from "@/lib/data/ligas";
 
-export const metadata: Metadata = { title: "Ligas y Pool" };
+export const metadata: Metadata = { title: "Clasificaciones" };
 
 export default async function LigasPage() {
   const ligas = await listarLigasActivas();
@@ -11,7 +11,7 @@ export default async function LigasPage() {
   return (
     <div className="mx-auto max-w-4xl px-4 py-10">
       <h1 className="font-display text-3xl font-semibold text-ajag-verde-900">
-        Ligas y Pool
+        Clasificaciones
       </h1>
       <p className="mt-2 max-w-2xl text-ajag-gris-500">
         La clasificación de cada liga suma los puntos obtenidos por posición
