@@ -79,17 +79,19 @@ export default async function InscripcionPage({
       </p>
 
       {!user ? (
-        <p className="mt-3 rounded-xl bg-ajag-verde-50 px-4 py-3 text-sm text-ajag-verde-900">
-          Te estás inscribiendo como invitado.{" "}
+        <div className="mt-3 flex flex-col items-start gap-3 rounded-xl bg-ajag-verde-50 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-sm text-ajag-verde-900">
+            Te estás inscribiendo como invitado. Inicia sesión o crea tu
+            cuenta si quieres que tus datos se rellenen solos la próxima vez
+            y ver tu historial de torneos.
+          </p>
           <Link
             href={`/login?next=/torneos/${slug}/inscripcion`}
-            className="font-medium underline"
+            className="shrink-0 rounded-full bg-ajag-verde-700 px-6 py-3 text-base font-semibold text-white transition hover:bg-ajag-verde-600"
           >
-            Inicia sesión o crea tu cuenta
-          </Link>{" "}
-          si quieres que tus datos se rellenen solos la próxima vez y ver tu
-          historial de torneos.
-        </p>
+            Iniciar sesión
+          </Link>
+        </div>
       ) : null}
 
       <div className="mt-6">
