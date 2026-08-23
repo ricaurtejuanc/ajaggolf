@@ -13,6 +13,9 @@ const etiquetaEstado: Record<string, string> = {
   finalizado: "Finalizado",
 };
 
+const claseBoton =
+  "rounded-full border border-ajag-verde-700 px-4 py-2 text-sm font-medium text-ajag-verde-700 transition hover:bg-ajag-verde-50";
+
 export default async function AdminTorneosPage() {
   const supabase = await createClient();
   const { data: torneos } = await supabase
@@ -32,66 +35,48 @@ export default async function AdminTorneosPage() {
         </Link>
       </div>
 
-      <div className="mt-6 overflow-x-auto rounded-2xl border border-ajag-gris-100 bg-white">
-        <table className="w-full min-w-[640px] text-left text-sm">
-          <thead className="border-b border-ajag-gris-100 text-xs uppercase text-ajag-gris-500">
-            <tr>
-              <th className="px-4 py-3">Torneo</th>
-              <th className="px-4 py-3">Fecha</th>
-              <th className="px-4 py-3">Precio</th>
-              <th className="px-4 py-3">Estado</th>
-              <th className="px-4 py-3" />
-            </tr>
-          </thead>
-          <tbody>
-            {(torneos ?? []).map((torneo) => (
-              <tr key={torneo.id} className="border-b border-ajag-gris-100 last:border-0">
-                <td className="px-4 py-3 font-medium text-ajag-verde-900">{torneo.nombre}</td>
-                <td className="px-4 py-3 text-ajag-gris-500">
+      <div className="mt-6 flex flex-col gap-4">
+        {(torneos ?? []).map((torneo) => (
+          <div key={torneo.id} className="card-ajag p-5">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <p className="text-xs font-medium uppercase tracking-wide text-ajag-oro-600">
                   {formatearFechaCorta(torneo.fecha)}
-                </td>
-                <td className="px-4 py-3 text-ajag-gris-500">
+                </p>
+                <h2 className="font-display text-lg font-semibold text-ajag-verde-900">
+                  {torneo.nombre}
+                </h2>
+                <p className="mt-0.5 text-sm text-ajag-gris-500">
                   {formatearPrecio(torneo.precio_cents)}
-                </td>
-                <td className="px-4 py-3">
-                  <span className="rounded-full bg-ajag-verde-50 px-2.5 py-1 text-xs font-medium text-ajag-verde-700">
-                    {etiquetaEstado[torneo.estado]}
-                  </span>
-                </td>
-                <td className="px-4 py-3">
-                  <div className="flex items-center justify-end gap-3">
-                    <Link
-                      href={`/admin/torneos/${torneo.id}/salidas`}
-                      className="text-sm font-medium text-ajag-verde-700 hover:underline"
-                    >
-                      Salidas
-                    </Link>
-                    <Link
-                      href={`/admin/torneos/${torneo.id}/resultados`}
-                      className="text-sm font-medium text-ajag-verde-700 hover:underline"
-                    >
-                      Resultados
-                    </Link>
-                    <Link
-                      href={`/admin/torneos/${torneo.id}/editar`}
-                      className="text-sm font-medium text-ajag-verde-700 hover:underline"
-                    >
-                      Editar
-                    </Link>
-                    <EliminarTorneoButton torneoId={torneo.id} />
-                  </div>
-                </td>
-              </tr>
-            ))}
-            {(torneos ?? []).length === 0 ? (
-              <tr>
-                <td colSpan={5} className="px-4 py-8 text-center text-ajag-gris-500">
-                  Todavía no hay torneos creados.
-                </td>
-              </tr>
-            ) : null}
-          </tbody>
-        </table>
+                </p>
+              </div>
+              <span className="rounded-full bg-ajag-verde-50 px-2.5 py-1 text-xs font-medium text-ajag-verde-700">
+                {etiquetaEstado[torneo.estado]}
+              </span>
+            </div>
+
+            <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-ajag-gris-100 pt-4">
+              <Link href={`/admin/torneos/${torneo.id}/editar`} className={claseBoton}>
+                Editar
+              </Link>
+              <Link href={`/admin/torneos/${torneo.id}/resultados`} className={claseBoton}>
+                Resultados
+              </Link>
+              <Link href={`/admin/torneos/${torneo.id}/salidas`} className={claseBoton}>
+                Tees de salida
+              </Link>
+              <div className="ml-auto">
+                <EliminarTorneoButton torneoId={torneo.id} />
+              </div>
+            </div>
+          </div>
+        ))}
+
+        {(torneos ?? []).length === 0 ? (
+          <div className="card-ajag p-8 text-center text-ajag-gris-500">
+            Todavía no hay torneos creados.
+          </div>
+        ) : null}
       </div>
     </div>
   );
