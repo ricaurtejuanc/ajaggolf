@@ -131,16 +131,11 @@ export default async function TorneoDetallePage({
       ) : null}
 
       <div className="mt-8 flex items-center justify-between rounded-2xl border border-ajag-gris-100 bg-white p-5">
-        <div>
-          <p className="font-display text-lg font-semibold text-ajag-verde-900">
-            {textoPrecio}
-          </p>
-          <p className="flex items-center gap-1 text-xs text-ajag-gris-500">
-            <Users size={13} />
-            {inscritos ?? 0}
-            {torneo.cupo_maximo ? ` / ${torneo.cupo_maximo}` : ""} inscritos
-          </p>
-        </div>
+        <p className="flex items-center gap-1 text-sm text-ajag-gris-500">
+          <Users size={15} />
+          {inscritos ?? 0}
+          {torneo.cupo_maximo ? ` / ${torneo.cupo_maximo}` : ""} inscritos
+        </p>
 
         {cerrado || lleno ? (
           <span className="rounded-full bg-ajag-gris-100 px-5 py-2.5 text-sm font-medium text-ajag-gris-500">
