@@ -2,6 +2,7 @@
 
 import { useActionState } from "react";
 import { TablaPuntosEditor } from "./tabla-puntos-editor";
+import { LigaImagenUploader } from "./liga-imagen-uploader";
 import type { EstadoLigaForm } from "@/app/admin/ligas/actions";
 import type { LigaPool } from "@/types/database";
 
@@ -18,6 +19,8 @@ export function LigaForm({
 
   return (
     <form action={formAction} className="card-ajag flex flex-col gap-5 p-6">
+      <LigaImagenUploader imagenUrlInicial={liga?.imagen_url} />
+
       <div>
         <label htmlFor="nombre" className="text-sm font-medium text-ajag-verde-900">
           Nombre *
@@ -69,6 +72,21 @@ export function LigaForm({
           defaultValue={liga?.descripcion ?? ""}
           className="mt-1 w-full rounded-xl border border-ajag-gris-200 px-4 py-2.5 text-sm outline-none focus:border-ajag-verde-600"
         />
+      </div>
+
+      <div>
+        <label htmlFor="reglas" className="text-sm font-medium text-ajag-verde-900">
+          Reglas
+        </label>
+        <textarea
+          id="reglas"
+          name="reglas"
+          rows={6}
+          placeholder="Cómo se puntúa, qué torneos cuentan, criterios de desempate..."
+          defaultValue={liga?.reglas ?? ""}
+          className="mt-1 w-full rounded-xl border border-ajag-gris-200 px-4 py-2.5 text-sm outline-none focus:border-ajag-verde-600"
+        />
+        <p className="mt-1 text-xs text-ajag-gris-500">Se muestra públicamente en la página de la liga.</p>
       </div>
 
       <TablaPuntosEditor tablaInicial={liga?.tabla_puntos ?? {}} />

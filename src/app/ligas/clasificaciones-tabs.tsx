@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { Trophy } from "lucide-react";
 import { formatearFecha } from "@/lib/format";
@@ -99,8 +100,28 @@ function PestanaLiga({ datos, nombre }: { datos: LigaConClasificacion | null; no
 
   return (
     <div>
+      {liga.imagen_url ? (
+        <div className="relative mb-4 aspect-[21/9] w-full overflow-hidden rounded-2xl bg-ajag-verde-100">
+          <Image
+            src={liga.imagen_url}
+            alt={liga.nombre}
+            fill
+            unoptimized
+            className="object-cover"
+            sizes="(min-width: 1024px) 900px, 100vw"
+          />
+        </div>
+      ) : null}
+
       {liga.descripcion ? (
         <p className="mb-4 max-w-2xl text-sm text-ajag-gris-500">{liga.descripcion}</p>
+      ) : null}
+
+      {liga.reglas ? (
+        <div className="mb-4 card-ajag p-5">
+          <h3 className="mb-2 font-display text-sm font-semibold text-ajag-verde-900">Reglas</h3>
+          <p className="whitespace-pre-line text-sm text-ajag-gris-500">{liga.reglas}</p>
+        </div>
       ) : null}
 
       {clasificacion.length === 0 ? (

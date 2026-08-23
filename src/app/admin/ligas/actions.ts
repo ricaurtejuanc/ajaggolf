@@ -36,6 +36,8 @@ function leerCamposLiga(formData: FormData) {
     nombre,
     slug: slugify(slugInput || nombre),
     descripcion: String(formData.get("descripcion") ?? "").trim() || null,
+    imagen_url: String(formData.get("imagen_url") ?? "").trim() || null,
+    reglas: String(formData.get("reglas") ?? "").trim() || null,
     temporada: String(formData.get("temporada") ?? "").trim() || null,
     tabla_puntos: leerTablaPuntos(formData),
     activa: formData.get("activa") === "on",

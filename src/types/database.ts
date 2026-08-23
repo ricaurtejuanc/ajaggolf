@@ -74,6 +74,8 @@ export type LigaPool = {
   nombre: string;
   slug: string;
   descripcion: string | null;
+  imagen_url: string | null;
+  reglas: string | null;
   temporada: string | null;
   tabla_puntos: Record<string, number>;
   activa: boolean;

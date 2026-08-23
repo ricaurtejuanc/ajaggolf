@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import { notFound } from "next/navigation";
 import { Trophy } from "lucide-react";
 import { obtenerLigaPorSlug } from "@/lib/data/ligas";
@@ -34,7 +35,21 @@ export default async function LigaDetallePage({
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-10">
-      <p className="text-xs font-medium uppercase tracking-wide text-ajag-oro-600">
+      {liga.imagen_url ? (
+        <div className="relative aspect-[21/9] w-full overflow-hidden rounded-2xl bg-ajag-verde-100">
+          <Image
+            src={liga.imagen_url}
+            alt={liga.nombre}
+            fill
+            unoptimized
+            className="object-cover"
+            sizes="100vw"
+            priority
+          />
+        </div>
+      ) : null}
+
+      <p className="mt-6 text-xs font-medium uppercase tracking-wide text-ajag-oro-600">
         {liga.temporada ?? "Liga AJAG"}
       </p>
       <h1 className="font-display text-3xl font-semibold text-ajag-verde-900">
@@ -42,6 +57,15 @@ export default async function LigaDetallePage({
       </h1>
       {liga.descripcion ? (
         <p className="mt-2 max-w-2xl text-ajag-gris-500">{liga.descripcion}</p>
+      ) : null}
+
+      {liga.reglas ? (
+        <div className="mt-6 card-ajag p-5">
+          <h2 className="mb-2 font-display text-base font-semibold text-ajag-verde-900">
+            Reglas
+          </h2>
+          <p className="whitespace-pre-line text-sm text-ajag-gris-500">{liga.reglas}</p>
+        </div>
       ) : null}
 
       <h2 className="mt-8 mb-4 flex items-center gap-2 font-display text-xl font-semibold text-ajag-verde-900">
