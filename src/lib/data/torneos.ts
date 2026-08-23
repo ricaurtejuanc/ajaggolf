@@ -38,6 +38,39 @@ export async function obtenerTorneoPorSlug(slug: string): Promise<Torneo | null>
   return data;
 }
 
+export async function listarTorneosConClasificacion(): Promise<Torneo[]> {
+  const supabase = await createClient();
+  const torneos = await listarTorneosPublicos();
+  if (torneos.length === 0) return [];
+
+  const idsConLiga = torneos.filter((t) => t.liga_pool_id).map((t) => t.id);
+  const idsSinLiga = torneos.filter((t) => !t.liga_pool_id).map((t) => t.id);
+
+  const [{ data: conResultados }, { data: conPdf }] = await Promise.all([
+    idsConLiga.length > 0
+      ? supabase
+          .from("resultados")
+          .select("torneo_id")
+          .eq("estado", "publicado")
+          .in("torneo_id", idsConLiga)
+      : Promise.resolve({ data: [] }),
+    idsSinLiga.length > 0
+      ? supabase
+          .from("resultados_pdf_uploads")
+          .select("torneo_id")
+          .eq("estado", "publicado")
+          .in("torneo_id", idsSinLiga)
+      : Promise.resolve({ data: [] }),
+  ]);
+
+  const idsConClasificacion = new Set([
+    ...(conResultados ?? []).map((r) => r.torneo_id),
+    ...(conPdf ?? []).map((r) => r.torneo_id),
+  ]);
+
+  return torneos.filter((t) => idsConClasificacion.has(t.id));
+}
+
 export async function obtenerInscritosPorTorneo(
   supabase: Awaited<ReturnType<typeof createClient>>,
   torneoIds: string[],

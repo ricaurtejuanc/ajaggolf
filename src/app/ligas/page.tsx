@@ -1,12 +1,32 @@
 import type { Metadata } from "next";
-import Link from "next/link";
-import { Trophy } from "lucide-react";
-import { listarLigasActivas } from "@/lib/data/ligas";
+import { listarTorneosConClasificacion } from "@/lib/data/torneos";
+import { obtenerLigaPorSlug } from "@/lib/data/ligas";
+import { createClient } from "@/lib/supabase/server";
+import { ClasificacionesTabs } from "./clasificaciones-tabs";
+import type { ClasificacionPublica } from "@/types/database";
 
 export const metadata: Metadata = { title: "Clasificaciones" };
 
+async function obtenerLigaConClasificacion(slug: string) {
+  const resultado = await obtenerLigaPorSlug(slug);
+  if (!resultado) return null;
+
+  const supabase = await createClient();
+  const { data: clasificacion } = await supabase
+    .from("clasificacion_publica")
+    .select("*")
+    .eq("liga_pool_id", resultado.liga.id)
+    .order("puntos_totales", { ascending: false });
+
+  return { liga: resultado.liga, clasificacion: (clasificacion ?? []) as ClasificacionPublica[] };
+}
+
 export default async function LigasPage() {
-  const ligas = await listarLigasActivas();
+  const [torneos, ranking, pool] = await Promise.all([
+    listarTorneosConClasificacion(),
+    obtenerLigaConClasificacion("ranking"),
+    obtenerLigaConClasificacion("pool"),
+  ]);
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-10">
@@ -14,36 +34,11 @@ export default async function LigasPage() {
         Clasificaciones
       </h1>
       <p className="mt-2 max-w-2xl text-ajag-gris-500">
-        La clasificación de cada liga suma los puntos obtenidos por posición
-        en cada torneo que la compone.
+        Consulta la clasificación de cada torneo, el Ranking general y el
+        Pool de AJAG.
       </p>
 
-      {ligas.length === 0 ? (
-        <div className="card-ajag mt-8 p-8 text-center text-ajag-gris-500">
-          No hay ligas activas por ahora.
-        </div>
-      ) : (
-        <div className="mt-8 grid gap-4 sm:grid-cols-2">
-          {ligas.map((liga) => (
-            <Link key={liga.id} href={`/ligas/${liga.slug}`} className="card-ajag p-5">
-              <div className="flex items-center gap-2 text-ajag-oro-600">
-                <Trophy size={18} />
-                {liga.temporada ? (
-                  <span className="text-xs font-medium uppercase tracking-wide">
-                    {liga.temporada}
-                  </span>
-                ) : null}
-              </div>
-              <h2 className="mt-1 font-display text-lg font-semibold text-ajag-verde-900">
-                {liga.nombre}
-              </h2>
-              {liga.descripcion ? (
-                <p className="mt-1 text-sm text-ajag-gris-500">{liga.descripcion}</p>
-              ) : null}
-            </Link>
-          ))}
-        </div>
-      )}
+      <ClasificacionesTabs torneos={torneos} ranking={ranking} pool={pool} />
     </div>
   );
 }
