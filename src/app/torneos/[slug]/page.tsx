@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { CalendarDays, MapPin, Flag, Coins, Users } from "lucide-react";
 import { obtenerTorneoPorSlug } from "@/lib/data/torneos";
 import { createClient } from "@/lib/supabase/server";
 import { formatearFecha, formatearHora, formatearPrecio } from "@/lib/format";
+import { PosterLightbox } from "@/components/torneos/poster-lightbox";
 
 const etiquetaFormato = {
   stableford: "Stableford",
@@ -72,22 +72,13 @@ export default async function TorneoDetallePage({
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-10">
-      <div className="relative aspect-[16/9] w-full overflow-hidden rounded-2xl bg-ajag-verde-100">
-        {torneo.poster_url ? (
-          <Image
-            src={torneo.poster_url}
-            alt={torneo.nombre}
-            fill
-            className="object-cover"
-            sizes="100vw"
-            priority
-          />
-        ) : (
-          <div className="flex h-full items-center justify-center text-ajag-verde-700/50">
-            <CalendarDays size={56} />
-          </div>
-        )}
-      </div>
+      {torneo.poster_url ? (
+        <PosterLightbox posterUrl={torneo.poster_url} alt={torneo.nombre} />
+      ) : (
+        <div className="relative flex aspect-[16/9] w-full items-center justify-center overflow-hidden rounded-2xl bg-ajag-verde-100 text-ajag-verde-700/50">
+          <CalendarDays size={56} />
+        </div>
+      )}
 
       <div className="mt-6 flex flex-col gap-1">
         {liga ? (
