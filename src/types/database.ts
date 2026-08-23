@@ -26,6 +26,26 @@ export type EstadoSalida = "borrador" | "publicado";
 export type EstadoResultado = "preview" | "publicado";
 export type EstadoPdfResultados = "preview" | "publicado" | "descartado";
 
+export type Organizador = {
+  id: string;
+  nombre: string;
+  slug: string;
+  logo_url: string | null;
+  color_primario: string | null;
+  dominio: string | null;
+  email_contacto: string | null;
+  activo: boolean;
+  created_at: string;
+};
+
+export type SuperAdmin = {
+  id: string;
+  user_id: string;
+  nombre: string;
+  email: string;
+  created_at: string;
+};
+
 export type UsuarioAdmin = {
   id: string;
   user_id: string;
@@ -33,6 +53,7 @@ export type UsuarioAdmin = {
   email: string;
   rol: "admin";
   activo: boolean;
+  organizador_id: string | null;
   created_at: string;
 };
 
@@ -40,6 +61,7 @@ export type Configuracion = {
   clave: string;
   valor: unknown;
   actualizado_por: string | null;
+  organizador_id: string | null;
   updated_at: string;
 };
 
@@ -52,6 +74,7 @@ export type Patrocinador = {
   logo_url: string;
   web: string | null;
   telefono: string | null;
+  organizador_id: string | null;
   created_at: string;
 };
 
@@ -65,6 +88,7 @@ export type Jugador = {
   sexo: SexoJugador | null;
   handicap: number | null;
   telefono: string | null;
+  organizador_id: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -79,6 +103,7 @@ export type LigaPool = {
   temporada: string | null;
   tabla_puntos: Record<string, number>;
   activa: boolean;
+  organizador_id: string | null;
   created_at: string;
 };
 
@@ -116,6 +141,7 @@ export type Torneo = {
   liga_pool_id: string | null;
   estado: EstadoTorneo;
   created_by: string | null;
+  organizador_id: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -292,6 +318,8 @@ export type TorneoCupo = {
 export type Database = {
   public: {
     Tables: {
+      organizadores: TableDef<Organizador>;
+      super_admins: TableDef<SuperAdmin>;
       usuarios_admin: TableDef<UsuarioAdmin>;
       configuracion: TableDef<Configuracion>;
       jugadores: TableDef<Jugador>;
