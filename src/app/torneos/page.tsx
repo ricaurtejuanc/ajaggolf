@@ -1,13 +1,35 @@
 import type { Metadata } from "next";
 import { listarTorneosPublicos } from "@/lib/data/torneos";
 import { TorneoCard } from "@/components/torneos/torneo-card";
+import type { Torneo } from "@/types/database";
 
 export const metadata: Metadata = { title: "Calendario de torneos" };
+
+function agruparPorMes(torneos: Torneo[]) {
+  const grupos = new Map<string, { etiqueta: string; torneos: Torneo[] }>();
+  for (const torneo of torneos) {
+    const fecha = new Date(`${torneo.fecha}T00:00:00`);
+    const clave = `${fecha.getFullYear()}-${fecha.getMonth()}`;
+    const etiqueta = fecha.toLocaleDateString("es-ES", {
+      month: "long",
+      year: "numeric",
+    });
+    if (!grupos.has(clave)) {
+      grupos.set(clave, {
+        etiqueta: etiqueta.charAt(0).toUpperCase() + etiqueta.slice(1),
+        torneos: [],
+      });
+    }
+    grupos.get(clave)!.torneos.push(torneo);
+  }
+  return [...grupos.values()];
+}
 
 export default async function TorneosPage() {
   const torneos = await listarTorneosPublicos();
   const proximos = torneos.filter((t) => t.estado === "publicado");
   const pasados = torneos.filter((t) => t.estado !== "publicado");
+  const proximosPorMes = agruparPorMes(proximos);
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-10">
@@ -25,10 +47,19 @@ export default async function TorneosPage() {
         </div>
       ) : (
         <>
-          {proximos.length > 0 ? (
-            <div className="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-              {proximos.map((torneo) => (
-                <TorneoCard key={torneo.id} torneo={torneo} />
+          {proximosPorMes.length > 0 ? (
+            <div className="mt-8 flex flex-col gap-10">
+              {proximosPorMes.map((grupo) => (
+                <div key={grupo.etiqueta}>
+                  <h2 className="mb-4 font-display text-xl font-semibold text-ajag-verde-900">
+                    {grupo.etiqueta}
+                  </h2>
+                  <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                    {grupo.torneos.map((torneo) => (
+                      <TorneoCard key={torneo.id} torneo={torneo} />
+                    ))}
+                  </div>
+                </div>
               ))}
             </div>
           ) : null}
