@@ -4,6 +4,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { TorneoForm } from "@/components/admin/torneo-form";
 import { listarCamposGolf } from "@/lib/data/campos-golf";
+import { obtenerCategoriasExtras } from "@/lib/data/configuracion";
 import { actualizarTorneo } from "../../actions";
 
 export const metadata: Metadata = { title: "Editar torneo · Admin" };
@@ -16,10 +17,11 @@ export default async function EditarTorneoPage({
   const { id } = await params;
   const supabase = await createClient();
 
-  const [{ data: torneo }, { data: ligas }, camposGolf] = await Promise.all([
+  const [{ data: torneo }, { data: ligas }, camposGolf, categoriasExtras] = await Promise.all([
     supabase.from("torneos").select("*").eq("id", id).maybeSingle(),
     supabase.from("ligas_pool").select("*").order("nombre"),
     listarCamposGolf(),
+    obtenerCategoriasExtras(),
   ]);
 
   if (!torneo) notFound();
@@ -44,6 +46,7 @@ export default async function EditarTorneoPage({
         torneo={torneo}
         ligas={ligas ?? []}
         camposGolf={camposGolf}
+        categoriasExtras={categoriasExtras}
         action={accionConId}
         textoBoton="Guardar cambios"
       />

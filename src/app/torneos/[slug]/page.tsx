@@ -7,7 +7,7 @@ import { obtenerTorneoPorSlug } from "@/lib/data/torneos";
 import { createClient } from "@/lib/supabase/server";
 import { formatearFecha, formatearHora, formatearPrecio } from "@/lib/format";
 import { PosterLightbox } from "@/components/torneos/poster-lightbox";
-import { CATEGORIAS_EXTRAS } from "@/lib/extras-torneo";
+import { obtenerCategoriasExtras } from "@/lib/data/configuracion";
 
 const etiquetaFormato = {
   stableford: "Stableford",
@@ -60,8 +60,14 @@ export default async function TorneoDetallePage({
         .eq("torneo_id", torneo.id)
         .eq("estado", "publicado");
 
-  const [{ data: liga }, { data: cupo }, { data: salidaPublicada }, { count: nResultados }] =
-    await Promise.all([ligaPromise, cupoPromise, salidaPromise, clasificacionPromise]);
+  const [{ data: liga }, { data: cupo }, { data: salidaPublicada }, { count: nResultados }, categoriasExtras] =
+    await Promise.all([
+      ligaPromise,
+      cupoPromise,
+      salidaPromise,
+      clasificacionPromise,
+      obtenerCategoriasExtras(),
+    ]);
 
   const inscritos = cupo?.inscritos ?? 0;
   const cerrado = torneo.estado !== "publicado";
@@ -147,7 +153,7 @@ export default async function TorneoDetallePage({
             Qué incluye
           </h2>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {CATEGORIAS_EXTRAS.map((cat) => {
+            {categoriasExtras.map((cat) => {
               const seleccionados = cat.opciones.filter((o) => torneo.extras.includes(o.value));
               if (seleccionados.length === 0) return null;
               return (

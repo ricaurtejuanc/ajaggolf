@@ -4,20 +4,21 @@ import { useActionState, useState } from "react";
 import { PosterUploader } from "./poster-uploader";
 import { TeesInput } from "./tees-input";
 import { CampoGolfInput } from "./campo-golf-input";
-import { CATEGORIAS_EXTRAS } from "@/lib/extras-torneo";
 import type { EstadoTorneoForm } from "@/app/admin/torneos/actions";
-import type { LigaPool, ModoSalida, Torneo } from "@/types/database";
+import type { CategoriaExtra, LigaPool, ModoSalida, Torneo } from "@/types/database";
 
 export function TorneoForm({
   torneo,
   ligas,
   camposGolf,
+  categoriasExtras,
   action,
   textoBoton,
 }: {
   torneo?: Torneo;
   ligas: LigaPool[];
   camposGolf: { nombre: string; recorrido: string }[];
+  categoriasExtras: CategoriaExtra[];
   action: (prevState: EstadoTorneoForm, formData: FormData) => Promise<EstadoTorneoForm>;
   textoBoton: string;
 }) {
@@ -307,7 +308,7 @@ export function TorneoForm({
           Extras que se mostrarán en la ficha del torneo
         </span>
         <div className="mt-2 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {CATEGORIAS_EXTRAS.map((cat) => (
+          {categoriasExtras.map((cat) => (
             <div key={cat.categoria}>
               <p className="text-xs font-medium uppercase tracking-wide text-ajag-gris-500">
                 {cat.categoria}

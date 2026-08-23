@@ -2,15 +2,17 @@ import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import { TorneoForm } from "@/components/admin/torneo-form";
 import { listarCamposGolf } from "@/lib/data/campos-golf";
+import { obtenerCategoriasExtras } from "@/lib/data/configuracion";
 import { crearTorneo } from "../actions";
 
 export const metadata: Metadata = { title: "Nuevo torneo · Admin" };
 
 export default async function NuevoTorneoPage() {
   const supabase = await createClient();
-  const [{ data: ligas }, camposGolf] = await Promise.all([
+  const [{ data: ligas }, camposGolf, categoriasExtras] = await Promise.all([
     supabase.from("ligas_pool").select("*").order("nombre"),
     listarCamposGolf(),
+    obtenerCategoriasExtras(),
   ]);
 
   return (
@@ -21,6 +23,7 @@ export default async function NuevoTorneoPage() {
       <TorneoForm
         ligas={ligas ?? []}
         camposGolf={camposGolf}
+        categoriasExtras={categoriasExtras}
         action={crearTorneo}
         textoBoton="Crear torneo"
       />

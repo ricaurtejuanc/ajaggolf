@@ -7,7 +7,7 @@ const supabaseHostname = process.env.NEXT_PUBLIC_SUPABASE_URL
 const nextConfig: NextConfig = {
   images: {
     remotePatterns: [
-      // Storage público de Supabase (pósters de torneos).
+      // Storage público de Supabase (pósters de torneos, logos de patrocinadores).
       ...(supabaseHostname
         ? [{ protocol: "https" as const, hostname: supabaseHostname }]
         : []),

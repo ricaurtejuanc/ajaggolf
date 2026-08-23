@@ -43,6 +43,18 @@ export type Configuracion = {
   updated_at: string;
 };
 
+export type OpcionExtra = { value: string; label: string };
+export type CategoriaExtra = { categoria: string; opciones: OpcionExtra[] };
+
+export type Patrocinador = {
+  id: string;
+  nombre: string;
+  logo_url: string;
+  web: string | null;
+  telefono: string | null;
+  created_at: string;
+};
+
 export type Jugador = {
   id: string;
   user_id: string | null;
@@ -294,6 +306,7 @@ export type Database = {
       visitas_web: TableDef<VisitaWeb>;
       consultas_contacto: TableDef<ConsultaContacto>;
       campos_golf: TableDef<CampoGolf>;
+      patrocinadores: TableDef<Patrocinador>;
     };
     Views: {
       salidas_publicadas: ViewDef<SalidaPublicada>;
