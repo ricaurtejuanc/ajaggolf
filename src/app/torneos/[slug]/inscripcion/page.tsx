@@ -78,6 +78,13 @@ export default async function InscripcionPage({
         {formatearFecha(torneo.fecha)} · {torneo.campo_golf}
       </p>
 
+      {torneo.modo_pago === "club" ? (
+        <p className="mt-3 rounded-xl bg-ajag-verde-50 px-4 py-3 text-sm text-ajag-verde-900">
+          Este torneo se paga en el club: tu inscripción quedará confirmada
+          al momento, sin esperar a que confirmemos ningún pago.
+        </p>
+      ) : null}
+
       {!user ? (
         <div className="mt-3 flex flex-col items-start gap-3 rounded-xl bg-ajag-verde-50 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-sm text-ajag-verde-900">
@@ -100,6 +107,7 @@ export default async function InscripcionPage({
           jugador={jugador}
           precioCents={torneo.precio_cents}
           precioSocioCents={torneo.precio_socio_cents}
+          pagaEnClub={torneo.modo_pago === "club"}
         />
       </div>
     </div>

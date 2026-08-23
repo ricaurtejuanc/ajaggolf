@@ -14,7 +14,8 @@ export type ModoSalida = "consecutivo" | "shotgun";
 export type ModoAsignacionSalida = "handicap" | "manual" | "mixto";
 export type EstadoTorneo = "borrador" | "publicado" | "cerrado" | "finalizado";
 export type EstadoInscripcion = "carrito" | "pendiente_pago" | "confirmada" | "cancelada";
-export type MetodoPago = "bizum" | "stripe";
+export type MetodoPago = "bizum" | "stripe" | "club";
+export type ModoPagoTorneo = "organizador" | "club";
 export type EstadoPedidoPago =
   | "pendiente_confirmacion"
   | "marcado_pagado"
@@ -84,6 +85,7 @@ export type Torneo = {
   formato_puntuacion: FormatoPuntuacion;
   modo_salida: ModoSalida;
   modo_asignacion_salida: ModoAsignacionSalida;
+  modo_pago: ModoPagoTorneo;
   liga_pool_id: string | null;
   estado: EstadoTorneo;
   created_by: string | null;

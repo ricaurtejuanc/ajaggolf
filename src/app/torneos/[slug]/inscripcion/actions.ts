@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { asegurarJugadorParaUsuario } from "@/lib/data/jugadores";
-import { enviarEmailInscripcionRecibida } from "@/lib/email";
+import { enviarEmailInscripcionRecibida, enviarEmailInscripcionConfirmada } from "@/lib/email";
 
 export type EstadoInscripcionForm = { ok: boolean; error: string | null };
 
@@ -41,7 +41,7 @@ export async function inscribirse(
 
   const { data: torneo } = await supabase
     .from("torneos")
-    .select("id, nombre, fecha, precio_cents, precio_socio_cents, estado, cupo_maximo")
+    .select("id, nombre, fecha, precio_cents, precio_socio_cents, estado, cupo_maximo, modo_pago")
     .eq("slug", torneoSlug)
     .maybeSingle();
 
@@ -56,6 +56,7 @@ export async function inscribirse(
   const esSocio = tieneDistincionSocio && esSocioRaw === "si";
   const precioAplicable =
     esSocio && torneo.precio_socio_cents != null ? torneo.precio_socio_cents : torneo.precio_cents;
+  const pagaEnClub = torneo.modo_pago === "club";
 
   if (user) {
     const jugador = await asegurarJugadorParaUsuario(supabase, user);
@@ -80,6 +81,52 @@ export async function inscribirse(
       .update({ nombre, apellidos, email, licencia_federativa, sexo, handicap })
       .eq("id", jugador.id);
 
+    // Pago en el club: no pasa por el carrito ni por Bizum, queda
+    // confirmada directamente con su propio pedido ya cerrado.
+    if (pagaEnClub) {
+      const { data: pedido, error: errorPedido } = await supabase
+        .from("pedidos_pago")
+        .insert({
+          user_id: user.id,
+          metodo_pago: "club",
+          estado: "confirmado",
+          total_cents: precioAplicable,
+          confirmado_at: new Date().toISOString(),
+        })
+        .select("id")
+        .single();
+      if (errorPedido || !pedido) {
+        return { ok: false, error: "No se ha podido guardar la inscripción. Inténtalo de nuevo." };
+      }
+
+      const { error } = await supabase.from("inscripciones").upsert(
+        {
+          torneo_id: torneo.id,
+          jugador_id: jugador.id,
+          sexo,
+          licencia_federativa,
+          handicap_snapshot: handicap,
+          juega_con_licencias: juegaConLicencias,
+          es_socio: esSocio,
+          precio_cents: precioAplicable,
+          estado: "confirmada",
+          pedido_pago_id: pedido.id,
+        },
+        { onConflict: "torneo_id,jugador_id" },
+      );
+      if (error) return { ok: false, error: error.message };
+
+      if (email) {
+        await enviarEmailInscripcionConfirmada({
+          destinatario: email,
+          nombre,
+          items: [{ torneoNombre: torneo.nombre, torneoFecha: torneo.fecha, precioCents: precioAplicable }],
+        });
+      }
+
+      redirect("/cuenta");
+    }
+
     const { error } = await supabase.from("inscripciones").upsert(
       {
         torneo_id: torneo.id,
@@ -103,9 +150,9 @@ export async function inscribirse(
   // Invitado: sin sesión (ni siquiera anónima). No hay auth.uid() que pase
   // las políticas RLS normales, así que se usa la service role key para
   // crear directamente el jugador (sin user_id), su inscripción y su
-  // pedido de pago, y se le manda a una página de confirmación con las
-  // instrucciones de pago. Sin cuenta no hay carrito multi-torneo: se paga
-  // esta inscripción de una vez.
+  // pedido de pago, y se le manda a una página de confirmación. Sin
+  // cuenta no hay carrito multi-torneo: se paga (o se confirma, si es
+  // pago en club) esta inscripción de una vez.
   let urlConfirmacion: string;
   try {
     const admin = createAdminClient();
@@ -167,7 +214,17 @@ export async function inscribirse(
 
     const { data: pedido, error: errorPedido } = await admin
       .from("pedidos_pago")
-      .insert({ user_id: null, metodo_pago: "bizum", total_cents: precioAplicable })
+      .insert(
+        pagaEnClub
+          ? {
+              user_id: null,
+              metodo_pago: "club",
+              estado: "confirmado",
+              total_cents: precioAplicable,
+              confirmado_at: new Date().toISOString(),
+            }
+          : { user_id: null, metodo_pago: "bizum", total_cents: precioAplicable },
+      )
       .select("id")
       .single();
     if (errorPedido || !pedido) {
@@ -184,7 +241,7 @@ export async function inscribirse(
       juega_con_licencias: juegaConLicencias,
       es_socio: esSocio,
       precio_cents: precioAplicable,
-      estado: "pendiente_pago",
+      estado: pagaEnClub ? "confirmada" : "pendiente_pago",
       pedido_pago_id: pedido.id,
     });
     if (errorInscripcion) {
@@ -192,11 +249,12 @@ export async function inscribirse(
       return { ok: false, error: "No se ha podido guardar la inscripción. Inténtalo de nuevo." };
     }
 
-    await enviarEmailInscripcionRecibida({
-      destinatario: email,
-      nombre,
-      items: [{ torneoNombre: torneo.nombre, torneoFecha: torneo.fecha, precioCents: precioAplicable }],
-    });
+    const item = { torneoNombre: torneo.nombre, torneoFecha: torneo.fecha, precioCents: precioAplicable };
+    if (pagaEnClub) {
+      await enviarEmailInscripcionConfirmada({ destinatario: email, nombre, items: [item] });
+    } else {
+      await enviarEmailInscripcionRecibida({ destinatario: email, nombre, items: [item] });
+    }
 
     urlConfirmacion = `/torneos/${torneoSlug}/inscripcion/confirmacion?pedido=${pedido.id}`;
   } catch (err) {

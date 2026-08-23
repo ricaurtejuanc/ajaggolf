@@ -8,6 +8,7 @@ import type {
   EstadoTorneo,
   FormatoPuntuacion,
   ModoAsignacionSalida,
+  ModoPagoTorneo,
   ModoSalida,
 } from "@/types/database";
 
@@ -53,6 +54,7 @@ function leerCamposTorneo(formData: FormData) {
     ) as ModoAsignacionSalida,
     liga_pool_id: String(formData.get("liga_pool_id") ?? "").trim() || null,
     estado: String(formData.get("estado") ?? "borrador") as EstadoTorneo,
+    modo_pago: String(formData.get("modo_pago") ?? "organizador") as ModoPagoTorneo,
   };
 }
 

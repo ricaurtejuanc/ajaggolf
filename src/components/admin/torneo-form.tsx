@@ -221,6 +221,30 @@ export function TorneoForm({
       </div>
 
       <div>
+        <span className="text-sm font-medium text-ajag-verde-900">¿Cómo se paga?</span>
+        <div className="mt-1 flex flex-col gap-2 sm:flex-row sm:gap-4">
+          <label className="flex items-center gap-2 text-sm text-ajag-gris-500">
+            <input
+              type="radio"
+              name="modo_pago"
+              value="organizador"
+              defaultChecked={(torneo?.modo_pago ?? "organizador") === "organizador"}
+            />
+            Al organizador (Bizum, un admin confirma el pago a mano)
+          </label>
+          <label className="flex items-center gap-2 text-sm text-ajag-gris-500">
+            <input
+              type="radio"
+              name="modo_pago"
+              value="club"
+              defaultChecked={torneo?.modo_pago === "club"}
+            />
+            En el club (la inscripción queda confirmada al momento)
+          </label>
+        </div>
+      </div>
+
+      <div>
         <label htmlFor="descripcion" className="text-sm font-medium text-ajag-verde-900">
           Descripción
         </label>

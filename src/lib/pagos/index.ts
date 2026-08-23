@@ -45,10 +45,22 @@ const bizumProvider: ProveedorPago = {
   },
 };
 
+const clubProvider: ProveedorPago = {
+  metodo: "club",
+  obtenerInstrucciones() {
+    return {
+      titulo: "Pago en el club",
+      pasos: ["Paga directamente en el club el día del torneo. Tu inscripción ya está confirmada."],
+      requiereConfirmacionManual: false,
+    };
+  },
+};
+
 export const proveedoresPago: Record<MetodoPago, ProveedorPago> = {
   bizum: bizumProvider,
   // stripe: se añadirá aquí implementando ProveedorPago sin tocar el resto del flujo.
   stripe: bizumProvider,
+  club: clubProvider,
 };
 
 export function obtenerProveedorPago(metodo: MetodoPago): ProveedorPago {

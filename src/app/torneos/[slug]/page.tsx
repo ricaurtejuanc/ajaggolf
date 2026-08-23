@@ -66,9 +66,9 @@ export default async function TorneoDetallePage({
   const cerrado = torneo.estado !== "publicado";
   const lleno = torneo.cupo_maximo != null && inscritos >= torneo.cupo_maximo;
   const textoPrecio =
-    torneo.precio_socio_cents != null
+    (torneo.precio_socio_cents != null
       ? `${formatearPrecio(torneo.precio_socio_cents)} socios · ${formatearPrecio(torneo.precio_cents)} no socios`
-      : formatearPrecio(torneo.precio_cents);
+      : formatearPrecio(torneo.precio_cents)) + (torneo.modo_pago === "club" ? " · pago en el club" : "");
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-10">

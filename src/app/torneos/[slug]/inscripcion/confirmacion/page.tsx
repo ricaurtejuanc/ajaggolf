@@ -6,13 +6,14 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { obtenerBizumNumero } from "@/lib/data/configuracion";
 import { obtenerTorneoPorSlug } from "@/lib/data/torneos";
 import { ConfirmacionPago } from "./confirmacion-pago";
-import type { EstadoPedidoPago } from "@/types/database";
+import type { EstadoPedidoPago, MetodoPago } from "@/types/database";
 
 export const metadata: Metadata = { title: "Inscripción confirmada" };
 
 type PedidoInvitado = {
   id: string;
   estado: EstadoPedidoPago;
+  metodo_pago: MetodoPago;
   total_cents: number;
   inscripciones: { torneo_id: string }[];
 };
@@ -35,7 +36,7 @@ export default async function ConfirmacionInscripcionPage({
   const [{ data: pedidoData }, bizumNumero] = await Promise.all([
     admin
       .from("pedidos_pago")
-      .select("id, estado, total_cents, inscripciones(torneo_id)")
+      .select("id, estado, metodo_pago, total_cents, inscripciones(torneo_id)")
       .eq("id", pedidoId)
       .is("user_id", null)
       .maybeSingle(),
@@ -45,26 +46,30 @@ export default async function ConfirmacionInscripcionPage({
   const pedido = pedidoData as unknown as PedidoInvitado | null;
   if (!pedido || !pedido.inscripciones.some((i) => i.torneo_id === torneo.id)) notFound();
 
+  const pagoEnClub = pedido.metodo_pago === "club";
+
   return (
     <div className="mx-auto max-w-lg px-4 py-10">
       <div className="card-ajag p-8 text-center">
         <Trophy size={32} className="mx-auto text-ajag-oro-600" />
         <h1 className="mt-3 font-display text-xl font-semibold text-ajag-verde-900">
-          ¡Ya casi está!
+          {pagoEnClub ? "¡Inscripción confirmada!" : "¡Ya casi está!"}
         </h1>
         <p className="mt-2 text-sm text-ajag-gris-500">
-          Tu inscripción a {torneo.nombre} está guardada. Solo falta el pago.
-          Te hemos enviado un email: no será válida hasta que recibas el
-          email de confirmación.
+          {pagoEnClub
+            ? `Tu inscripción a ${torneo.nombre} está confirmada. Paga directamente en el club el día del torneo.`
+            : `Tu inscripción a ${torneo.nombre} está guardada. Solo falta el pago. Te hemos enviado un email: no será válida hasta que recibas el email de confirmación.`}
         </p>
       </div>
 
-      <ConfirmacionPago
-        pedidoId={pedido.id}
-        totalCents={pedido.total_cents}
-        estadoInicial={pedido.estado}
-        bizumNumero={bizumNumero}
-      />
+      {pagoEnClub ? null : (
+        <ConfirmacionPago
+          pedidoId={pedido.id}
+          totalCents={pedido.total_cents}
+          estadoInicial={pedido.estado}
+          bizumNumero={bizumNumero}
+        />
+      )}
 
       <p className="mt-6 rounded-xl bg-ajag-verde-50 px-4 py-3 text-center text-sm text-ajag-verde-900">
         ¿Quieres que tus datos se rellenen solos la próxima vez y ver tu

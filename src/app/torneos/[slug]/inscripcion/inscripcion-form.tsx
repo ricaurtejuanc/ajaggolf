@@ -13,11 +13,13 @@ export function InscripcionForm({
   jugador,
   precioCents,
   precioSocioCents,
+  pagaEnClub,
 }: {
   torneoSlug: string;
   jugador: Jugador | null;
   precioCents: number;
   precioSocioCents: number | null;
+  pagaEnClub: boolean;
 }) {
   const accionConSlug = inscribirse.bind(null, torneoSlug);
   const [state, formAction, pending] = useActionState<EstadoInscripcionForm, FormData>(
@@ -239,7 +241,7 @@ export function InscripcionForm({
         disabled={pending}
         className="rounded-xl bg-ajag-verde-700 px-5 py-3 text-sm font-medium text-white transition hover:bg-ajag-verde-600 disabled:opacity-60"
       >
-        {jugador
+        {jugador && !pagaEnClub
           ? pending
             ? "Añadiendo..."
             : "Añadir al carrito"
