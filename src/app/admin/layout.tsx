@@ -1,0 +1,68 @@
+import Link from "next/link";
+import Image from "next/image";
+import { redirect } from "next/navigation";
+import {
+  LayoutDashboard,
+  Trophy,
+  Wallet,
+  MessageSquare,
+  Settings,
+} from "lucide-react";
+import { getUsuarioAdmin } from "@/lib/auth";
+
+const adminLinks = [
+  { href: "/admin", label: "Resumen", icon: LayoutDashboard },
+  { href: "/admin/torneos", label: "Torneos", icon: Trophy },
+  { href: "/admin/pedidos", label: "Pagos", icon: Wallet },
+  { href: "/admin/consultas", label: "Consultas", icon: MessageSquare },
+  { href: "/admin/configuracion", label: "Configuración", icon: Settings },
+];
+
+export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
+  const admin = await getUsuarioAdmin();
+  if (!admin) redirect("/login?next=/admin");
+
+  return (
+    <div className="mx-auto flex max-w-6xl gap-6 px-4 py-8">
+      <aside className="hidden w-56 shrink-0 md:block">
+        <div className="sticky top-24 flex flex-col gap-1">
+          <div className="mb-3 flex items-center gap-2 px-2">
+            <Image src="/Logo_AJAG.svg" alt="AJAG" width={28} height={28} />
+            <span className="font-display text-sm font-semibold text-ajag-verde-900">
+              Panel admin
+            </span>
+          </div>
+          {adminLinks.map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              className="flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-medium text-ajag-verde-900/80 transition hover:bg-ajag-verde-50 hover:text-ajag-verde-900"
+            >
+              <link.icon size={17} />
+              {link.label}
+            </Link>
+          ))}
+          <p className="mt-4 px-3 text-xs text-ajag-gris-500">
+            Sesión: {admin.nombre}
+          </p>
+        </div>
+      </aside>
+
+      <div className="min-w-0 flex-1">
+        <nav className="mb-4 flex gap-3 overflow-x-auto md:hidden">
+          {adminLinks.map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              className="flex shrink-0 items-center gap-1.5 rounded-full border border-ajag-gris-200 px-3 py-1.5 text-xs font-medium text-ajag-verde-900"
+            >
+              <link.icon size={14} />
+              {link.label}
+            </Link>
+          ))}
+        </nav>
+        {children}
+      </div>
+    </div>
+  );
+}

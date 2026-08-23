@@ -1,0 +1,78 @@
+@import "tailwindcss";
+
+:root {
+  --background: #f7f8f4;
+  --foreground: #17301f;
+
+  /* Identidad AJAG (extraída del logo) */
+  --ajag-verde-950: #10261a;
+  --ajag-verde-900: #163821;
+  --ajag-verde-800: #1e4a2c;
+  --ajag-verde-700: #276945;
+  --ajag-verde-600: #2f7d52;
+  --ajag-verde-500: #3c9463;
+  --ajag-verde-100: #dcece1;
+  --ajag-verde-50: #f0f6f2;
+
+  --ajag-oro-500: #f5c315;
+  --ajag-oro-600: #d9a80f;
+
+  --ajag-rojo-600: #b12023;
+  --ajag-rojo-700: #94191c;
+
+  --ajag-gris-100: #e7e9e6;
+  --ajag-gris-200: #d9dcd6;
+  --ajag-gris-500: #6b7368;
+
+  --radius-card: 1rem;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-sans);
+  --font-display: var(--font-display);
+
+  --color-ajag-verde-950: var(--ajag-verde-950);
+  --color-ajag-verde-900: var(--ajag-verde-900);
+  --color-ajag-verde-800: var(--ajag-verde-800);
+  --color-ajag-verde-700: var(--ajag-verde-700);
+  --color-ajag-verde-600: var(--ajag-verde-600);
+  --color-ajag-verde-500: var(--ajag-verde-500);
+  --color-ajag-verde-100: var(--ajag-verde-100);
+  --color-ajag-verde-50: var(--ajag-verde-50);
+
+  --color-ajag-oro-500: var(--ajag-oro-500);
+  --color-ajag-oro-600: var(--ajag-oro-600);
+
+  --color-ajag-rojo-600: var(--ajag-rojo-600);
+  --color-ajag-rojo-700: var(--ajag-rojo-700);
+
+  --color-ajag-gris-100: var(--ajag-gris-100);
+  --color-ajag-gris-200: var(--ajag-gris-200);
+  --color-ajag-gris-500: var(--ajag-gris-500);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans), system-ui, sans-serif;
+}
+
+.font-display {
+  font-family: var(--font-display), var(--font-sans), system-ui, sans-serif;
+}
+
+/* Textura sutil tipo "césped" para secciones destacadas */
+.bg-ajag-hero {
+  background-image:
+    radial-gradient(circle at 15% 20%, rgba(245, 195, 21, 0.12), transparent 45%),
+    linear-gradient(160deg, var(--ajag-verde-900) 0%, var(--ajag-verde-700) 55%, var(--ajag-verde-600) 100%);
+}
+
+.card-ajag {
+  background: #fff;
+  border-radius: var(--radius-card);
+  border: 1px solid var(--ajag-gris-100);
+  box-shadow: 0 1px 2px rgba(16, 38, 26, 0.04);
+}

@@ -1,0 +1,73 @@
+import Link from "next/link";
+import Image from "next/image";
+import { listarProximosTorneos } from "@/lib/data/torneos";
+import { TorneoCard } from "@/components/torneos/torneo-card";
+
+export default async function Home() {
+  const proximos = await listarProximosTorneos(3);
+
+  return (
+    <div>
+      <section className="bg-ajag-hero px-4 py-20 text-white">
+        <div className="mx-auto flex max-w-6xl flex-col items-center gap-6 text-center">
+          <Image
+            src="/Logo_AJAG.svg"
+            alt="AJAG Golf"
+            width={88}
+            height={88}
+            priority
+            className="drop-shadow"
+          />
+          <h1 className="font-display max-w-2xl text-4xl font-semibold leading-tight sm:text-5xl">
+            Torneos amateur de golf, sin complicaciones
+          </h1>
+          <p className="max-w-xl text-white/85">
+            Calendario, inscripciones, salidas y clasificaciones de la
+            Asociación de Jugadores Amateur de Golf.
+          </p>
+          <div className="mt-2 flex flex-wrap justify-center gap-3">
+            <Link
+              href="/torneos"
+              className="rounded-full bg-ajag-oro-500 px-6 py-3 text-sm font-semibold text-ajag-verde-950 transition hover:bg-ajag-oro-600"
+            >
+              Ver calendario
+            </Link>
+            <Link
+              href="/ligas"
+              className="rounded-full border border-white/40 px-6 py-3 text-sm font-medium text-white transition hover:bg-white/10"
+            >
+              Ligas y Pool
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      <section className="mx-auto max-w-6xl px-4 py-14">
+        <div className="flex items-end justify-between">
+          <h2 className="font-display text-2xl font-semibold text-ajag-verde-900">
+            Próximos torneos
+          </h2>
+          <Link href="/torneos" className="text-sm font-medium text-ajag-verde-700 hover:underline">
+            Ver todos
+          </Link>
+        </div>
+
+        {proximos.length === 0 ? (
+          <p className="mt-6 text-ajag-gris-500">
+            No hay torneos publicados por ahora. Vuelve pronto o consulta{" "}
+            <Link href="/contacto" className="underline">
+              contacto
+            </Link>
+            .
+          </p>
+        ) : (
+          <div className="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {proximos.map((torneo) => (
+              <TorneoCard key={torneo.id} torneo={torneo} />
+            ))}
+          </div>
+        )}
+      </section>
+    </div>
+  );
+}

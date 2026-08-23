@@ -1,0 +1,257 @@
+// Tipos generados a mano a partir de supabase/migrations/*.sql
+// Cuando el proyecto Supabase esté enlazado, se pueden regenerar con:
+//   supabase gen types typescript --project-id <id> > src/types/database.ts
+// (mantener la forma compatible con SupabaseClient<Database> si se regeneran).
+//
+// Nota: se usan `type` (no `interface`) para las filas porque
+// @supabase/postgrest-js exige que cada tabla sea estructuralmente
+// asignable a Record<string, unknown>, algo que solo cumplen los alias de
+// tipo con forma de objeto, no las interfaces.
+
+export type SexoJugador = "masculino" | "femenino";
+export type FormatoPuntuacion = "stableford" | "medal_play";
+export type ModoSalida = "consecutivo" | "shotgun";
+export type ModoAsignacionSalida = "handicap" | "manual" | "mixto";
+export type EstadoTorneo = "borrador" | "publicado" | "cerrado" | "finalizado";
+export type EstadoInscripcion = "carrito" | "pendiente_pago" | "confirmada" | "cancelada";
+export type MetodoPago = "bizum" | "stripe";
+export type EstadoPedidoPago =
+  | "pendiente_confirmacion"
+  | "marcado_pagado"
+  | "confirmado"
+  | "rechazado"
+  | "cancelado";
+export type EstadoSalida = "borrador" | "publicado";
+export type EstadoResultado = "preview" | "publicado";
+export type EstadoPdfResultados = "preview" | "publicado" | "descartado";
+
+export type UsuarioAdmin = {
+  id: string;
+  user_id: string;
+  nombre: string;
+  email: string;
+  rol: "admin";
+  activo: boolean;
+  created_at: string;
+};
+
+export type Configuracion = {
+  clave: string;
+  valor: unknown;
+  actualizado_por: string | null;
+  updated_at: string;
+};
+
+export type Jugador = {
+  id: string;
+  user_id: string | null;
+  nombre: string;
+  email: string | null;
+  licencia_federativa: string | null;
+  sexo: SexoJugador | null;
+  handicap: number | null;
+  telefono: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type LigaPool = {
+  id: string;
+  nombre: string;
+  slug: string;
+  descripcion: string | null;
+  temporada: string | null;
+  tabla_puntos: Record<string, number>;
+  activa: boolean;
+  created_at: string;
+};
+
+export type Torneo = {
+  id: string;
+  nombre: string;
+  slug: string;
+  descripcion: string | null;
+  info_adicional: string | null;
+  campo_golf: string;
+  tees: string[];
+  fecha: string;
+  hora_inicio: string | null;
+  poster_url: string | null;
+  precio_cents: number;
+  cupo_maximo: number | null;
+  formato_puntuacion: FormatoPuntuacion;
+  modo_salida: ModoSalida;
+  modo_asignacion_salida: ModoAsignacionSalida;
+  liga_pool_id: string | null;
+  estado: EstadoTorneo;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type PedidoPago = {
+  id: string;
+  user_id: string;
+  metodo_pago: MetodoPago;
+  estado: EstadoPedidoPago;
+  total_cents: number;
+  referencia_pago: string | null;
+  notas_admin: string | null;
+  marcado_pagado_at: string | null;
+  confirmado_at: string | null;
+  confirmado_por: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type Inscripcion = {
+  id: string;
+  torneo_id: string;
+  jugador_id: string;
+  pedido_pago_id: string | null;
+  sexo: SexoJugador | null;
+  licencia_federativa: string | null;
+  handicap_snapshot: number | null;
+  juega_con_licencias: string[];
+  precio_cents: number;
+  estado: EstadoInscripcion;
+  created_at: string;
+  updated_at: string;
+};
+
+export type Salida = {
+  id: string;
+  torneo_id: string;
+  modo: ModoSalida;
+  config: Record<string, unknown>;
+  modo_asignacion: ModoAsignacionSalida;
+  estado: EstadoSalida;
+  generado_at: string | null;
+  publicado_at: string | null;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type GrupoSalida = {
+  id: string;
+  salida_id: string;
+  numero_grupo: number;
+  hoyo_salida: number;
+  hora_salida: string | null;
+  notas: string | null;
+  created_at: string;
+};
+
+export type GrupoSalidaJugador = {
+  id: string;
+  grupo_salida_id: string;
+  inscripcion_id: string;
+  orden: number;
+  conflicto_juega_con: boolean;
+  conflicto_detalle: string | null;
+  created_at: string;
+};
+
+export type ResultadoPdfUpload = {
+  id: string;
+  torneo_id: string;
+  storage_path: string;
+  nombre_archivo: string;
+  proveedor_origen: string | null;
+  mapeo_columnas: Record<string, string>;
+  filas_extraidas: unknown[];
+  estado: EstadoPdfResultados;
+  subido_por: string | null;
+  created_at: string;
+  publicado_at: string | null;
+};
+
+export type Resultado = {
+  id: string;
+  torneo_id: string;
+  jugador_id: string | null;
+  inscripcion_id: string | null;
+  posicion: number | null;
+  nombre_mostrado: string;
+  licencia_federativa: string | null;
+  handicap: number | null;
+  puntos: number | null;
+  golpes: number | null;
+  estado: EstadoResultado;
+  pdf_origen_id: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type LigaPoolEvento = {
+  id: string;
+  liga_pool_id: string;
+  torneo_id: string;
+  orden: number | null;
+  created_at: string;
+};
+
+export type ClasificacionGlobal = {
+  id: string;
+  liga_pool_id: string;
+  jugador_id: string;
+  puntos_totales: number;
+  eventos_jugados: number;
+  updated_at: string;
+};
+
+export type VisitaWeb = {
+  id: number;
+  ruta: string;
+  referrer: string | null;
+  user_agent: string | null;
+  ip_hash: string | null;
+  created_at: string;
+};
+
+export type ConsultaContacto = {
+  id: string;
+  nombre: string;
+  email: string;
+  telefono: string | null;
+  mensaje: string;
+  leido: boolean;
+  created_at: string;
+};
+
+// Insert/Update se dejan totalmente opcionales (Partial<Row>): las columnas
+// obligatorias reales las exige Postgres al insertar, no el tipo TS. Es una
+// simplificación deliberada frente a un `gen types` real, que sí distingue
+// columnas con default/nullable de las obligatorias.
+type TableDef<Row> = {
+  Row: Row;
+  Insert: Partial<Row>;
+  Update: Partial<Row>;
+  Relationships: [];
+};
+
+export type Database = {
+  public: {
+    Tables: {
+      usuarios_admin: TableDef<UsuarioAdmin>;
+      configuracion: TableDef<Configuracion>;
+      jugadores: TableDef<Jugador>;
+      ligas_pool: TableDef<LigaPool>;
+      torneos: TableDef<Torneo>;
+      pedidos_pago: TableDef<PedidoPago>;
+      inscripciones: TableDef<Inscripcion>;
+      salidas: TableDef<Salida>;
+      grupos_salida: TableDef<GrupoSalida>;
+      grupo_salida_jugadores: TableDef<GrupoSalidaJugador>;
+      resultados_pdf_uploads: TableDef<ResultadoPdfUpload>;
+      resultados: TableDef<Resultado>;
+      liga_pool_eventos: TableDef<LigaPoolEvento>;
+      clasificacion_global: TableDef<ClasificacionGlobal>;
+      visitas_web: TableDef<VisitaWeb>;
+      consultas_contacto: TableDef<ConsultaContacto>;
+    };
+    Views: Record<string, never>;
+    Functions: Record<string, never>;
+  };
+};
