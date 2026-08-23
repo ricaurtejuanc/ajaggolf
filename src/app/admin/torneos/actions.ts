@@ -26,6 +26,7 @@ function leerCamposTorneo(formData: FormData) {
   const nombre = String(formData.get("nombre") ?? "").trim();
   const slugInput = String(formData.get("slug") ?? "").trim();
   const precioEuros = String(formData.get("precio_euros") ?? "0").replace(",", ".");
+  const precioSocioEuros = String(formData.get("precio_socio_euros") ?? "").trim().replace(",", ".");
   const cupoRaw = String(formData.get("cupo_maximo") ?? "").trim();
   const tees = String(formData.get("tees") ?? "")
     .split(",")
@@ -43,6 +44,7 @@ function leerCamposTorneo(formData: FormData) {
     hora_inicio: String(formData.get("hora_inicio") ?? "").trim() || null,
     poster_url: String(formData.get("poster_url") ?? "").trim() || null,
     precio_cents: Math.round(parseFloat(precioEuros || "0") * 100),
+    precio_socio_cents: precioSocioEuros ? Math.round(parseFloat(precioSocioEuros) * 100) : null,
     cupo_maximo: cupoRaw ? parseInt(cupoRaw, 10) : null,
     formato_puntuacion: String(formData.get("formato_puntuacion") ?? "stableford") as FormatoPuntuacion,
     modo_salida: String(formData.get("modo_salida") ?? "consecutivo") as ModoSalida,

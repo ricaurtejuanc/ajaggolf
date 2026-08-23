@@ -42,7 +42,12 @@ export default async function InscripcionPage({
       </p>
 
       <div className="mt-6">
-        <InscripcionForm torneoSlug={slug} jugador={jugador} />
+        <InscripcionForm
+          torneoSlug={slug}
+          jugador={jugador}
+          precioCents={torneo.precio_cents}
+          precioSocioCents={torneo.precio_socio_cents}
+        />
       </div>
     </div>
   );

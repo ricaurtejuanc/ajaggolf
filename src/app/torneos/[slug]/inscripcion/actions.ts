@@ -26,20 +26,34 @@ export async function inscribirse(
     .getAll("juega_con_licencia")
     .map((v) => String(v).trim())
     .filter(Boolean);
+  const esSocioRaw = String(formData.get("es_socio") ?? "");
+  const handicapRaw = String(formData.get("handicap") ?? "").trim().replace(",", ".");
+  const handicap = handicapRaw ? Number(handicapRaw) : null;
 
   if (!nombre || !email || !licencia_federativa || !sexo) {
     return { ok: false, error: "Rellena todos los campos obligatorios." };
   }
+  if (handicapRaw && Number.isNaN(handicap)) {
+    return { ok: false, error: "El hándicap debe ser un número." };
+  }
 
   const { data: torneo } = await supabase
     .from("torneos")
-    .select("id, precio_cents, estado, cupo_maximo")
+    .select("id, precio_cents, precio_socio_cents, estado, cupo_maximo")
     .eq("slug", torneoSlug)
     .maybeSingle();
 
   if (!torneo || torneo.estado !== "publicado") {
     return { ok: false, error: "Este torneo no admite inscripciones en este momento." };
   }
+
+  const tieneDistincionSocio = torneo.precio_socio_cents != null;
+  if (tieneDistincionSocio && esSocioRaw !== "si" && esSocioRaw !== "no") {
+    return { ok: false, error: "Indica si eres socio del club o no." };
+  }
+  const esSocio = tieneDistincionSocio && esSocioRaw === "si";
+  const precioAplicable =
+    esSocio && torneo.precio_socio_cents != null ? torneo.precio_socio_cents : torneo.precio_cents;
 
   if (torneo.cupo_maximo != null) {
     const { count } = await supabase
@@ -56,7 +70,7 @@ export async function inscribirse(
 
   await supabase
     .from("jugadores")
-    .update({ nombre, email, licencia_federativa, sexo })
+    .update({ nombre, email, licencia_federativa, sexo, handicap })
     .eq("id", jugador.id);
 
   const { error } = await supabase.from("inscripciones").upsert(
@@ -65,8 +79,10 @@ export async function inscribirse(
       jugador_id: jugador.id,
       sexo,
       licencia_federativa,
+      handicap_snapshot: handicap,
       juega_con_licencias: juegaConLicencias,
-      precio_cents: torneo.precio_cents,
+      es_socio: esSocio,
+      precio_cents: precioAplicable,
       estado: "carrito",
     },
     { onConflict: "torneo_id,jugador_id" },

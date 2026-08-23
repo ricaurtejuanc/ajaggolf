@@ -62,7 +62,9 @@ export function TorneoCard({ torneo }: { torneo: Torneo }) {
             {etiquetaFormato[torneo.formato_puntuacion]}
           </span>
           <span className="font-display text-base font-semibold text-ajag-verde-900">
-            {formatearPrecio(torneo.precio_cents)}
+            {torneo.precio_socio_cents != null
+              ? `Desde ${formatearPrecio(Math.min(torneo.precio_socio_cents, torneo.precio_cents))}`
+              : formatearPrecio(torneo.precio_cents)}
           </span>
         </div>
       </div>

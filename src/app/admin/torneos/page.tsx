@@ -61,6 +61,12 @@ export default async function AdminTorneosPage() {
                 <td className="px-4 py-3">
                   <div className="flex items-center justify-end gap-3">
                     <Link
+                      href={`/admin/torneos/${torneo.id}/salidas`}
+                      className="text-sm font-medium text-ajag-verde-700 hover:underline"
+                    >
+                      Salidas
+                    </Link>
+                    <Link
                       href={`/admin/torneos/${torneo.id}/editar`}
                       className="text-sm font-medium text-ajag-verde-700 hover:underline"
                     >

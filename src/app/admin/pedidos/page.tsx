@@ -11,7 +11,9 @@ export default async function AdminPedidosPage() {
   const supabase = await createClient();
   const { data } = await supabase
     .from("pedidos_pago")
-    .select("*, inscripciones(id, torneos(nombre), jugadores(nombre, email))")
+    .select(
+      "*, inscripciones(id, es_socio, precio_cents, torneos(nombre), jugadores(nombre, email))",
+    )
     .order("created_at", { ascending: false });
 
   const pedidos = (data ?? []) as unknown as PedidoConDetalle[];

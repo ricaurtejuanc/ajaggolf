@@ -3,6 +3,7 @@
 import { useActionState, useState } from "react";
 import { Plus, X } from "lucide-react";
 import { inscribirse, type EstadoInscripcionForm } from "./actions";
+import { formatearPrecio } from "@/lib/format";
 import type { Jugador } from "@/types/database";
 
 const MAX_ACOMPANANTES = 3;
@@ -10,9 +11,13 @@ const MAX_ACOMPANANTES = 3;
 export function InscripcionForm({
   torneoSlug,
   jugador,
+  precioCents,
+  precioSocioCents,
 }: {
   torneoSlug: string;
   jugador: Jugador;
+  precioCents: number;
+  precioSocioCents: number | null;
 }) {
   const accionConSlug = inscribirse.bind(null, torneoSlug);
   const [state, formAction, pending] = useActionState<EstadoInscripcionForm, FormData>(
@@ -22,6 +27,10 @@ export function InscripcionForm({
 
   const [juegaConAlguien, setJuegaConAlguien] = useState(false);
   const [acompanantes, setAcompanantes] = useState<number[]>([0]);
+  const [esSocio, setEsSocio] = useState<"si" | "no" | null>(null);
+  const tieneDistincionSocio = precioSocioCents != null;
+  const precioMostrado =
+    tieneDistincionSocio && esSocio === "si" ? precioSocioCents! : precioCents;
 
   return (
     <form action={formAction} className="card-ajag flex flex-col gap-5 p-6">
@@ -65,6 +74,56 @@ export function InscripcionForm({
           />
         </div>
       </div>
+
+      <div>
+        <label htmlFor="handicap" className="text-sm font-medium text-ajag-verde-900">
+          Hándicap
+        </label>
+        <input
+          id="handicap"
+          name="handicap"
+          type="number"
+          step="0.1"
+          placeholder="Ej. 18.4"
+          defaultValue={jugador.handicap ?? ""}
+          className="mt-1 w-full max-w-[10rem] rounded-xl border border-ajag-gris-200 px-4 py-2.5 text-sm outline-none focus:border-ajag-verde-600"
+        />
+        <p className="mt-1 text-xs text-ajag-gris-500">
+          Se usa para formar los grupos de salida por nivel.
+        </p>
+      </div>
+
+      {tieneDistincionSocio ? (
+        <div>
+          <span className="text-sm font-medium text-ajag-verde-900">
+            ¿Eres socio del club? *
+          </span>
+          <div className="mt-1 flex gap-4">
+            <label className="flex items-center gap-2 text-sm text-ajag-gris-500">
+              <input
+                type="radio"
+                name="es_socio"
+                value="si"
+                required
+                checked={esSocio === "si"}
+                onChange={() => setEsSocio("si")}
+              />
+              Sí, soy socio ({formatearPrecio(precioSocioCents!)})
+            </label>
+            <label className="flex items-center gap-2 text-sm text-ajag-gris-500">
+              <input
+                type="radio"
+                name="es_socio"
+                value="no"
+                required
+                checked={esSocio === "no"}
+                onChange={() => setEsSocio("no")}
+              />
+              No ({formatearPrecio(precioCents)})
+            </label>
+          </div>
+        </div>
+      ) : null}
 
       <div>
         <span className="text-sm font-medium text-ajag-verde-900">Sexo *</span>
@@ -153,6 +212,13 @@ export function InscripcionForm({
       </div>
 
       {state.error ? <p className="text-sm text-ajag-rojo-600">{state.error}</p> : null}
+
+      <div className="flex items-center justify-between border-t border-ajag-gris-100 pt-4">
+        <span className="text-sm text-ajag-gris-500">Precio de la inscripción</span>
+        <span className="font-display text-lg font-semibold text-ajag-verde-900">
+          {formatearPrecio(precioMostrado)}
+        </span>
+      </div>
 
       <button
         type="submit"

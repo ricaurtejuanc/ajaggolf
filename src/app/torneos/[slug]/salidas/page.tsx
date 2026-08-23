@@ -1,0 +1,113 @@
+import type { Metadata } from "next";
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import { Flag, Clock } from "lucide-react";
+import { createClient } from "@/lib/supabase/server";
+import { obtenerTorneoPorSlug } from "@/lib/data/torneos";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+  const { slug } = await params;
+  const torneo = await obtenerTorneoPorSlug(slug);
+  return { title: torneo ? `Salidas — ${torneo.nombre}` : "Salidas" };
+}
+
+export default async function SalidasPublicasPage({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}) {
+  const { slug } = await params;
+  const torneo = await obtenerTorneoPorSlug(slug);
+  if (!torneo) notFound();
+
+  const supabase = await createClient();
+  const { data: filas } = await supabase
+    .from("salidas_publicadas")
+    .select("*")
+    .eq("torneo_id", torneo.id)
+    .order("numero_grupo", { ascending: true });
+
+  if (!filas || filas.length === 0) notFound();
+
+  const modo = filas[0].modo;
+  const grupos = new Map<
+    string,
+    {
+      numeroGrupo: number;
+      hoyoSalida: number;
+      horaSalida: string | null;
+      jugadores: { id: string; nombre: string; handicap: number | null }[];
+    }
+  >();
+
+  for (const fila of filas) {
+    if (!grupos.has(fila.grupo_salida_id)) {
+      grupos.set(fila.grupo_salida_id, {
+        numeroGrupo: fila.numero_grupo,
+        hoyoSalida: fila.hoyo_salida,
+        horaSalida: fila.hora_salida,
+        jugadores: [],
+      });
+    }
+    if (fila.grupo_salida_jugador_id && fila.nombre) {
+      grupos.get(fila.grupo_salida_id)!.jugadores.push({
+        id: fila.grupo_salida_jugador_id,
+        nombre: fila.nombre,
+        handicap: fila.handicap,
+      });
+    }
+  }
+
+  const gruposOrdenados = Array.from(grupos.values()).sort(
+    (a, b) => a.numeroGrupo - b.numeroGrupo,
+  );
+
+  return (
+    <div className="mx-auto max-w-4xl px-4 py-10">
+      <Link href={`/torneos/${slug}`} className="text-sm text-ajag-gris-500 hover:underline">
+        ← {torneo.nombre}
+      </Link>
+      <h1 className="mt-2 font-display text-2xl font-semibold text-ajag-verde-900">
+        Cuadro de salidas
+      </h1>
+      <p className="text-sm text-ajag-gris-500">
+        {modo === "shotgun" ? "Salida a tiro (shotgun)" : "Salidas consecutivas"}
+      </p>
+
+      <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {gruposOrdenados.map((grupo) => (
+          <div key={grupo.numeroGrupo} className="card-ajag p-4">
+            <div className="mb-3 flex items-center justify-between">
+              <span className="font-display text-sm font-semibold text-ajag-verde-900">
+                Grupo {grupo.numeroGrupo}
+              </span>
+              <span className="flex items-center gap-1 text-xs text-ajag-gris-500">
+                {grupo.horaSalida ? (
+                  <>
+                    <Clock size={13} /> {grupo.horaSalida.slice(0, 5)}
+                  </>
+                ) : (
+                  <>
+                    <Flag size={13} /> Hoyo {grupo.hoyoSalida}
+                  </>
+                )}
+              </span>
+            </div>
+            <ul className="space-y-1">
+              {grupo.jugadores.map((j) => (
+                <li key={j.id} className="flex items-center justify-between text-sm">
+                  <span className="text-ajag-verde-900">{j.nombre}</span>
+                  <span className="text-xs text-ajag-gris-500">Hcp {j.handicap ?? "—"}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}

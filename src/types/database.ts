@@ -78,6 +78,7 @@ export type Torneo = {
   hora_inicio: string | null;
   poster_url: string | null;
   precio_cents: number;
+  precio_socio_cents: number | null;
   cupo_maximo: number | null;
   formato_puntuacion: FormatoPuntuacion;
   modo_salida: ModoSalida;
@@ -113,6 +114,7 @@ export type Inscripcion = {
   licencia_federativa: string | null;
   handicap_snapshot: number | null;
   juega_con_licencias: string[];
+  es_socio: boolean;
   precio_cents: number;
   estado: EstadoInscripcion;
   created_at: string;
@@ -231,6 +233,24 @@ type TableDef<Row> = {
   Relationships: [];
 };
 
+type ViewDef<Row> = {
+  Row: Row;
+  Relationships: [];
+};
+
+export type SalidaPublicada = {
+  torneo_id: string;
+  salida_id: string;
+  modo: ModoSalida;
+  grupo_salida_id: string;
+  numero_grupo: number;
+  hoyo_salida: number;
+  hora_salida: string | null;
+  grupo_salida_jugador_id: string | null;
+  nombre: string | null;
+  handicap: number | null;
+};
+
 export type Database = {
   public: {
     Tables: {
@@ -251,7 +271,9 @@ export type Database = {
       visitas_web: TableDef<VisitaWeb>;
       consultas_contacto: TableDef<ConsultaContacto>;
     };
-    Views: Record<string, never>;
+    Views: {
+      salidas_publicadas: ViewDef<SalidaPublicada>;
+    };
     Functions: Record<string, never>;
   };
 };

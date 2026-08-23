@@ -41,12 +41,26 @@ export default async function TorneoDetallePage({
     .select("id", { count: "exact", head: true })
     .eq("torneo_id", torneo.id)
     .in("estado", ["pendiente_pago", "confirmada"]);
+  const salidaPromise = supabase
+    .from("salidas")
+    .select("id")
+    .eq("torneo_id", torneo.id)
+    .eq("estado", "publicado")
+    .maybeSingle();
 
-  const [{ data: liga }, { count: inscritos }] = await Promise.all([ligaPromise, cupoPromise]);
+  const [{ data: liga }, { count: inscritos }, { data: salidaPublicada }] = await Promise.all([
+    ligaPromise,
+    cupoPromise,
+    salidaPromise,
+  ]);
 
   const cerrado = torneo.estado !== "publicado";
   const lleno =
     torneo.cupo_maximo != null && (inscritos ?? 0) >= torneo.cupo_maximo;
+  const textoPrecio =
+    torneo.precio_socio_cents != null
+      ? `${formatearPrecio(torneo.precio_socio_cents)} socios · ${formatearPrecio(torneo.precio_cents)} no socios`
+      : formatearPrecio(torneo.precio_cents);
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-10">
@@ -94,11 +108,7 @@ export default async function TorneoDetallePage({
           label="Hora"
           value={formatearHora(torneo.hora_inicio) ?? "Por confirmar"}
         />
-        <InfoPill
-          icon={<Coins size={16} />}
-          label="Precio"
-          value={formatearPrecio(torneo.precio_cents)}
-        />
+        <InfoPill icon={<Coins size={16} />} label="Precio" value={textoPrecio} />
       </div>
 
       {torneo.descripcion ? (
@@ -119,7 +129,7 @@ export default async function TorneoDetallePage({
       <div className="mt-8 flex items-center justify-between rounded-2xl border border-ajag-gris-100 bg-white p-5">
         <div>
           <p className="font-display text-lg font-semibold text-ajag-verde-900">
-            {formatearPrecio(torneo.precio_cents)}
+            {textoPrecio}
           </p>
           <p className="flex items-center gap-1 text-xs text-ajag-gris-500">
             <Users size={13} />
@@ -141,6 +151,15 @@ export default async function TorneoDetallePage({
           </Link>
         )}
       </div>
+
+      {salidaPublicada ? (
+        <Link
+          href={`/torneos/${torneo.slug}/salidas`}
+          className="mt-4 flex items-center justify-center rounded-2xl border border-ajag-verde-700 px-5 py-3 text-sm font-medium text-ajag-verde-700 transition hover:bg-ajag-verde-50"
+        >
+          Ver cuadro de salidas
+        </Link>
+      ) : null}
 
       <p className="mt-8">
         <span className="text-xs uppercase tracking-wide text-ajag-gris-500">Formato</span>

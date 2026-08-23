@@ -43,12 +43,17 @@ export async function actualizarPerfil(
   const telefono = String(formData.get("telefono") ?? "").trim() || null;
   const sexoRaw = String(formData.get("sexo") ?? "");
   const sexo = sexoRaw === "masculino" || sexoRaw === "femenino" ? sexoRaw : null;
+  const handicapRaw = String(formData.get("handicap") ?? "").trim().replace(",", ".");
+  const handicap = handicapRaw ? Number(handicapRaw) : null;
 
   if (!nombre) return { ok: false, error: "El nombre es obligatorio." };
+  if (handicapRaw && Number.isNaN(handicap)) {
+    return { ok: false, error: "El hándicap debe ser un número." };
+  }
 
   const { error } = await supabase
     .from("jugadores")
-    .update({ nombre, licencia_federativa, telefono, sexo })
+    .update({ nombre, licencia_federativa, telefono, sexo, handicap })
     .eq("user_id", user.id);
 
   if (error) return { ok: false, error: error.message };

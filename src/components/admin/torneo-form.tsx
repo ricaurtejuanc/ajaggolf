@@ -103,10 +103,10 @@ export function TorneoForm({
         </div>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid gap-4 sm:grid-cols-3">
         <div>
           <label htmlFor="precio_euros" className="text-sm font-medium text-ajag-verde-900">
-            Precio (€) *
+            Precio no socio (€) *
           </label>
           <input
             id="precio_euros"
@@ -118,6 +118,28 @@ export function TorneoForm({
             defaultValue={torneo ? (torneo.precio_cents / 100).toFixed(2) : "0"}
             className="mt-1 w-full rounded-xl border border-ajag-gris-200 px-4 py-2.5 text-sm outline-none focus:border-ajag-verde-600"
           />
+        </div>
+        <div>
+          <label htmlFor="precio_socio_euros" className="text-sm font-medium text-ajag-verde-900">
+            Precio socio (€)
+          </label>
+          <input
+            id="precio_socio_euros"
+            name="precio_socio_euros"
+            type="number"
+            min={0}
+            step="0.01"
+            placeholder="Sin distinción"
+            defaultValue={
+              torneo?.precio_socio_cents != null
+                ? (torneo.precio_socio_cents / 100).toFixed(2)
+                : ""
+            }
+            className="mt-1 w-full rounded-xl border border-ajag-gris-200 px-4 py-2.5 text-sm outline-none focus:border-ajag-verde-600"
+          />
+          <p className="mt-1 text-xs text-ajag-gris-500">
+            Déjalo vacío si el torneo tiene un precio único.
+          </p>
         </div>
         <div>
           <label htmlFor="cupo_maximo" className="text-sm font-medium text-ajag-verde-900">
