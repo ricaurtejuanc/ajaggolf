@@ -4,6 +4,8 @@ import { useActionState, useState } from "react";
 import { generarSalidas, type EstadoGenerarSalidas } from "./actions";
 import type { ModoAsignacionSalida, ModoSalida, Salida } from "@/types/database";
 
+const TODOS_LOS_HOYOS = Array.from({ length: 18 }, (_, i) => i + 1);
+
 export function GenerarSalidasForm({
   torneoId,
   modoSalidaDefecto,
@@ -26,6 +28,34 @@ export function GenerarSalidasForm({
   const [modo, setModo] = useState<ModoSalida>(salidaExistente?.modo ?? modoSalidaDefecto);
 
   const configExistente = (salidaExistente?.config ?? {}) as Record<string, unknown>;
+
+  const teesConsecutivoIniciales = Array.isArray(configExistente.tees)
+    ? new Set((configExistente.tees as number[]).map(Number))
+    : new Set([1]);
+  const [teesConsecutivo, setTeesConsecutivo] = useState<Set<number>>(teesConsecutivoIniciales);
+
+  const hoyosSalidaIniciales = Array.isArray(configExistente.hoyos_salida)
+    ? new Set((configExistente.hoyos_salida as number[]).map(Number))
+    : new Set([1]);
+  const [hoyosSalida, setHoyosSalida] = useState<Set<number>>(hoyosSalidaIniciales);
+
+  const hoyosDobladosIniciales = Array.isArray(configExistente.hoyos_doblados)
+    ? new Set((configExistente.hoyos_doblados as number[]).map(Number))
+    : new Set<number>();
+  const [hoyosDoblados, setHoyosDoblados] = useState<Set<number>>(hoyosDobladosIniciales);
+
+  function alternar(set: Set<number>, valor: number): Set<number> {
+    const copia = new Set(set);
+    if (copia.has(valor)) copia.delete(valor);
+    else copia.add(valor);
+    return copia;
+  }
+
+  function alternarHoyoSalida(hoyo: number) {
+    setHoyosSalida((prev) => alternar(prev, hoyo));
+    // Si se quita un hoyo de "salida", deja de tener sentido marcarlo doblado.
+    setHoyosDoblados((prev) => (prev.has(hoyo) && hoyosSalida.has(hoyo) ? alternar(prev, hoyo) : prev));
+  }
 
   return (
     <form action={formAction} className="card-ajag flex flex-col gap-4 p-5">
@@ -57,7 +87,7 @@ export function GenerarSalidasForm({
                 checked={modo === "consecutivo"}
                 onChange={() => setModo("consecutivo")}
               />
-              Consecutivo (tee 1)
+              Consecutivo
             </label>
             <label className="flex items-center gap-2 text-sm text-ajag-gris-500">
               <input
@@ -73,7 +103,7 @@ export function GenerarSalidasForm({
         </div>
 
         <div>
-          <label htmlFor="modo_asignacion" className="text-sm font-medium text-ajag-verde-900">
+          <label htmlFor="modo_asignacion" className="block text-sm font-medium text-ajag-verde-900">
             Criterio de agrupación
           </label>
           <select
@@ -92,7 +122,7 @@ export function GenerarSalidasForm({
       {modo === "consecutivo" ? (
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
-            <label htmlFor="hora_inicio" className="text-sm font-medium text-ajag-verde-900">
+            <label htmlFor="hora_inicio" className="block text-sm font-medium text-ajag-verde-900">
               Hora de la primera salida
             </label>
             <input
@@ -104,7 +134,10 @@ export function GenerarSalidasForm({
             />
           </div>
           <div>
-            <label htmlFor="intervalo_minutos" className="text-sm font-medium text-ajag-verde-900">
+            <label
+              htmlFor="intervalo_minutos"
+              className="block text-sm font-medium text-ajag-verde-900"
+            >
               Intervalo entre grupos (min)
             </label>
             <input
@@ -116,45 +149,77 @@ export function GenerarSalidasForm({
               className="mt-1 w-full rounded-xl border border-ajag-gris-200 px-4 py-2.5 text-sm outline-none focus:border-ajag-verde-600"
             />
           </div>
-        </div>
-      ) : (
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div>
-            <label htmlFor="hoyos_salida" className="text-sm font-medium text-ajag-verde-900">
-              Hoyos de salida
-            </label>
-            <input
-              id="hoyos_salida"
-              name="hoyos_salida"
-              placeholder="1, 10"
-              defaultValue={
-                Array.isArray(configExistente.hoyos_salida)
-                  ? (configExistente.hoyos_salida as number[]).join(", ")
-                  : "1, 10"
-              }
-              className="mt-1 w-full rounded-xl border border-ajag-gris-200 px-4 py-2.5 text-sm outline-none focus:border-ajag-verde-600"
-            />
-            <p className="mt-1 text-xs text-ajag-gris-500">Separados por coma.</p>
-          </div>
-          <div>
-            <label htmlFor="hoyos_doblados" className="text-sm font-medium text-ajag-verde-900">
-              Hoyos doblados
-            </label>
-            <input
-              id="hoyos_doblados"
-              name="hoyos_doblados"
-              placeholder="Opcional"
-              defaultValue={
-                Array.isArray(configExistente.hoyos_doblados)
-                  ? (configExistente.hoyos_doblados as number[]).join(", ")
-                  : ""
-              }
-              className="mt-1 w-full rounded-xl border border-ajag-gris-200 px-4 py-2.5 text-sm outline-none focus:border-ajag-verde-600"
-            />
+          <div className="sm:col-span-2">
+            <span className="text-sm font-medium text-ajag-verde-900">Tee de salida</span>
+            <div className="mt-1 flex gap-4">
+              {[1, 10].map((tee) => (
+                <label key={tee} className="flex items-center gap-2 text-sm text-ajag-gris-500">
+                  <input
+                    type="checkbox"
+                    name="tee_consecutivo"
+                    value={tee}
+                    checked={teesConsecutivo.has(tee)}
+                    onChange={() => setTeesConsecutivo((prev) => alternar(prev, tee))}
+                  />
+                  Tee {tee}
+                </label>
+              ))}
+            </div>
             <p className="mt-1 text-xs text-ajag-gris-500">
-              Hoyos donde salen dos grupos a la vez.
+              Si marcas los dos, los grupos se reparten por turnos entre ambos tees.
             </p>
           </div>
+        </div>
+      ) : (
+        <div className="flex flex-col gap-4">
+          <div>
+            <span className="text-sm font-medium text-ajag-verde-900">Hoyos de salida</span>
+            <div className="mt-1.5 grid grid-cols-6 gap-1.5 sm:grid-cols-9">
+              {TODOS_LOS_HOYOS.map((hoyo) => (
+                <label
+                  key={hoyo}
+                  className="flex items-center justify-center gap-1 rounded-lg border border-ajag-gris-200 py-1.5 text-sm text-ajag-gris-500 has-[:checked]:border-ajag-verde-600 has-[:checked]:bg-ajag-verde-50 has-[:checked]:text-ajag-verde-900"
+                >
+                  <input
+                    type="checkbox"
+                    name="hoyos_salida"
+                    value={hoyo}
+                    checked={hoyosSalida.has(hoyo)}
+                    onChange={() => alternarHoyoSalida(hoyo)}
+                    className="sr-only"
+                  />
+                  {hoyo}
+                </label>
+              ))}
+            </div>
+          </div>
+
+          {hoyosSalida.size > 0 ? (
+            <div>
+              <span className="text-sm font-medium text-ajag-verde-900">Hoyos doblados</span>
+              <p className="mt-0.5 text-xs text-ajag-gris-500">
+                Marca los hoyos, de entre los de salida, donde salgan dos grupos a la vez.
+              </p>
+              <div className="mt-1.5 grid grid-cols-6 gap-1.5 sm:grid-cols-9">
+                {TODOS_LOS_HOYOS.filter((hoyo) => hoyosSalida.has(hoyo)).map((hoyo) => (
+                  <label
+                    key={hoyo}
+                    className="flex items-center justify-center gap-1 rounded-lg border border-ajag-gris-200 py-1.5 text-sm text-ajag-gris-500 has-[:checked]:border-ajag-oro-500 has-[:checked]:bg-ajag-oro-500/10 has-[:checked]:text-ajag-oro-600"
+                  >
+                    <input
+                      type="checkbox"
+                      name="hoyos_doblados"
+                      value={hoyo}
+                      checked={hoyosDoblados.has(hoyo)}
+                      onChange={() => setHoyosDoblados((prev) => alternar(prev, hoyo))}
+                      className="sr-only"
+                    />
+                    {hoyo}
+                  </label>
+                ))}
+              </div>
+            </div>
+          ) : null}
         </div>
       )}
 

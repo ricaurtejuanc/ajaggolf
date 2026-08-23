@@ -13,13 +13,6 @@ import type { ModoAsignacionSalida, ModoSalida } from "@/types/database";
 
 export type EstadoGenerarSalidas = { ok: boolean; error: string | null };
 
-function parseListaHoyos(raw: string): number[] {
-  return raw
-    .split(",")
-    .map((v) => parseInt(v.trim(), 10))
-    .filter((n) => !Number.isNaN(n) && n >= 1 && n <= 18);
-}
-
 export async function generarSalidas(
   torneoId: string,
   _prevState: EstadoGenerarSalidas,
@@ -42,17 +35,34 @@ export async function generarSalidas(
   }
 
   let config: Record<string, unknown>;
-  let configConsecutivo: { horaInicio: string; intervaloMinutos: number } | undefined;
+  let configConsecutivo: { horaInicio: string; intervaloMinutos: number; tees: number[] } | undefined;
   let configShotgun: { hoyosSalida: number[]; hoyosDoblados: number[] } | undefined;
 
   if (modo === "consecutivo") {
     const horaInicio = String(formData.get("hora_inicio") ?? "08:00");
     const intervaloMinutos = parseInt(String(formData.get("intervalo_minutos") ?? "10"), 10);
-    configConsecutivo = { horaInicio, intervaloMinutos: intervaloMinutos || 10 };
-    config = { hora_inicio: horaInicio, intervalo_minutos: configConsecutivo.intervaloMinutos };
+    const tees = formData
+      .getAll("tee_consecutivo")
+      .map((v) => parseInt(String(v), 10))
+      .filter((n) => !Number.isNaN(n));
+    if (tees.length === 0) {
+      return { ok: false, error: "Elige al menos un tee de salida." };
+    }
+    configConsecutivo = { horaInicio, intervaloMinutos: intervaloMinutos || 10, tees };
+    config = {
+      hora_inicio: horaInicio,
+      intervalo_minutos: configConsecutivo.intervaloMinutos,
+      tees: configConsecutivo.tees,
+    };
   } else {
-    const hoyosSalida = parseListaHoyos(String(formData.get("hoyos_salida") ?? "1"));
-    const hoyosDoblados = parseListaHoyos(String(formData.get("hoyos_doblados") ?? ""));
+    const hoyosSalida = formData
+      .getAll("hoyos_salida")
+      .map((v) => parseInt(String(v), 10))
+      .filter((n) => !Number.isNaN(n) && n >= 1 && n <= 18);
+    const hoyosDoblados = formData
+      .getAll("hoyos_doblados")
+      .map((v) => parseInt(String(v), 10))
+      .filter((n) => !Number.isNaN(n) && n >= 1 && n <= 18 && hoyosSalida.includes(n));
     if (hoyosSalida.length === 0) {
       return { ok: false, error: "Indica al menos un hoyo de salida." };
     }

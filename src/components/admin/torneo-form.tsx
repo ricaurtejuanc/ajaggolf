@@ -2,6 +2,7 @@
 
 import { useActionState } from "react";
 import { PosterUploader } from "./poster-uploader";
+import { TeesInput } from "./tees-input";
 import { CATEGORIAS_EXTRAS } from "@/lib/extras-torneo";
 import type { EstadoTorneoForm } from "@/app/admin/torneos/actions";
 import type { LigaPool, Torneo } from "@/types/database";
@@ -50,30 +51,18 @@ export function TorneoForm({
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <div>
-          <label htmlFor="tees_masculino" className="block text-sm font-medium text-ajag-verde-900">
-            Tees caballeros (separados por coma)
-          </label>
-          <input
-            id="tees_masculino"
-            name="tees_masculino"
-            placeholder="Tee 54"
-            defaultValue={torneo?.tees_masculino.join(", ")}
-            className="mt-1 w-full rounded-xl border border-ajag-gris-200 px-4 py-2.5 text-sm outline-none focus:border-ajag-verde-600"
-          />
-        </div>
-        <div>
-          <label htmlFor="tees_femenino" className="block text-sm font-medium text-ajag-verde-900">
-            Tees damas (separados por coma)
-          </label>
-          <input
-            id="tees_femenino"
-            name="tees_femenino"
-            placeholder="Tee 51"
-            defaultValue={torneo?.tees_femenino.join(", ")}
-            className="mt-1 w-full rounded-xl border border-ajag-gris-200 px-4 py-2.5 text-sm outline-none focus:border-ajag-verde-600"
-          />
-        </div>
+        <TeesInput
+          name="tees_masculino"
+          label="Tees caballeros"
+          placeholder="Tee 54"
+          valoresIniciales={torneo?.tees_masculino ?? []}
+        />
+        <TeesInput
+          name="tees_femenino"
+          label="Tees damas"
+          placeholder="Tee 51"
+          valoresIniciales={torneo?.tees_femenino ?? []}
+        />
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
@@ -173,7 +162,7 @@ export function TorneoForm({
           label="Modo de salida"
           defaultValue={torneo?.modo_salida ?? "consecutivo"}
           options={[
-            { value: "consecutivo", label: "Consecutivo (tee 1)" },
+            { value: "consecutivo", label: "Consecutivo" },
             { value: "shotgun", label: "A tiro (shotgun)" },
           ]}
         />
@@ -303,7 +292,6 @@ export function TorneoForm({
       </div>
 
       {state.error ? <p className="text-sm text-ajag-rojo-600">{state.error}</p> : null}
-      {state.ok ? <p className="text-sm text-ajag-verde-700">Guardado correctamente.</p> : null}
 
       <button
         type="submit"

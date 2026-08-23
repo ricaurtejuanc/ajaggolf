@@ -76,18 +76,28 @@ function agruparMixto(jugadores: JugadorParaSalida[]): JugadorParaSalida[][] {
   return grupos;
 }
 
-/** Asigna hora de salida consecutiva desde un único tee. */
+/**
+ * Asigna hora de salida consecutiva desde uno o varios tees (ej. tee 1 y
+ * tee 10 a la vez): los grupos se reparten por turnos entre los tees
+ * elegidos, y dentro de cada tee la hora avanza de forma consecutiva
+ * desde horaInicio.
+ */
 function asignarConsecutivo(
   grupos: JugadorParaSalida[][],
-  config: { horaInicio: string; intervaloMinutos: number },
+  config: { horaInicio: string; intervaloMinutos: number; tees: number[] },
 ): Omit<GrupoGenerado, "jugadores">[] {
+  const tees = config.tees.length > 0 ? config.tees : [1];
   const [h, m] = config.horaInicio.split(":").map(Number);
   const inicioMinutos = h * 60 + m;
+  const posicionPorTee = new Map<number, number>();
   return grupos.map((_, i) => {
-    const minutos = inicioMinutos + i * config.intervaloMinutos;
+    const tee = tees[i % tees.length];
+    const posicion = posicionPorTee.get(tee) ?? 0;
+    posicionPorTee.set(tee, posicion + 1);
+    const minutos = inicioMinutos + posicion * config.intervaloMinutos;
     const hh = String(Math.floor(minutos / 60) % 24).padStart(2, "0");
     const mm = String(minutos % 60).padStart(2, "0");
-    return { numeroGrupo: i + 1, hoyoSalida: 1, horaSalida: `${hh}:${mm}:00` };
+    return { numeroGrupo: i + 1, hoyoSalida: tee, horaSalida: `${hh}:${mm}:00` };
   });
 }
 
@@ -158,6 +168,7 @@ export function detectarConflictos(grupos: JugadorParaSalida[][]): Map<
 export interface ConfigConsecutivo {
   horaInicio: string;
   intervaloMinutos: number;
+  tees: number[];
 }
 
 export interface ConfigShotgun {
