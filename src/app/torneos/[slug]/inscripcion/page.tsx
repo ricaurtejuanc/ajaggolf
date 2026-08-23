@@ -4,7 +4,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { obtenerTorneoPorSlug } from "@/lib/data/torneos";
 import { asegurarJugadorParaUsuario } from "@/lib/data/jugadores";
-import { formatearFecha, formatearPrecio } from "@/lib/format";
+import { formatearFecha } from "@/lib/format";
 import { InscripcionForm } from "./inscripcion-form";
 
 export const metadata: Metadata = { title: "Inscripción" };
@@ -37,8 +37,7 @@ export default async function InscripcionPage({
         Inscripción — {torneo.nombre}
       </h1>
       <p className="mt-1 text-sm text-ajag-gris-500">
-        {formatearFecha(torneo.fecha)} · {torneo.campo_golf} ·{" "}
-        {formatearPrecio(torneo.precio_cents)}
+        {formatearFecha(torneo.fecha)} · {torneo.campo_golf}
       </p>
 
       <div className="mt-6">
