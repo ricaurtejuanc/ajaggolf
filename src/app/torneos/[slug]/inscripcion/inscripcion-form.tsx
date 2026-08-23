@@ -36,7 +36,7 @@ export function InscripcionForm({
     <form action={formAction} className="card-ajag flex flex-col gap-5 p-6">
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
-          <label htmlFor="nombre" className="text-sm font-medium text-ajag-verde-900">
+          <label htmlFor="nombre" className="block text-sm font-medium text-ajag-verde-900">
             Nombre *
           </label>
           <input
@@ -48,7 +48,7 @@ export function InscripcionForm({
           />
         </div>
         <div>
-          <label htmlFor="apellidos" className="text-sm font-medium text-ajag-verde-900">
+          <label htmlFor="apellidos" className="block text-sm font-medium text-ajag-verde-900">
             Apellidos *
           </label>
           <input
@@ -63,7 +63,7 @@ export function InscripcionForm({
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
-          <label htmlFor="email" className="text-sm font-medium text-ajag-verde-900">
+          <label htmlFor="email" className="block text-sm font-medium text-ajag-verde-900">
             Email *
           </label>
           <input
@@ -76,7 +76,7 @@ export function InscripcionForm({
           />
         </div>
         <div>
-          <label htmlFor="licencia_federativa" className="text-sm font-medium text-ajag-verde-900">
+          <label htmlFor="licencia_federativa" className="block text-sm font-medium text-ajag-verde-900">
             Licencia federativa *
           </label>
           <input
@@ -90,7 +90,7 @@ export function InscripcionForm({
       </div>
 
       <div>
-        <label htmlFor="handicap" className="text-sm font-medium text-ajag-verde-900">
+        <label htmlFor="handicap" className="block text-sm font-medium text-ajag-verde-900">
           Hándicap
         </label>
         <input

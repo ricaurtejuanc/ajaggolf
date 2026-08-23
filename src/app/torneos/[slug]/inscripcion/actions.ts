@@ -105,86 +105,97 @@ export async function inscribirse(
   // pedido de pago, y se le manda a una página de confirmación con las
   // instrucciones de pago. Sin cuenta no hay carrito multi-torneo: se paga
   // esta inscripción de una vez.
-  const admin = createAdminClient();
+  let urlConfirmacion: string;
+  try {
+    const admin = createAdminClient();
 
-  if (torneo.cupo_maximo != null) {
-    const { data: cupo } = await admin
-      .from("torneos_cupo")
-      .select("inscritos")
-      .eq("torneo_id", torneo.id)
-      .maybeSingle();
-    if ((cupo?.inscritos ?? 0) >= torneo.cupo_maximo) {
-      return { ok: false, error: "El cupo de este torneo ya está completo." };
+    if (torneo.cupo_maximo != null) {
+      const { data: cupo } = await admin
+        .from("torneos_cupo")
+        .select("inscritos")
+        .eq("torneo_id", torneo.id)
+        .maybeSingle();
+      if ((cupo?.inscritos ?? 0) >= torneo.cupo_maximo) {
+        return { ok: false, error: "El cupo de este torneo ya está completo." };
+      }
     }
-  }
 
-  // La licencia federativa es única en `jugadores`. Un invitado que ya
-  // jugó antes (como invitado o con cuenta) reutiliza esa fila en vez de
-  // chocar con la restricción; si es una cuenta real (user_id no nulo) no
-  // se le pisan sus datos guardados con lo que ha escrito el invitado.
-  const { data: jugadorExistente } = await admin
-    .from("jugadores")
-    .select("id, user_id")
-    .eq("licencia_federativa", licencia_federativa)
-    .maybeSingle();
-
-  let jugadorId: string;
-  if (jugadorExistente) {
-    jugadorId = jugadorExistente.id;
-    if (jugadorExistente.user_id == null) {
-      await admin
-        .from("jugadores")
-        .update({ nombre, apellidos, email, sexo, handicap })
-        .eq("id", jugadorId);
-    }
-  } else {
-    const { data: jugadorInvitado, error: errorJugador } = await admin
+    // La licencia federativa es única en `jugadores`. Un invitado que ya
+    // jugó antes (como invitado o con cuenta) reutiliza esa fila en vez de
+    // chocar con la restricción; si es una cuenta real (user_id no nulo)
+    // no se le pisan sus datos guardados con lo que ha escrito el invitado.
+    const { data: jugadorExistente } = await admin
       .from("jugadores")
-      .insert({ nombre, apellidos, email, licencia_federativa, sexo, handicap, user_id: null })
+      .select("id, user_id")
+      .eq("licencia_federativa", licencia_federativa)
+      .maybeSingle();
+
+    let jugadorId: string;
+    if (jugadorExistente) {
+      jugadorId = jugadorExistente.id;
+      if (jugadorExistente.user_id == null) {
+        await admin
+          .from("jugadores")
+          .update({ nombre, apellidos, email, sexo, handicap })
+          .eq("id", jugadorId);
+      }
+    } else {
+      const { data: jugadorInvitado, error: errorJugador } = await admin
+        .from("jugadores")
+        .insert({ nombre, apellidos, email, licencia_federativa, sexo, handicap, user_id: null })
+        .select("id")
+        .single();
+      if (errorJugador || !jugadorInvitado) {
+        console.error("Error creando jugador invitado:", errorJugador);
+        return { ok: false, error: "No se ha podido guardar la inscripción. Inténtalo de nuevo." };
+      }
+      jugadorId = jugadorInvitado.id;
+    }
+
+    if (jugadorExistente) {
+      const { data: yaInscrito } = await admin
+        .from("inscripciones")
+        .select("id")
+        .eq("torneo_id", torneo.id)
+        .eq("jugador_id", jugadorId)
+        .maybeSingle();
+      if (yaInscrito) {
+        return { ok: false, error: "Esa licencia federativa ya está inscrita en este torneo." };
+      }
+    }
+
+    const { data: pedido, error: errorPedido } = await admin
+      .from("pedidos_pago")
+      .insert({ user_id: null, metodo_pago: "bizum", total_cents: precioAplicable })
       .select("id")
       .single();
-    if (errorJugador || !jugadorInvitado) {
+    if (errorPedido || !pedido) {
+      console.error("Error creando pedido de invitado:", errorPedido);
       return { ok: false, error: "No se ha podido guardar la inscripción. Inténtalo de nuevo." };
     }
-    jugadorId = jugadorInvitado.id;
-  }
 
-  if (jugadorExistente) {
-    const { data: yaInscrito } = await admin
-      .from("inscripciones")
-      .select("id")
-      .eq("torneo_id", torneo.id)
-      .eq("jugador_id", jugadorId)
-      .maybeSingle();
-    if (yaInscrito) {
-      return { ok: false, error: "Esa licencia federativa ya está inscrita en este torneo." };
+    const { error: errorInscripcion } = await admin.from("inscripciones").insert({
+      torneo_id: torneo.id,
+      jugador_id: jugadorId,
+      sexo,
+      licencia_federativa,
+      handicap_snapshot: handicap,
+      juega_con_licencias: juegaConLicencias,
+      es_socio: esSocio,
+      precio_cents: precioAplicable,
+      estado: "pendiente_pago",
+      pedido_pago_id: pedido.id,
+    });
+    if (errorInscripcion) {
+      console.error("Error creando inscripción de invitado:", errorInscripcion);
+      return { ok: false, error: "No se ha podido guardar la inscripción. Inténtalo de nuevo." };
     }
-  }
 
-  const { data: pedido, error: errorPedido } = await admin
-    .from("pedidos_pago")
-    .insert({ user_id: null, metodo_pago: "bizum", total_cents: precioAplicable })
-    .select("id")
-    .single();
-  if (errorPedido || !pedido) {
+    urlConfirmacion = `/torneos/${torneoSlug}/inscripcion/confirmacion?pedido=${pedido.id}`;
+  } catch (err) {
+    console.error("Error inesperado en inscripción de invitado:", err);
     return { ok: false, error: "No se ha podido guardar la inscripción. Inténtalo de nuevo." };
   }
 
-  const { error: errorInscripcion } = await admin.from("inscripciones").insert({
-    torneo_id: torneo.id,
-    jugador_id: jugadorId,
-    sexo,
-    licencia_federativa,
-    handicap_snapshot: handicap,
-    juega_con_licencias: juegaConLicencias,
-    es_socio: esSocio,
-    precio_cents: precioAplicable,
-    estado: "pendiente_pago",
-    pedido_pago_id: pedido.id,
-  });
-  if (errorInscripcion) {
-    return { ok: false, error: "No se ha podido guardar la inscripción. Inténtalo de nuevo." };
-  }
-
-  redirect(`/torneos/${torneoSlug}/inscripcion/confirmacion?pedido=${pedido.id}`);
+  redirect(urlConfirmacion);
 }
