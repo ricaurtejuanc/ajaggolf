@@ -90,7 +90,7 @@ export async function SiteHeader() {
           ) : (
             <Link
               href="/login"
-              className="rounded-full bg-ajag-verde-700 px-4 py-2 text-sm font-medium text-white transition hover:bg-ajag-verde-600"
+              className="rounded-full bg-ajag-verde-700 px-6 py-3 text-base font-semibold text-white transition hover:bg-ajag-verde-600"
             >
               Iniciar sesión
             </Link>
