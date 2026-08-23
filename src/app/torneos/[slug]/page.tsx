@@ -2,11 +2,12 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { CalendarDays, MapPin, Flag, Coins, Users, Trophy } from "lucide-react";
+import { CalendarDays, MapPin, Flag, Coins, Users, Trophy, Check } from "lucide-react";
 import { obtenerTorneoPorSlug } from "@/lib/data/torneos";
 import { createClient } from "@/lib/supabase/server";
 import { formatearFecha, formatearHora, formatearPrecio } from "@/lib/format";
 import { PosterLightbox } from "@/components/torneos/poster-lightbox";
+import { CATEGORIAS_EXTRAS } from "@/lib/extras-torneo";
 
 const etiquetaFormato = {
   stableford: "Stableford",
@@ -127,6 +128,38 @@ export default async function TorneoDetallePage({
           <p className="whitespace-pre-line text-sm text-ajag-gris-500">
             {torneo.info_adicional}
           </p>
+        </div>
+      ) : null}
+
+      {torneo.extras.length > 0 ? (
+        <div className="mt-6 card-ajag p-5">
+          <h2 className="mb-3 font-display text-base font-semibold text-ajag-verde-900">
+            Qué incluye
+          </h2>
+          <div className="grid gap-4 sm:grid-cols-3">
+            {CATEGORIAS_EXTRAS.map((cat) => {
+              const seleccionados = cat.opciones.filter((o) => torneo.extras.includes(o.value));
+              if (seleccionados.length === 0) return null;
+              return (
+                <div key={cat.categoria}>
+                  <p className="text-xs font-medium uppercase tracking-wide text-ajag-oro-600">
+                    {cat.categoria}
+                  </p>
+                  <ul className="mt-1.5 flex flex-col gap-1">
+                    {seleccionados.map((o) => (
+                      <li
+                        key={o.value}
+                        className="flex items-center gap-1.5 text-sm text-ajag-verde-900"
+                      >
+                        <Check size={14} className="shrink-0 text-ajag-verde-700" />
+                        {o.label}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              );
+            })}
+          </div>
         </div>
       ) : null}
 

@@ -86,6 +86,7 @@ export type Torneo = {
   modo_salida: ModoSalida;
   modo_asignacion_salida: ModoAsignacionSalida;
   modo_pago: ModoPagoTorneo;
+  extras: string[];
   liga_pool_id: string | null;
   estado: EstadoTorneo;
   created_by: string | null;

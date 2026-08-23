@@ -2,6 +2,7 @@
 
 import { useActionState } from "react";
 import { PosterUploader } from "./poster-uploader";
+import { CATEGORIAS_EXTRAS } from "@/lib/extras-torneo";
 import type { EstadoTorneoForm } from "@/app/admin/torneos/actions";
 import type { LigaPool, Torneo } from "@/types/database";
 
@@ -35,22 +36,9 @@ export function TorneoForm({
         />
       </div>
 
-      <div>
-        <label htmlFor="slug" className="text-sm font-medium text-ajag-verde-900">
-          URL (slug)
-        </label>
-        <input
-          id="slug"
-          name="slug"
-          placeholder="se genera automáticamente si lo dejas vacío"
-          defaultValue={torneo?.slug}
-          className="mt-1 w-full rounded-xl border border-ajag-gris-200 px-4 py-2.5 text-sm outline-none focus:border-ajag-verde-600"
-        />
-      </div>
-
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
-          <label htmlFor="campo_golf" className="text-sm font-medium text-ajag-verde-900">
+          <label htmlFor="campo_golf" className="block text-sm font-medium text-ajag-verde-900">
             Campo de golf *
           </label>
           <input
@@ -62,7 +50,7 @@ export function TorneoForm({
           />
         </div>
         <div>
-          <label htmlFor="tees" className="text-sm font-medium text-ajag-verde-900">
+          <label htmlFor="tees" className="block text-sm font-medium text-ajag-verde-900">
             Tees (separados por coma)
           </label>
           <input
@@ -76,8 +64,8 @@ export function TorneoForm({
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <div>
-          <label htmlFor="fecha" className="text-sm font-medium text-ajag-verde-900">
+        <div className="min-w-0">
+          <label htmlFor="fecha" className="block text-sm font-medium text-ajag-verde-900">
             Fecha *
           </label>
           <input
@@ -86,11 +74,11 @@ export function TorneoForm({
             type="date"
             required
             defaultValue={torneo?.fecha}
-            className="mt-1 w-full rounded-xl border border-ajag-gris-200 px-4 py-2.5 text-sm outline-none focus:border-ajag-verde-600"
+            className="mt-1 w-full min-w-0 rounded-xl border border-ajag-gris-200 px-4 py-2.5 text-sm outline-none focus:border-ajag-verde-600"
           />
         </div>
-        <div>
-          <label htmlFor="hora_inicio" className="text-sm font-medium text-ajag-verde-900">
+        <div className="min-w-0">
+          <label htmlFor="hora_inicio" className="block text-sm font-medium text-ajag-verde-900">
             Hora de inicio
           </label>
           <input
@@ -98,7 +86,7 @@ export function TorneoForm({
             name="hora_inicio"
             type="time"
             defaultValue={torneo?.hora_inicio ?? ""}
-            className="mt-1 w-full rounded-xl border border-ajag-gris-200 px-4 py-2.5 text-sm outline-none focus:border-ajag-verde-600"
+            className="mt-1 w-full min-w-0 rounded-xl border border-ajag-gris-200 px-4 py-2.5 text-sm outline-none focus:border-ajag-verde-600"
           />
         </div>
       </div>
@@ -258,7 +246,7 @@ export function TorneoForm({
       </div>
 
       <div>
-        <label htmlFor="info_adicional" className="text-sm font-medium text-ajag-verde-900">
+        <label htmlFor="info_adicional" className="block text-sm font-medium text-ajag-verde-900">
           Información adicional
         </label>
         <textarea
@@ -268,6 +256,37 @@ export function TorneoForm({
           defaultValue={torneo?.info_adicional ?? ""}
           className="mt-1 w-full rounded-xl border border-ajag-gris-200 px-4 py-2.5 text-sm outline-none focus:border-ajag-verde-600"
         />
+      </div>
+
+      <div>
+        <span className="text-sm font-medium text-ajag-verde-900">
+          Extras que se mostrarán en la ficha del torneo
+        </span>
+        <div className="mt-2 grid gap-4 sm:grid-cols-3">
+          {CATEGORIAS_EXTRAS.map((cat) => (
+            <div key={cat.categoria}>
+              <p className="text-xs font-medium uppercase tracking-wide text-ajag-gris-500">
+                {cat.categoria}
+              </p>
+              <div className="mt-1.5 flex flex-col gap-1.5">
+                {cat.opciones.map((opcion) => (
+                  <label
+                    key={opcion.value}
+                    className="flex items-center gap-2 text-sm text-ajag-gris-500"
+                  >
+                    <input
+                      type="checkbox"
+                      name="extras"
+                      value={opcion.value}
+                      defaultChecked={torneo?.extras.includes(opcion.value)}
+                    />
+                    {opcion.label}
+                  </label>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
 
       {state.error ? <p className="text-sm text-ajag-rojo-600">{state.error}</p> : null}
