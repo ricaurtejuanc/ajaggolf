@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { asegurarJugadorParaUsuario } from "@/lib/data/jugadores";
 
 export type EstadoInscripcionForm = { ok: boolean; error: string | null };
@@ -15,7 +16,6 @@ export async function inscribirse(
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) redirect(`/login?next=/torneos/${torneoSlug}/inscripcion`);
 
   const nombre = String(formData.get("nombre") ?? "").trim();
   const apellidos = String(formData.get("apellidos") ?? "").trim();
@@ -56,44 +56,135 @@ export async function inscribirse(
   const precioAplicable =
     esSocio && torneo.precio_socio_cents != null ? torneo.precio_socio_cents : torneo.precio_cents;
 
-  const jugador = await asegurarJugadorParaUsuario(supabase, user);
+  if (user) {
+    const jugador = await asegurarJugadorParaUsuario(supabase, user);
+
+    if (torneo.cupo_maximo != null) {
+      const [{ data: cupo }, { data: yaInscrito }] = await Promise.all([
+        supabase.from("torneos_cupo").select("inscritos").eq("torneo_id", torneo.id).maybeSingle(),
+        supabase
+          .from("inscripciones")
+          .select("id")
+          .eq("torneo_id", torneo.id)
+          .eq("jugador_id", jugador.id)
+          .maybeSingle(),
+      ]);
+      if (!yaInscrito && (cupo?.inscritos ?? 0) >= torneo.cupo_maximo) {
+        return { ok: false, error: "El cupo de este torneo ya está completo." };
+      }
+    }
+
+    await supabase
+      .from("jugadores")
+      .update({ nombre, apellidos, email, licencia_federativa, sexo, handicap })
+      .eq("id", jugador.id);
+
+    const { error } = await supabase.from("inscripciones").upsert(
+      {
+        torneo_id: torneo.id,
+        jugador_id: jugador.id,
+        sexo,
+        licencia_federativa,
+        handicap_snapshot: handicap,
+        juega_con_licencias: juegaConLicencias,
+        es_socio: esSocio,
+        precio_cents: precioAplicable,
+        estado: "carrito",
+      },
+      { onConflict: "torneo_id,jugador_id" },
+    );
+
+    if (error) return { ok: false, error: error.message };
+
+    redirect("/carrito");
+  }
+
+  // Invitado: sin sesión (ni siquiera anónima). No hay auth.uid() que pase
+  // las políticas RLS normales, así que se usa la service role key para
+  // crear directamente el jugador (sin user_id), su inscripción y su
+  // pedido de pago, y se le manda a una página de confirmación con las
+  // instrucciones de pago. Sin cuenta no hay carrito multi-torneo: se paga
+  // esta inscripción de una vez.
+  const admin = createAdminClient();
 
   if (torneo.cupo_maximo != null) {
-    const [{ data: cupo }, { data: yaInscrito }] = await Promise.all([
-      supabase.from("torneos_cupo").select("inscritos").eq("torneo_id", torneo.id).maybeSingle(),
-      supabase
-        .from("inscripciones")
-        .select("id")
-        .eq("torneo_id", torneo.id)
-        .eq("jugador_id", jugador.id)
-        .maybeSingle(),
-    ]);
-    if (!yaInscrito && (cupo?.inscritos ?? 0) >= torneo.cupo_maximo) {
+    const { data: cupo } = await admin
+      .from("torneos_cupo")
+      .select("inscritos")
+      .eq("torneo_id", torneo.id)
+      .maybeSingle();
+    if ((cupo?.inscritos ?? 0) >= torneo.cupo_maximo) {
       return { ok: false, error: "El cupo de este torneo ya está completo." };
     }
   }
 
-  await supabase
+  // La licencia federativa es única en `jugadores`. Un invitado que ya
+  // jugó antes (como invitado o con cuenta) reutiliza esa fila en vez de
+  // chocar con la restricción; si es una cuenta real (user_id no nulo) no
+  // se le pisan sus datos guardados con lo que ha escrito el invitado.
+  const { data: jugadorExistente } = await admin
     .from("jugadores")
-    .update({ nombre, apellidos, email, licencia_federativa, sexo, handicap })
-    .eq("id", jugador.id);
+    .select("id, user_id")
+    .eq("licencia_federativa", licencia_federativa)
+    .maybeSingle();
 
-  const { error } = await supabase.from("inscripciones").upsert(
-    {
-      torneo_id: torneo.id,
-      jugador_id: jugador.id,
-      sexo,
-      licencia_federativa,
-      handicap_snapshot: handicap,
-      juega_con_licencias: juegaConLicencias,
-      es_socio: esSocio,
-      precio_cents: precioAplicable,
-      estado: "carrito",
-    },
-    { onConflict: "torneo_id,jugador_id" },
-  );
+  let jugadorId: string;
+  if (jugadorExistente) {
+    jugadorId = jugadorExistente.id;
+    if (jugadorExistente.user_id == null) {
+      await admin
+        .from("jugadores")
+        .update({ nombre, apellidos, email, sexo, handicap })
+        .eq("id", jugadorId);
+    }
+  } else {
+    const { data: jugadorInvitado, error: errorJugador } = await admin
+      .from("jugadores")
+      .insert({ nombre, apellidos, email, licencia_federativa, sexo, handicap, user_id: null })
+      .select("id")
+      .single();
+    if (errorJugador || !jugadorInvitado) {
+      return { ok: false, error: "No se ha podido guardar la inscripción. Inténtalo de nuevo." };
+    }
+    jugadorId = jugadorInvitado.id;
+  }
 
-  if (error) return { ok: false, error: error.message };
+  if (jugadorExistente) {
+    const { data: yaInscrito } = await admin
+      .from("inscripciones")
+      .select("id")
+      .eq("torneo_id", torneo.id)
+      .eq("jugador_id", jugadorId)
+      .maybeSingle();
+    if (yaInscrito) {
+      return { ok: false, error: "Esa licencia federativa ya está inscrita en este torneo." };
+    }
+  }
 
-  redirect("/carrito");
+  const { data: pedido, error: errorPedido } = await admin
+    .from("pedidos_pago")
+    .insert({ user_id: null, metodo_pago: "bizum", total_cents: precioAplicable })
+    .select("id")
+    .single();
+  if (errorPedido || !pedido) {
+    return { ok: false, error: "No se ha podido guardar la inscripción. Inténtalo de nuevo." };
+  }
+
+  const { error: errorInscripcion } = await admin.from("inscripciones").insert({
+    torneo_id: torneo.id,
+    jugador_id: jugadorId,
+    sexo,
+    licencia_federativa,
+    handicap_snapshot: handicap,
+    juega_con_licencias: juegaConLicencias,
+    es_socio: esSocio,
+    precio_cents: precioAplicable,
+    estado: "pendiente_pago",
+    pedido_pago_id: pedido.id,
+  });
+  if (errorInscripcion) {
+    return { ok: false, error: "No se ha podido guardar la inscripción. Inténtalo de nuevo." };
+  }
+
+  redirect(`/torneos/${torneoSlug}/inscripcion/confirmacion?pedido=${pedido.id}`);
 }

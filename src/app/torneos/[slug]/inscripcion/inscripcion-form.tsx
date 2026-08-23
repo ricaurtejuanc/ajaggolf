@@ -15,7 +15,7 @@ export function InscripcionForm({
   precioSocioCents,
 }: {
   torneoSlug: string;
-  jugador: Jugador;
+  jugador: Jugador | null;
   precioCents: number;
   precioSocioCents: number | null;
 }) {
@@ -43,7 +43,7 @@ export function InscripcionForm({
             id="nombre"
             name="nombre"
             required
-            defaultValue={jugador.nombre}
+            defaultValue={jugador?.nombre}
             className="mt-1 w-full rounded-xl border border-ajag-gris-200 px-4 py-2.5 text-sm outline-none focus:border-ajag-verde-600"
           />
         </div>
@@ -55,7 +55,7 @@ export function InscripcionForm({
             id="apellidos"
             name="apellidos"
             required
-            defaultValue={jugador.apellidos}
+            defaultValue={jugador?.apellidos}
             className="mt-1 w-full rounded-xl border border-ajag-gris-200 px-4 py-2.5 text-sm outline-none focus:border-ajag-verde-600"
           />
         </div>
@@ -71,7 +71,7 @@ export function InscripcionForm({
             name="email"
             type="email"
             required
-            defaultValue={jugador.email ?? ""}
+            defaultValue={jugador?.email ?? ""}
             className="mt-1 w-full rounded-xl border border-ajag-gris-200 px-4 py-2.5 text-sm outline-none focus:border-ajag-verde-600"
           />
         </div>
@@ -83,7 +83,7 @@ export function InscripcionForm({
             id="licencia_federativa"
             name="licencia_federativa"
             required
-            defaultValue={jugador.licencia_federativa ?? ""}
+            defaultValue={jugador?.licencia_federativa ?? ""}
             className="mt-1 w-full rounded-xl border border-ajag-gris-200 px-4 py-2.5 text-sm outline-none focus:border-ajag-verde-600"
           />
         </div>
@@ -99,7 +99,7 @@ export function InscripcionForm({
           type="number"
           step="0.1"
           placeholder="Ej. 18.4"
-          defaultValue={jugador.handicap ?? ""}
+          defaultValue={jugador?.handicap ?? ""}
           className="mt-1 w-full max-w-[10rem] rounded-xl border border-ajag-gris-200 px-4 py-2.5 text-sm outline-none focus:border-ajag-verde-600"
         />
         <p className="mt-1 text-xs text-ajag-gris-500">
@@ -149,7 +149,7 @@ export function InscripcionForm({
                 name="sexo"
                 value={valor}
                 required
-                defaultChecked={jugador.sexo === valor}
+                defaultChecked={jugador?.sexo === valor}
               />
               {valor === "masculino" ? "Masculino" : "Femenino"}
             </label>
@@ -239,7 +239,13 @@ export function InscripcionForm({
         disabled={pending}
         className="rounded-xl bg-ajag-verde-700 px-5 py-3 text-sm font-medium text-white transition hover:bg-ajag-verde-600 disabled:opacity-60"
       >
-        {pending ? "Añadiendo..." : "Añadir al carrito"}
+        {jugador
+          ? pending
+            ? "Añadiendo..."
+            : "Añadir al carrito"
+          : pending
+            ? "Enviando..."
+            : "Confirmar inscripción"}
       </button>
     </form>
   );

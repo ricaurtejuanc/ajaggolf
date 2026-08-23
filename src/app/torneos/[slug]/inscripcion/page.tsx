@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { notFound, redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { obtenerTorneoPorSlug } from "@/lib/data/torneos";
@@ -23,22 +23,28 @@ export default async function InscripcionPage({
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) redirect(`/login?next=/torneos/${slug}/inscripcion`);
 
-  const jugador = await asegurarJugadorParaUsuario(supabase, user);
+  const jugador = user ? await asegurarJugadorParaUsuario(supabase, user) : null;
 
   let lleno = false;
   if (torneo.cupo_maximo != null) {
-    const [{ data: cupo }, { data: yaInscrito }] = await Promise.all([
-      supabase.from("torneos_cupo").select("inscritos").eq("torneo_id", torneo.id).maybeSingle(),
-      supabase
+    const { data: cupo } = await supabase
+      .from("torneos_cupo")
+      .select("inscritos")
+      .eq("torneo_id", torneo.id)
+      .maybeSingle();
+
+    if (jugador) {
+      const { data: yaInscrito } = await supabase
         .from("inscripciones")
         .select("id")
         .eq("torneo_id", torneo.id)
         .eq("jugador_id", jugador.id)
-        .maybeSingle(),
-    ]);
-    lleno = !yaInscrito && (cupo?.inscritos ?? 0) >= torneo.cupo_maximo;
+        .maybeSingle();
+      lleno = !yaInscrito && (cupo?.inscritos ?? 0) >= torneo.cupo_maximo;
+    } else {
+      lleno = (cupo?.inscritos ?? 0) >= torneo.cupo_maximo;
+    }
   }
 
   if (lleno) {
@@ -71,6 +77,20 @@ export default async function InscripcionPage({
       <p className="mt-1 text-sm text-ajag-gris-500">
         {formatearFecha(torneo.fecha)} · {torneo.campo_golf}
       </p>
+
+      {!user ? (
+        <p className="mt-3 rounded-xl bg-ajag-verde-50 px-4 py-3 text-sm text-ajag-verde-900">
+          Te estás inscribiendo como invitado.{" "}
+          <Link
+            href={`/login?next=/torneos/${slug}/inscripcion`}
+            className="font-medium underline"
+          >
+            Inicia sesión o crea tu cuenta
+          </Link>{" "}
+          si quieres que tus datos se rellenen solos la próxima vez y ver tu
+          historial de torneos.
+        </p>
+      ) : null}
 
       <div className="mt-6">
         <InscripcionForm

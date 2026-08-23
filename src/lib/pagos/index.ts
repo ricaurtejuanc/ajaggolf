@@ -20,19 +20,24 @@ export interface InstruccionesPago {
 
 export interface ProveedorPago {
   metodo: MetodoPago;
-  obtenerInstrucciones(args: { totalCents: number; bizumNumero?: string }): InstruccionesPago;
+  obtenerInstrucciones(args: {
+    totalCents: number;
+    bizumNumero?: string;
+    ubicacionConfirmacion?: string;
+  }): InstruccionesPago;
 }
 
 const bizumProvider: ProveedorPago = {
   metodo: "bizum",
-  obtenerInstrucciones({ totalCents, bizumNumero }) {
+  obtenerInstrucciones({ totalCents, bizumNumero, ubicacionConfirmacion }) {
     const numero = bizumNumero ?? "633 88 10 27 4";
+    const ubicacion = ubicacionConfirmacion ?? "tu área de usuario";
     return {
       titulo: "Paga con Bizum",
       pasos: [
         `Haz un Bizum de ${(totalCents / 100).toLocaleString("es-ES", { style: "currency", currency: "EUR" })} al número ${numero}.`,
         "Indica tu nombre y el nombre del torneo en el concepto.",
-        'Cuando lo hayas enviado, pulsa "Ya he pagado" en tu área de usuario.',
+        `Cuando lo hayas enviado, pulsa "Ya he pagado" en ${ubicacion}.`,
         "El organizador confirmará el ingreso y tu inscripción quedará en firme.",
       ],
       requiereConfirmacionManual: true,
