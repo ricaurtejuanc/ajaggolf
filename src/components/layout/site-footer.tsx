@@ -8,7 +8,7 @@ export function SiteFooter() {
         <div className="flex items-center gap-2">
           <Image src="/Logo_AJAG.svg" alt="AJAG Golf" width={36} height={36} />
           <div>
-            <p className="font-display font-semibold text-ajag-verde-900">AJAG Golf</p>
+            <p className="font-semibold text-ajag-verde-900">AJAG Golf</p>
             <p className="text-sm text-ajag-gris-500">
               Asociación de Jugadores Amateur de Golf
             </p>
