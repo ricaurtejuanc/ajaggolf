@@ -7,12 +7,14 @@ import {
   Wallet,
   MessageSquare,
   Settings,
+  Medal,
 } from "lucide-react";
 import { getUsuarioAdmin } from "@/lib/auth";
 
 const adminLinks = [
   { href: "/admin", label: "Resumen", icon: LayoutDashboard },
   { href: "/admin/torneos", label: "Torneos", icon: Trophy },
+  { href: "/admin/ligas", label: "Ligas y Pool", icon: Medal },
   { href: "/admin/pedidos", label: "Pagos", icon: Wallet },
   { href: "/admin/consultas", label: "Consultas", icon: MessageSquare },
   { href: "/admin/configuracion", label: "Configuración", icon: Settings },

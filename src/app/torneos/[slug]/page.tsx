@@ -47,12 +47,20 @@ export default async function TorneoDetallePage({
     .eq("torneo_id", torneo.id)
     .eq("estado", "publicado")
     .maybeSingle();
+  const clasificacionPromise = torneo.liga_pool_id
+    ? supabase
+        .from("resultados")
+        .select("id", { count: "exact", head: true })
+        .eq("torneo_id", torneo.id)
+        .eq("estado", "publicado")
+    : supabase
+        .from("resultados_pdf_uploads")
+        .select("id", { count: "exact", head: true })
+        .eq("torneo_id", torneo.id)
+        .eq("estado", "publicado");
 
-  const [{ data: liga }, { count: inscritos }, { data: salidaPublicada }] = await Promise.all([
-    ligaPromise,
-    cupoPromise,
-    salidaPromise,
-  ]);
+  const [{ data: liga }, { count: inscritos }, { data: salidaPublicada }, { count: nResultados }] =
+    await Promise.all([ligaPromise, cupoPromise, salidaPromise, clasificacionPromise]);
 
   const cerrado = torneo.estado !== "publicado";
   const lleno =
@@ -152,14 +160,24 @@ export default async function TorneoDetallePage({
         )}
       </div>
 
-      {salidaPublicada ? (
-        <Link
-          href={`/torneos/${torneo.slug}/salidas`}
-          className="mt-4 flex items-center justify-center rounded-2xl border border-ajag-verde-700 px-5 py-3 text-sm font-medium text-ajag-verde-700 transition hover:bg-ajag-verde-50"
-        >
-          Ver cuadro de salidas
-        </Link>
-      ) : null}
+      <div className="mt-4 flex flex-col gap-3 sm:flex-row">
+        {salidaPublicada ? (
+          <Link
+            href={`/torneos/${torneo.slug}/salidas`}
+            className="flex flex-1 items-center justify-center rounded-2xl border border-ajag-verde-700 px-5 py-3 text-sm font-medium text-ajag-verde-700 transition hover:bg-ajag-verde-50"
+          >
+            Ver cuadro de salidas
+          </Link>
+        ) : null}
+        {(nResultados ?? 0) > 0 ? (
+          <Link
+            href={`/torneos/${torneo.slug}/clasificacion`}
+            className="flex flex-1 items-center justify-center rounded-2xl border border-ajag-verde-700 px-5 py-3 text-sm font-medium text-ajag-verde-700 transition hover:bg-ajag-verde-50"
+          >
+            Ver clasificación
+          </Link>
+        ) : null}
+      </div>
 
       <p className="mt-8">
         <span className="text-xs uppercase tracking-wide text-ajag-gris-500">Formato</span>

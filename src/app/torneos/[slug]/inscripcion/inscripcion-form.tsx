@@ -34,17 +34,31 @@ export function InscripcionForm({
 
   return (
     <form action={formAction} className="card-ajag flex flex-col gap-5 p-6">
-      <div>
-        <label htmlFor="nombre" className="text-sm font-medium text-ajag-verde-900">
-          Nombre completo *
-        </label>
-        <input
-          id="nombre"
-          name="nombre"
-          required
-          defaultValue={jugador.nombre}
-          className="mt-1 w-full rounded-xl border border-ajag-gris-200 px-4 py-2.5 text-sm outline-none focus:border-ajag-verde-600"
-        />
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div>
+          <label htmlFor="nombre" className="text-sm font-medium text-ajag-verde-900">
+            Nombre *
+          </label>
+          <input
+            id="nombre"
+            name="nombre"
+            required
+            defaultValue={jugador.nombre}
+            className="mt-1 w-full rounded-xl border border-ajag-gris-200 px-4 py-2.5 text-sm outline-none focus:border-ajag-verde-600"
+          />
+        </div>
+        <div>
+          <label htmlFor="apellidos" className="text-sm font-medium text-ajag-verde-900">
+            Apellidos *
+          </label>
+          <input
+            id="apellidos"
+            name="apellidos"
+            required
+            defaultValue={jugador.apellidos}
+            className="mt-1 w-full rounded-xl border border-ajag-gris-200 px-4 py-2.5 text-sm outline-none focus:border-ajag-verde-600"
+          />
+        </div>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">

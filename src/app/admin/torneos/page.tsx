@@ -67,6 +67,12 @@ export default async function AdminTorneosPage() {
                       Salidas
                     </Link>
                     <Link
+                      href={`/admin/torneos/${torneo.id}/resultados`}
+                      className="text-sm font-medium text-ajag-verde-700 hover:underline"
+                    >
+                      Resultados
+                    </Link>
+                    <Link
                       href={`/admin/torneos/${torneo.id}/editar`}
                       className="text-sm font-medium text-ajag-verde-700 hover:underline"
                     >

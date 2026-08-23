@@ -10,7 +10,7 @@ interface Inscripcion {
   es_socio: boolean;
   precio_cents: number;
   torneos: { nombre: string } | null;
-  jugadores: { nombre: string; email: string | null } | null;
+  jugadores: { nombre: string; apellidos: string; email: string | null } | null;
 }
 
 interface Pedido {
@@ -55,7 +55,10 @@ export function PedidoRow({ pedido }: { pedido: Pedido }) {
         {pedido.inscripciones.map((insc) => (
           <li key={insc.id} className="flex justify-between gap-4">
             <span>
-              {insc.jugadores?.nombre ?? "Jugador"} — {insc.torneos?.nombre ?? "Torneo"}
+              {insc.jugadores
+                ? `${insc.jugadores.nombre} ${insc.jugadores.apellidos}`.trim()
+                : "Jugador"}{" "}
+              — {insc.torneos?.nombre ?? "Torneo"}
               {insc.es_socio ? (
                 <span className="ml-1.5 rounded-full bg-ajag-verde-50 px-2 py-0.5 text-xs font-medium text-ajag-verde-700">
                   socio

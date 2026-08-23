@@ -24,7 +24,12 @@ interface GrupoSalidaRaw {
       licencia_federativa: string | null;
       juega_con_licencias: string[];
       handicap_snapshot: number | null;
-      jugadores: { nombre: string; handicap: number | null; sexo: string | null } | null;
+      jugadores: {
+        nombre: string;
+        apellidos: string;
+        handicap: number | null;
+        sexo: string | null;
+      } | null;
     } | null;
   }[];
 }
@@ -50,7 +55,7 @@ export default async function AdminSalidasPage({
     supabase
       .from("salidas")
       .select(
-        "*, grupos_salida(id, numero_grupo, hoyo_salida, hora_salida, grupo_salida_jugadores(id, inscripcion_id, conflicto_juega_con, conflicto_detalle, inscripciones(licencia_federativa, juega_con_licencias, handicap_snapshot, jugadores(nombre, handicap, sexo))))",
+        "*, grupos_salida(id, numero_grupo, hoyo_salida, hora_salida, grupo_salida_jugadores(id, inscripcion_id, conflicto_juega_con, conflicto_detalle, inscripciones(licencia_federativa, juega_con_licencias, handicap_snapshot, jugadores(nombre, apellidos, handicap, sexo))))",
       )
       .eq("torneo_id", id)
       .maybeSingle(),
@@ -78,7 +83,7 @@ export default async function AdminSalidasPage({
       const jugador = insc?.jugadores;
       return {
         inscripcionId: gj.inscripcion_id,
-        nombre: jugador?.nombre ?? "Jugador",
+        nombre: jugador ? `${jugador.nombre} ${jugador.apellidos}`.trim() : "Jugador",
         handicap: insc?.handicap_snapshot ?? jugador?.handicap ?? null,
         sexo: jugador?.sexo ?? null,
         juegaConLicencias: insc?.juega_con_licencias ?? [],

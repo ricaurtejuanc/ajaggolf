@@ -18,15 +18,20 @@ export async function asegurarJugadorParaUsuario(
 
   if (existente) return existente;
 
-  const nombre =
+  const givenName = user.user_metadata?.given_name as string | undefined;
+  const familyName = user.user_metadata?.family_name as string | undefined;
+  const nombreCompleto =
     (user.user_metadata?.full_name as string | undefined) ??
     (user.user_metadata?.name as string | undefined) ??
     user.email?.split("@")[0] ??
     "Jugador AJAG";
 
+  const nombre = givenName ?? nombreCompleto;
+  const apellidos = familyName ?? "";
+
   const { data: creado, error } = await supabase
     .from("jugadores")
-    .insert({ user_id: user.id, nombre, email: user.email ?? null })
+    .insert({ user_id: user.id, nombre, apellidos, email: user.email ?? null })
     .select("*")
     .single();
 

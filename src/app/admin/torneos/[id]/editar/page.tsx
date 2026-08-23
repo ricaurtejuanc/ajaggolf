@@ -38,6 +38,12 @@ export default async function EditarTorneoPage({
             Gestionar salidas →
           </Link>
           <Link
+            href={`/admin/torneos/${id}/resultados`}
+            className="text-sm font-medium text-ajag-verde-700 hover:underline"
+          >
+            Resultados →
+          </Link>
+          <Link
             href={`/torneos/${torneo.slug}`}
             target="_blank"
             className="text-sm font-medium text-ajag-verde-700 hover:underline"

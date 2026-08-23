@@ -12,28 +12,42 @@ export function PerfilForm({ jugador }: { jugador: Jugador }) {
 
   return (
     <form action={formAction} className="card-ajag flex flex-col gap-4 p-5">
-      <div>
-        <label htmlFor="nombre" className="text-sm font-medium text-ajag-verde-900">
-          Nombre completo
-        </label>
-        <input
-          id="nombre"
-          name="nombre"
-          defaultValue={jugador.nombre}
-          required
-          className="mt-1 w-full rounded-xl border border-ajag-gris-200 px-4 py-2.5 text-sm outline-none focus:border-ajag-verde-600"
-        />
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div>
+          <label htmlFor="nombre" className="text-sm font-medium text-ajag-verde-900">
+            Nombre
+          </label>
+          <input
+            id="nombre"
+            name="nombre"
+            defaultValue={jugador.nombre}
+            required
+            className="mt-1 w-full rounded-xl border border-ajag-gris-200 px-4 py-2.5 text-sm outline-none focus:border-ajag-verde-600"
+          />
+        </div>
+        <div>
+          <label htmlFor="apellidos" className="text-sm font-medium text-ajag-verde-900">
+            Apellidos
+          </label>
+          <input
+            id="apellidos"
+            name="apellidos"
+            defaultValue={jugador.apellidos}
+            className="mt-1 w-full rounded-xl border border-ajag-gris-200 px-4 py-2.5 text-sm outline-none focus:border-ajag-verde-600"
+          />
+        </div>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
-          <label htmlFor="licencia_federativa" className="text-sm font-medium text-ajag-verde-900">
-            Licencia federativa
+          <label htmlFor="email" className="text-sm font-medium text-ajag-verde-900">
+            Email de contacto
           </label>
           <input
-            id="licencia_federativa"
-            name="licencia_federativa"
-            defaultValue={jugador.licencia_federativa ?? ""}
+            id="email"
+            name="email"
+            type="email"
+            defaultValue={jugador.email ?? ""}
             className="mt-1 w-full rounded-xl border border-ajag-gris-200 px-4 py-2.5 text-sm outline-none focus:border-ajag-verde-600"
           />
         </div>
@@ -48,6 +62,18 @@ export function PerfilForm({ jugador }: { jugador: Jugador }) {
             className="mt-1 w-full rounded-xl border border-ajag-gris-200 px-4 py-2.5 text-sm outline-none focus:border-ajag-verde-600"
           />
         </div>
+      </div>
+
+      <div>
+        <label htmlFor="licencia_federativa" className="text-sm font-medium text-ajag-verde-900">
+          Licencia federativa
+        </label>
+        <input
+          id="licencia_federativa"
+          name="licencia_federativa"
+          defaultValue={jugador.licencia_federativa ?? ""}
+          className="mt-1 w-full max-w-xs rounded-xl border border-ajag-gris-200 px-4 py-2.5 text-sm outline-none focus:border-ajag-verde-600"
+        />
       </div>
 
       <div>

@@ -46,6 +46,7 @@ export type Jugador = {
   id: string;
   user_id: string | null;
   nombre: string;
+  apellidos: string;
   email: string | null;
   licencia_federativa: string | null;
   sexo: SexoJugador | null;
@@ -162,7 +163,7 @@ export type ResultadoPdfUpload = {
   nombre_archivo: string;
   proveedor_origen: string | null;
   mapeo_columnas: Record<string, string>;
-  filas_extraidas: unknown[];
+  filas_extraidas: unknown;
   estado: EstadoPdfResultados;
   subido_por: string | null;
   created_at: string;
@@ -184,14 +185,6 @@ export type Resultado = {
   pdf_origen_id: string | null;
   created_at: string;
   updated_at: string;
-};
-
-export type LigaPoolEvento = {
-  id: string;
-  liga_pool_id: string;
-  torneo_id: string;
-  orden: number | null;
-  created_at: string;
 };
 
 export type ClasificacionGlobal = {
@@ -249,6 +242,17 @@ export type SalidaPublicada = {
   grupo_salida_jugador_id: string | null;
   nombre: string | null;
   handicap: number | null;
+  apellidos: string | null;
+};
+
+export type ClasificacionPublica = {
+  liga_pool_id: string;
+  jugador_id: string;
+  nombre: string;
+  apellidos: string;
+  handicap: number | null;
+  puntos_totales: number;
+  eventos_jugados: number;
 };
 
 export type Database = {
@@ -266,13 +270,13 @@ export type Database = {
       grupo_salida_jugadores: TableDef<GrupoSalidaJugador>;
       resultados_pdf_uploads: TableDef<ResultadoPdfUpload>;
       resultados: TableDef<Resultado>;
-      liga_pool_eventos: TableDef<LigaPoolEvento>;
       clasificacion_global: TableDef<ClasificacionGlobal>;
       visitas_web: TableDef<VisitaWeb>;
       consultas_contacto: TableDef<ConsultaContacto>;
     };
     Views: {
       salidas_publicadas: ViewDef<SalidaPublicada>;
+      clasificacion_publica: ViewDef<ClasificacionPublica>;
     };
     Functions: Record<string, never>;
   };

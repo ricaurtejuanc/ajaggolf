@@ -9,6 +9,7 @@ interface InscripcionConJugadorRaw {
   jugador_id: string;
   jugadores: {
     nombre: string;
+    apellidos: string;
     handicap: number | null;
     sexo: string | null;
     licencia_federativa: string | null;
@@ -22,7 +23,7 @@ export async function obtenerJugadoresConfirmados(
   const { data } = await supabase
     .from("inscripciones")
     .select(
-      "id, licencia_federativa, handicap_snapshot, juega_con_licencias, jugador_id, jugadores(nombre, handicap, sexo, licencia_federativa)",
+      "id, licencia_federativa, handicap_snapshot, juega_con_licencias, jugador_id, jugadores(nombre, apellidos, handicap, sexo, licencia_federativa)",
     )
     .eq("torneo_id", torneoId)
     .eq("estado", "confirmada");
@@ -34,7 +35,7 @@ export async function obtenerJugadoresConfirmados(
     return {
       inscripcionId: insc.id,
       jugadorId: insc.jugador_id,
-      nombre: jugador?.nombre ?? "Jugador",
+      nombre: jugador ? `${jugador.nombre} ${jugador.apellidos}`.trim() : "Jugador",
       handicap: insc.handicap_snapshot ?? jugador?.handicap ?? null,
       sexo: jugador?.sexo ?? null,
       licenciaFederativa: insc.licencia_federativa ?? jugador?.licencia_federativa ?? null,

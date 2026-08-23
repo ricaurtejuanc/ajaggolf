@@ -39,6 +39,8 @@ export async function actualizarPerfil(
   if (!user) return { ok: false, error: "Sesión no válida." };
 
   const nombre = String(formData.get("nombre") ?? "").trim();
+  const apellidos = String(formData.get("apellidos") ?? "").trim();
+  const email = String(formData.get("email") ?? "").trim() || null;
   const licencia_federativa = String(formData.get("licencia_federativa") ?? "").trim() || null;
   const telefono = String(formData.get("telefono") ?? "").trim() || null;
   const sexoRaw = String(formData.get("sexo") ?? "");
@@ -53,7 +55,7 @@ export async function actualizarPerfil(
 
   const { error } = await supabase
     .from("jugadores")
-    .update({ nombre, licencia_federativa, telefono, sexo, handicap })
+    .update({ nombre, apellidos, email, licencia_federativa, telefono, sexo, handicap })
     .eq("user_id", user.id);
 
   if (error) return { ok: false, error: error.message };

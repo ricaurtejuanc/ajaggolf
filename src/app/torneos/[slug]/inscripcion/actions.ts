@@ -18,6 +18,7 @@ export async function inscribirse(
   if (!user) redirect(`/login?next=/torneos/${torneoSlug}/inscripcion`);
 
   const nombre = String(formData.get("nombre") ?? "").trim();
+  const apellidos = String(formData.get("apellidos") ?? "").trim();
   const email = String(formData.get("email") ?? "").trim();
   const licencia_federativa = String(formData.get("licencia_federativa") ?? "").trim();
   const sexoRaw = String(formData.get("sexo") ?? "");
@@ -30,7 +31,7 @@ export async function inscribirse(
   const handicapRaw = String(formData.get("handicap") ?? "").trim().replace(",", ".");
   const handicap = handicapRaw ? Number(handicapRaw) : null;
 
-  if (!nombre || !email || !licencia_federativa || !sexo) {
+  if (!nombre || !apellidos || !email || !licencia_federativa || !sexo) {
     return { ok: false, error: "Rellena todos los campos obligatorios." };
   }
   if (handicapRaw && Number.isNaN(handicap)) {
@@ -70,7 +71,7 @@ export async function inscribirse(
 
   await supabase
     .from("jugadores")
-    .update({ nombre, email, licencia_federativa, sexo, handicap })
+    .update({ nombre, apellidos, email, licencia_federativa, sexo, handicap })
     .eq("id", jugador.id);
 
   const { error } = await supabase.from("inscripciones").upsert(

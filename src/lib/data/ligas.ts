@@ -23,19 +23,10 @@ export async function obtenerLigaPorSlug(
 
   if (!liga) return null;
 
-  const { data: eventos } = await supabase
-    .from("liga_pool_eventos")
-    .select("torneo_id, orden")
-    .eq("liga_pool_id", liga.id)
-    .order("orden", { ascending: true });
-
-  const torneoIds = (eventos ?? []).map((e) => e.torneo_id);
-  if (torneoIds.length === 0) return { liga, torneos: [] };
-
   const { data: torneos } = await supabase
     .from("torneos")
     .select("*")
-    .in("id", torneoIds)
+    .eq("liga_pool_id", liga.id)
     .in("estado", ["publicado", "cerrado", "finalizado"])
     .order("fecha", { ascending: true });
 

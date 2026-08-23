@@ -56,7 +56,7 @@ export default async function SalidasPublicasPage({
     if (fila.grupo_salida_jugador_id && fila.nombre) {
       grupos.get(fila.grupo_salida_id)!.jugadores.push({
         id: fila.grupo_salida_jugador_id,
-        nombre: fila.nombre,
+        nombre: `${fila.nombre} ${fila.apellidos ?? ""}`.trim(),
         handicap: fila.handicap,
       });
     }

@@ -138,7 +138,7 @@ interface GrupoSalidaConJugadoresRaw {
       juega_con_licencias: string[];
       handicap_snapshot: number | null;
       jugador_id: string;
-      jugadores: { nombre: string; handicap: number | null } | null;
+      jugadores: { nombre: string; apellidos: string; handicap: number | null } | null;
     } | null;
   }[];
 }
@@ -149,7 +149,7 @@ async function recalcularConflictos(salidaId: string) {
   const { data } = await supabase
     .from("grupos_salida")
     .select(
-      "id, grupo_salida_jugadores(id, inscripcion_id, inscripciones(licencia_federativa, juega_con_licencias, handicap_snapshot, jugador_id, jugadores(nombre, handicap)))",
+      "id, grupo_salida_jugadores(id, inscripcion_id, inscripciones(licencia_federativa, juega_con_licencias, handicap_snapshot, jugador_id, jugadores(nombre, apellidos, handicap)))",
     )
     .eq("salida_id", salidaId);
 
@@ -163,7 +163,7 @@ async function recalcularConflictos(salidaId: string) {
       return {
         inscripcionId: gj.inscripcion_id,
         jugadorId: insc?.jugador_id ?? "",
-        nombre: jugador?.nombre ?? "Jugador",
+        nombre: jugador ? `${jugador.nombre} ${jugador.apellidos}`.trim() : "Jugador",
         handicap: insc?.handicap_snapshot ?? jugador?.handicap ?? null,
         sexo: null,
         licenciaFederativa: insc?.licencia_federativa ?? null,

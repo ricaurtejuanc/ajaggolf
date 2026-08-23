@@ -12,7 +12,7 @@ export default async function AdminPedidosPage() {
   const { data } = await supabase
     .from("pedidos_pago")
     .select(
-      "*, inscripciones(id, es_socio, precio_cents, torneos(nombre), jugadores(nombre, email))",
+      "*, inscripciones(id, es_socio, precio_cents, torneos(nombre), jugadores(nombre, apellidos, email))",
     )
     .order("created_at", { ascending: false });
 
