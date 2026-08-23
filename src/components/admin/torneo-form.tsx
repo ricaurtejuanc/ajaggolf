@@ -1,11 +1,11 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { PosterUploader } from "./poster-uploader";
 import { TeesInput } from "./tees-input";
 import { CATEGORIAS_EXTRAS } from "@/lib/extras-torneo";
 import type { EstadoTorneoForm } from "@/app/admin/torneos/actions";
-import type { LigaPool, Torneo } from "@/types/database";
+import type { LigaPool, ModoSalida, Torneo } from "@/types/database";
 
 export function TorneoForm({
   torneo,
@@ -19,6 +19,10 @@ export function TorneoForm({
   textoBoton: string;
 }) {
   const [state, formAction, pending] = useActionState(action, { ok: false, error: null });
+  const [modoSalida, setModoSalida] = useState<ModoSalida>(torneo?.modo_salida ?? "consecutivo");
+  const [teesConsecutivo, setTeesConsecutivo] = useState<Set<number>>(
+    new Set(torneo?.tees_consecutivo && torneo.tees_consecutivo.length > 0 ? torneo.tees_consecutivo : [1]),
+  );
 
   return (
     <form action={formAction} className="card-ajag flex flex-col gap-5 p-6">
@@ -157,15 +161,21 @@ export function TorneoForm({
             { value: "medal_play", label: "Medal Play" },
           ]}
         />
-        <Select
-          id="modo_salida"
-          label="Modo de salida"
-          defaultValue={torneo?.modo_salida ?? "consecutivo"}
-          options={[
-            { value: "consecutivo", label: "Consecutivo" },
-            { value: "shotgun", label: "A tiro (shotgun)" },
-          ]}
-        />
+        <div>
+          <label htmlFor="modo_salida" className="block text-sm font-medium text-ajag-verde-900">
+            Modo de salida
+          </label>
+          <select
+            id="modo_salida"
+            name="modo_salida"
+            value={modoSalida}
+            onChange={(e) => setModoSalida(e.target.value as ModoSalida)}
+            className="mt-1 w-full rounded-xl border border-ajag-gris-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-ajag-verde-600"
+          >
+            <option value="consecutivo">Consecutivo</option>
+            <option value="shotgun">A tiro (shotgun)</option>
+          </select>
+        </div>
         <Select
           id="modo_asignacion_salida"
           label="Asignación de grupos"
@@ -177,6 +187,38 @@ export function TorneoForm({
           ]}
         />
       </div>
+
+      {modoSalida === "consecutivo" ? (
+        <div>
+          <span className="text-sm font-medium text-ajag-verde-900">
+            Tee de salida (consecutivo)
+          </span>
+          <div className="mt-1 flex gap-4">
+            {[1, 10].map((tee) => (
+              <label key={tee} className="flex items-center gap-2 text-sm text-ajag-gris-500">
+                <input
+                  type="checkbox"
+                  name="tees_consecutivo"
+                  value={tee}
+                  checked={teesConsecutivo.has(tee)}
+                  onChange={() =>
+                    setTeesConsecutivo((prev) => {
+                      const copia = new Set(prev);
+                      if (copia.has(tee)) copia.delete(tee);
+                      else copia.add(tee);
+                      return copia;
+                    })
+                  }
+                />
+                Tee {tee}
+              </label>
+            ))}
+          </div>
+          <p className="mt-1 text-xs text-ajag-gris-500">
+            Se usa como valor por defecto al generar el cuadro de salidas; se puede cambiar ahí.
+          </p>
+        </div>
+      ) : null}
 
       <div className="grid gap-4 sm:grid-cols-2">
         <Select

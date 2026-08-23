@@ -10,12 +10,14 @@ export function GenerarSalidasForm({
   torneoId,
   modoSalidaDefecto,
   modoAsignacionDefecto,
+  teesConsecutivoDefecto,
   salidaExistente,
   nJugadoresConfirmados,
 }: {
   torneoId: string;
   modoSalidaDefecto: ModoSalida;
   modoAsignacionDefecto: ModoAsignacionSalida;
+  teesConsecutivoDefecto: number[];
   salidaExistente: Salida | null;
   nJugadoresConfirmados: number;
 }) {
@@ -31,7 +33,7 @@ export function GenerarSalidasForm({
 
   const teesConsecutivoIniciales = Array.isArray(configExistente.tees)
     ? new Set((configExistente.tees as number[]).map(Number))
-    : new Set([1]);
+    : new Set(teesConsecutivoDefecto.length > 0 ? teesConsecutivoDefecto : [1]);
   const [teesConsecutivo, setTeesConsecutivo] = useState<Set<number>>(teesConsecutivoIniciales);
 
   const hoyosSalidaIniciales = Array.isArray(configExistente.hoyos_salida)

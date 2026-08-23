@@ -86,6 +86,7 @@ export type Torneo = {
   formato_puntuacion: FormatoPuntuacion;
   modo_salida: ModoSalida;
   modo_asignacion_salida: ModoAsignacionSalida;
+  tees_consecutivo: number[];
   modo_pago: ModoPagoTorneo;
   extras: string[];
   liga_pool_id: string | null;

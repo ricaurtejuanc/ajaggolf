@@ -34,6 +34,10 @@ function leerCamposTorneo(formData: FormData) {
       .map((v) => String(v).trim())
       .filter(Boolean);
   const extras = formData.getAll("extras").map((v) => String(v));
+  const teesConsecutivo = formData
+    .getAll("tees_consecutivo")
+    .map((v) => parseInt(String(v), 10))
+    .filter((n) => !Number.isNaN(n));
 
   return {
     nombre,
@@ -50,6 +54,7 @@ function leerCamposTorneo(formData: FormData) {
     cupo_maximo: cupoRaw ? parseInt(cupoRaw, 10) : null,
     formato_puntuacion: String(formData.get("formato_puntuacion") ?? "stableford") as FormatoPuntuacion,
     modo_salida: String(formData.get("modo_salida") ?? "consecutivo") as ModoSalida,
+    tees_consecutivo: teesConsecutivo.length > 0 ? teesConsecutivo : [1],
     modo_asignacion_salida: String(
       formData.get("modo_asignacion_salida") ?? "handicap",
     ) as ModoAsignacionSalida,
