@@ -26,7 +26,11 @@ export function TorneoForm({
 
   return (
     <form action={formAction} className="card-ajag flex flex-col gap-5 p-6">
-      <PosterUploader posterUrlInicial={torneo?.poster_url ?? null} />
+      <PosterUploader
+        posterUrlInicial={torneo?.poster_url ?? null}
+        focalXInicial={torneo?.poster_focal_x}
+        focalYInicial={torneo?.poster_focal_y}
+      />
 
       <div>
         <label htmlFor="nombre" className="text-sm font-medium text-ajag-verde-900">

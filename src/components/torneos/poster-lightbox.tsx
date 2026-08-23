@@ -4,7 +4,17 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import { X, ZoomIn } from "lucide-react";
 
-export function PosterLightbox({ posterUrl, alt }: { posterUrl: string; alt: string }) {
+export function PosterLightbox({
+  posterUrl,
+  alt,
+  focalX = 50,
+  focalY = 50,
+}: {
+  posterUrl: string;
+  alt: string;
+  focalX?: number;
+  focalY?: number;
+}) {
   const [abierto, setAbierto] = useState(false);
 
   useEffect(() => {
@@ -33,6 +43,7 @@ export function PosterLightbox({ posterUrl, alt }: { posterUrl: string; alt: str
           alt={alt}
           fill
           className="object-cover"
+          style={{ objectPosition: `${focalX}% ${focalY}%` }}
           sizes="100vw"
           priority
         />

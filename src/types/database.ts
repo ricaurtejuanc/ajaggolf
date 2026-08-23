@@ -80,6 +80,8 @@ export type Torneo = {
   fecha: string;
   hora_inicio: string | null;
   poster_url: string | null;
+  poster_focal_x: number;
+  poster_focal_y: number;
   precio_cents: number;
   precio_socio_cents: number | null;
   cupo_maximo: number | null;

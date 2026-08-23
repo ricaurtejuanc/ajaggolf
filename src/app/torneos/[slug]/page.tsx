@@ -79,7 +79,12 @@ export default async function TorneoDetallePage({
   return (
     <div className="mx-auto max-w-4xl px-4 py-10">
       {torneo.poster_url ? (
-        <PosterLightbox posterUrl={torneo.poster_url} alt={torneo.nombre} />
+        <PosterLightbox
+          posterUrl={torneo.poster_url}
+          alt={torneo.nombre}
+          focalX={torneo.poster_focal_x}
+          focalY={torneo.poster_focal_y}
+        />
       ) : (
         <div className="relative flex aspect-[16/9] w-full items-center justify-center overflow-hidden rounded-2xl bg-ajag-verde-100 text-ajag-verde-700/50">
           <CalendarDays size={56} />

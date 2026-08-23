@@ -41,6 +41,7 @@ export function TorneoCard({
             alt={torneo.nombre}
             fill
             className="object-cover transition duration-300 group-hover:scale-105"
+            style={{ objectPosition: `${torneo.poster_focal_x}% ${torneo.poster_focal_y}%` }}
             sizes="(min-width: 768px) 33vw, 100vw"
           />
         ) : (

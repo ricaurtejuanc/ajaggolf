@@ -38,6 +38,9 @@ function leerCamposTorneo(formData: FormData) {
     .getAll("tees_consecutivo")
     .map((v) => parseInt(String(v), 10))
     .filter((n) => !Number.isNaN(n));
+  const clamp = (n: number) => Math.min(100, Math.max(0, n));
+  const focalX = parseInt(String(formData.get("poster_focal_x") ?? "50"), 10);
+  const focalY = parseInt(String(formData.get("poster_focal_y") ?? "50"), 10);
 
   return {
     nombre,
@@ -49,6 +52,8 @@ function leerCamposTorneo(formData: FormData) {
     fecha: String(formData.get("fecha") ?? ""),
     hora_inicio: String(formData.get("hora_inicio") ?? "").trim() || null,
     poster_url: String(formData.get("poster_url") ?? "").trim() || null,
+    poster_focal_x: Number.isNaN(focalX) ? 50 : clamp(focalX),
+    poster_focal_y: Number.isNaN(focalY) ? 50 : clamp(focalY),
     precio_cents: Math.round(parseFloat(precioEuros || "0") * 100),
     precio_socio_cents: precioSocioEuros ? Math.round(parseFloat(precioSocioEuros) * 100) : null,
     cupo_maximo: cupoRaw ? parseInt(cupoRaw, 10) : null,

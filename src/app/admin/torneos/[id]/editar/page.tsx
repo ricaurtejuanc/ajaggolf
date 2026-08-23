@@ -30,27 +30,13 @@ export default async function EditarTorneoPage({
         <h1 className="font-display text-2xl font-semibold text-ajag-verde-900">
           Editar torneo
         </h1>
-        <div className="flex items-center gap-4">
-          <Link
-            href={`/admin/torneos/${id}/salidas`}
-            className="text-sm font-medium text-ajag-verde-700 hover:underline"
-          >
-            Gestionar salidas →
-          </Link>
-          <Link
-            href={`/admin/torneos/${id}/resultados`}
-            className="text-sm font-medium text-ajag-verde-700 hover:underline"
-          >
-            Resultados →
-          </Link>
-          <Link
-            href={`/torneos/${torneo.slug}`}
-            target="_blank"
-            className="text-sm font-medium text-ajag-verde-700 hover:underline"
-          >
-            Ver página pública ↗
-          </Link>
-        </div>
+        <Link
+          href={`/torneos/${torneo.slug}`}
+          target="_blank"
+          className="text-sm font-medium text-ajag-verde-700 hover:underline"
+        >
+          Ver página pública ↗
+        </Link>
       </div>
       <TorneoForm
         torneo={torneo}
