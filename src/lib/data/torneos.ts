@@ -20,7 +20,9 @@ export async function listarProximosTorneos(limite = 3): Promise<Torneo[]> {
   const { data } = await supabase
     .from("torneos")
     .select("*")
-    .eq("estado", "publicado")
+    // "Completo" (cerrado) sigue contando como próximo torneo, igual que en
+    // el calendario: solo "finalizado" deja de ser un próximo torneo.
+    .in("estado", ["publicado", "cerrado"])
     .gte("fecha", hoy)
     .order("fecha", { ascending: true })
     .limit(limite);
