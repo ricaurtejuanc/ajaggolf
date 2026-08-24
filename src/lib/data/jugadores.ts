@@ -18,6 +18,32 @@ export async function asegurarJugadorParaUsuario(
 
   if (existente) return existente;
 
+  // Si ya se inscribió como invitado antes de tener cuenta, reclama esa
+  // ficha (con su licencia, hándicap, etc.) en vez de crear una duplicada:
+  // si no, el email queda repartido en dos jugadores distintos y la
+  // licencia federativa choca con la restricción unique al rellenarla.
+  if (user.email) {
+    const { data: invitado } = await supabase
+      .from("jugadores")
+      .select("*")
+      .is("user_id", null)
+      .eq("email", user.email)
+      .order("created_at", { ascending: true })
+      .limit(1)
+      .maybeSingle();
+
+    if (invitado) {
+      const { data: reclamado, error: errorReclamo } = await supabase
+        .from("jugadores")
+        .update({ user_id: user.id })
+        .eq("id", invitado.id)
+        .select("*")
+        .single();
+
+      if (!errorReclamo && reclamado) return reclamado;
+    }
+  }
+
   const givenName = user.user_metadata?.given_name as string | undefined;
   const familyName = user.user_metadata?.family_name as string | undefined;
   const nombreCompleto =
