@@ -1,10 +1,19 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { TablaPuntosEditor } from "./tabla-puntos-editor";
 import { LigaImagenUploader } from "./liga-imagen-uploader";
 import type { EstadoLigaForm } from "@/app/admin/ligas/actions";
 import type { LigaPool } from "@/types/database";
+
+function slugify(texto: string): string {
+  return texto
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
+}
 
 export function LigaForm({
   liga,
@@ -16,6 +25,9 @@ export function LigaForm({
   textoBoton: string;
 }) {
   const [state, formAction, pending] = useActionState(action, { ok: false, error: null });
+  const [nombre, setNombre] = useState(liga?.nombre ?? "");
+  const [slug, setSlug] = useState(liga?.slug ?? "");
+  const slugPrevisualizado = slugify(slug || nombre);
 
   return (
     <form action={formAction} className="card-ajag flex flex-col gap-5 p-6">
@@ -29,36 +41,40 @@ export function LigaForm({
           id="nombre"
           name="nombre"
           required
-          defaultValue={liga?.nombre}
+          value={nombre}
+          onChange={(e) => setNombre(e.target.value)}
           className="mt-1 w-full rounded-xl border border-ajag-gris-200 px-4 py-2.5 text-sm outline-none focus:border-ajag-verde-600"
         />
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2">
-        <div>
-          <label htmlFor="slug" className="text-sm font-medium text-ajag-verde-900">
-            URL (slug)
-          </label>
-          <input
-            id="slug"
-            name="slug"
-            placeholder="se genera automáticamente si lo dejas vacío"
-            defaultValue={liga?.slug}
-            className="mt-1 w-full rounded-xl border border-ajag-gris-200 px-4 py-2.5 text-sm outline-none focus:border-ajag-verde-600"
-          />
-        </div>
-        <div>
-          <label htmlFor="temporada" className="text-sm font-medium text-ajag-verde-900">
-            Temporada
-          </label>
-          <input
-            id="temporada"
-            name="temporada"
-            placeholder="Ej. 2026"
-            defaultValue={liga?.temporada ?? ""}
-            className="mt-1 w-full rounded-xl border border-ajag-gris-200 px-4 py-2.5 text-sm outline-none focus:border-ajag-verde-600"
-          />
-        </div>
+      <div>
+        <label htmlFor="slug" className="text-sm font-medium text-ajag-verde-900">
+          URL (slug)
+        </label>
+        <input
+          id="slug"
+          name="slug"
+          placeholder="se genera automáticamente a partir del nombre si lo dejas vacío"
+          value={slug}
+          onChange={(e) => setSlug(e.target.value)}
+          className="mt-1 w-full rounded-xl border border-ajag-gris-200 px-4 py-2.5 text-sm outline-none focus:border-ajag-verde-600"
+        />
+        <p className="mt-1 truncate text-xs text-ajag-gris-500">
+          URL pública: /ligas/{slugPrevisualizado || "…"}
+        </p>
+      </div>
+
+      <div>
+        <label htmlFor="temporada" className="text-sm font-medium text-ajag-verde-900">
+          Temporada
+        </label>
+        <input
+          id="temporada"
+          name="temporada"
+          placeholder="Ej. 2026"
+          defaultValue={liga?.temporada ?? ""}
+          className="mt-1 w-full rounded-xl border border-ajag-gris-200 px-4 py-2.5 text-sm outline-none focus:border-ajag-verde-600"
+        />
       </div>
 
       <div>
@@ -93,7 +109,12 @@ export function LigaForm({
 
       <div>
         <span className="text-sm font-medium text-ajag-verde-900">Tipo</span>
-        <div className="mt-1 flex flex-col gap-2">
+        <p className="mt-1 text-xs text-ajag-gris-500">
+          Puedes crear tantas ligas como quieras por temática (ej. Liga de Damas, Liga
+          Senior...). Márcala como Ranking o Pool oficial solo si quieres que sea la que
+          se puede elegir al crear un torneo: solo puede haber una de cada tipo.
+        </p>
+        <div className="mt-2 flex flex-col gap-2">
           <label className="flex items-center gap-2 text-sm text-ajag-gris-500">
             <input
               type="radio"
@@ -101,7 +122,7 @@ export function LigaForm({
               value=""
               defaultChecked={!liga?.tipo_oficial}
             />
-            Liga normal
+            Liga temática (no oficial, no se puede elegir al crear torneos)
           </label>
           <label className="flex items-center gap-2 text-sm text-ajag-gris-500">
             <input
@@ -110,7 +131,7 @@ export function LigaForm({
               value="ranking"
               defaultChecked={liga?.tipo_oficial === "ranking"}
             />
-            Es el Ranking oficial (aparecerá para elegir al crear torneos)
+            Ranking oficial (aparecerá para elegir al crear torneos)
           </label>
           <label className="flex items-center gap-2 text-sm text-ajag-gris-500">
             <input
@@ -119,12 +140,9 @@ export function LigaForm({
               value="pool"
               defaultChecked={liga?.tipo_oficial === "pool"}
             />
-            Es el Pool oficial (aparecerá para elegir al crear torneos)
+            Pool oficial (aparecerá para elegir al crear torneos)
           </label>
         </div>
-        <p className="mt-1 text-xs text-ajag-gris-500">
-          Solo puede haber una liga marcada como Ranking oficial y una como Pool oficial.
-        </p>
       </div>
 
       <label className="flex items-center gap-2 text-sm text-ajag-verde-900">
