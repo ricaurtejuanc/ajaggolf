@@ -201,9 +201,7 @@ export function ResultadosForm({
         <p className="text-sm text-ajag-verde-700">Borrador guardado.</p>
       ) : null}
       {estadoPublicar.ok ? (
-        <p className="text-sm text-ajag-verde-700">
-          Clasificación publicada y clasificación global de la liga actualizada.
-        </p>
+        <p className="text-sm text-ajag-verde-700">Clasificación publicada.</p>
       ) : null}
 
       <div className="flex gap-3">

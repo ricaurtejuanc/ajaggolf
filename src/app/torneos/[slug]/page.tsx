@@ -49,23 +49,21 @@ export default async function TorneoDetallePage({
     .eq("torneo_id", torneo.id)
     .eq("estado", "publicado")
     .maybeSingle();
-  // La clasificación general puede venir de un PDF/foto publicado (para
-  // cualquier torneo) o, en los de liga/pool, de la tabla rellenada a mano
-  // (marcada como es_clasificacion_general; los puestos guardados solo
-  // para puntuar en la liga no cuentan aquí).
+  // La clasificación general puede venir de un PDF/foto publicado o de la
+  // tabla rellenada a mano (marcada como es_clasificacion_general, sea o
+  // no torneo de liga); los puestos guardados solo para puntuar en la
+  // liga no cuentan aquí.
   const pdfPromise = supabase
     .from("resultados_pdf_uploads")
     .select("id", { count: "exact", head: true })
     .eq("torneo_id", torneo.id)
     .eq("estado", "publicado");
-  const resultadosPromise = torneo.liga_pool_id
-    ? supabase
-        .from("resultados")
-        .select("id", { count: "exact", head: true })
-        .eq("torneo_id", torneo.id)
-        .eq("estado", "publicado")
-        .eq("es_clasificacion_general", true)
-    : Promise.resolve({ count: 0 });
+  const resultadosPromise = supabase
+    .from("resultados")
+    .select("id", { count: "exact", head: true })
+    .eq("torneo_id", torneo.id)
+    .eq("estado", "publicado")
+    .eq("es_clasificacion_general", true);
 
   const [
     { data: liga },

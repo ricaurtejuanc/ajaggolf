@@ -74,73 +74,49 @@ export default async function AdminResultadosPage({
         </h1>
       </div>
 
-      {torneo.liga_pool_id ? (
-        <>
-          <ClasificacionGeneralToggle
-            hayDocumento={Boolean(documento)}
-            documentoUploader={
-              <div className="flex flex-col gap-4">
-                <DocumentoUploader torneoId={id} />
-                {documento ? <DocumentoActual torneoId={id} documento={documento} /> : null}
-              </div>
-            }
-            tablaManual={
-              <TablaResultados
-                torneoId={id}
-                formatoPuntuacion={torneo.formato_puntuacion}
-                confirmados={confirmados}
-                documentoFilasExtraidas={documentoFilasExtraidas}
-                resultados={resultados ?? []}
-                categorias={torneo.premios
-                  .filter((c) => !c.categoria_unica)
-                  .map((c) => ({
-                    nombre: c.nombre,
-                    handicapDesde: c.handicap_desde,
-                    handicapHasta: c.handicap_hasta,
-                  }))}
-              />
-            }
-          />
-
-          <GanadoresPremiosForm
-            torneoId={id}
-            premios={torneo.premios}
-            ganadoresIniciales={torneo.premios_ganadores}
-            confirmados={confirmados}
-            sugerenciasPosicion={sugerenciasPosicion}
-          />
-
-          <PosicionesLiga
-            torneoId={id}
-            ligaPoolId={torneo.liga_pool_id}
-            confirmados={confirmados}
-            sugerenciasPosicion={sugerenciasPosicion}
-            resultados={resultados ?? []}
-          />
-        </>
-      ) : (
-        <>
-          <div className="mb-6">
+      <ClasificacionGeneralToggle
+        hayDocumento={Boolean(documento)}
+        documentoUploader={
+          <div className="flex flex-col gap-4">
             <DocumentoUploader torneoId={id} />
+            {documento ? <DocumentoActual torneoId={id} documento={documento} /> : null}
           </div>
-
-          {documento ? <DocumentoActual torneoId={id} documento={documento} /> : null}
-
-          <GanadoresPremiosForm
+        }
+        tablaManual={
+          <TablaResultados
             torneoId={id}
-            premios={torneo.premios}
-            ganadoresIniciales={torneo.premios_ganadores}
+            formatoPuntuacion={torneo.formato_puntuacion}
             confirmados={confirmados}
-            sugerenciasPosicion={sugerenciasPosicion}
+            documentoFilasExtraidas={documentoFilasExtraidas}
+            resultados={resultados ?? []}
+            categorias={torneo.premios
+              .filter((c) => !c.categoria_unica)
+              .map((c) => ({
+                nombre: c.nombre,
+                handicapDesde: c.handicap_desde,
+                handicapHasta: c.handicap_hasta,
+              }))}
           />
+        }
+      />
 
-          <p className="mt-6 text-sm text-ajag-gris-500">
-            Este torneo no pertenece a ninguna liga/pool, así que no necesita una
-            clasificación estructurada: con subir el PDF o la foto y publicarlo
-            es suficiente.
-          </p>
-        </>
-      )}
+      <GanadoresPremiosForm
+        torneoId={id}
+        premios={torneo.premios}
+        ganadoresIniciales={torneo.premios_ganadores}
+        confirmados={confirmados}
+        sugerenciasPosicion={sugerenciasPosicion}
+      />
+
+      {torneo.liga_pool_id ? (
+        <PosicionesLiga
+          torneoId={id}
+          ligaPoolId={torneo.liga_pool_id}
+          confirmados={confirmados}
+          sugerenciasPosicion={sugerenciasPosicion}
+          resultados={resultados ?? []}
+        />
+      ) : null}
     </div>
   );
 }

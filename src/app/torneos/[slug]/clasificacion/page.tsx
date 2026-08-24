@@ -49,19 +49,18 @@ export default async function ClasificacionPage({
 
   // La clasificación general con todos los jugadores solo sale del PDF/foto
   // publicado, o de la tabla rellenada a mano en el admin (marcada como
-  // es_clasificacion_general). Los puestos guardados solo para puntuar en
-  // una liga/pool no cuentan aquí: esos se ven en la clasificación de la
-  // liga, no en la ficha de este torneo.
-  const { data: resultados } =
-    !documento && torneo.liga_pool_id
-      ? await supabase
-          .from("resultados")
-          .select("*")
-          .eq("torneo_id", torneo.id)
-          .eq("estado", "publicado")
-          .eq("es_clasificacion_general", true)
-          .order("posicion", { ascending: true, nullsFirst: false })
-      : { data: null };
+  // es_clasificacion_general, sea o no torneo de liga). Los puestos
+  // guardados solo para puntuar en una liga/pool no cuentan aquí: esos se
+  // ven en la clasificación de la liga, no en la ficha de este torneo.
+  const { data: resultados } = !documento
+    ? await supabase
+        .from("resultados")
+        .select("*")
+        .eq("torneo_id", torneo.id)
+        .eq("estado", "publicado")
+        .eq("es_clasificacion_general", true)
+        .order("posicion", { ascending: true, nullsFirst: false })
+    : { data: null };
 
   if (!documento && (!resultados || resultados.length === 0) && !cuadroHonor) notFound();
 
