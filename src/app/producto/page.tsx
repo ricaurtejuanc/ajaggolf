@@ -76,12 +76,16 @@ export default function ProductoLandingPage() {
           >
             Quiero probarlo
           </a>
-          <Link
-            href="/torneos"
+          {/* No usamos "/" relativo: en torneos.aftergolf.es esa ruta la
+              reescribe el proxy de vuelta a esta misma landing (ver
+              proxy.ts). Este dominio sirve la home real de AJAG sin ese
+              rewrite. */}
+          <a
+            href="https://ajaggolf-umber.vercel.app/"
             className="rounded-full border border-aftergolf-verde-700/40 px-6 py-3 text-sm font-medium text-aftergolf-verde-800 transition hover:bg-aftergolf-verde-50"
           >
             Ver un ejemplo en vivo (AJAG)
-          </Link>
+          </a>
         </div>
       </section>
 
