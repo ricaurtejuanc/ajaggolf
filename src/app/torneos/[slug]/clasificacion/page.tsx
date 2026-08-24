@@ -30,6 +30,14 @@ export default async function ClasificacionPage({
   const supabase = await createClient();
   const cuadroHonor = hayCuadroDeHonor(torneo) ? <CuadroDeHonor torneo={torneo} /> : null;
 
+  // Si el torneo pertenece a una liga/pool, "atrás" lleva a la clasificación
+  // de esa liga (de donde suele venir el usuario), no a la ficha del torneo.
+  const { data: liga } = torneo.liga_pool_id
+    ? await supabase.from("ligas_pool").select("slug").eq("id", torneo.liga_pool_id).maybeSingle()
+    : { data: null };
+  const hrefVolver = liga ? `/clasificaciones/${liga.slug}` : `/torneos/${slug}`;
+  const textoVolver = liga ? "Clasificaciones" : torneo.nombre;
+
   const { data: documento } = await supabase
     .from("resultados_pdf_uploads")
     .select("storage_path, nombre_archivo")
@@ -122,8 +130,8 @@ export default async function ClasificacionPage({
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-10">
-      <Link href={`/torneos/${slug}`} className="text-sm text-ajag-gris-500 hover:underline">
-        ← {torneo.nombre}
+      <Link href={hrefVolver} className="text-sm text-ajag-gris-500 hover:underline">
+        ← {textoVolver}
       </Link>
       <h1 className="mt-2 flex items-center gap-2 font-display text-2xl font-semibold text-ajag-verde-900">
         <Trophy size={22} className="text-ajag-oro-600" /> Clasificación

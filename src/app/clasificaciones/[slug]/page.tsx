@@ -88,6 +88,10 @@ export default async function LigaDetallePage({
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-10">
+      <Link href="/clasificaciones" className="mb-4 inline-block text-sm text-ajag-gris-500 hover:underline">
+        ← Clasificaciones
+      </Link>
+
       {liga.imagen_url ? (
         <div className="relative aspect-[21/9] w-full overflow-hidden rounded-2xl bg-ajag-verde-100">
           <Image
