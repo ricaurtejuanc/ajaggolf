@@ -19,7 +19,12 @@ export default async function EditarTorneoPage({
 
   const [{ data: torneo }, { data: ligas }, camposGolf, categoriasExtras] = await Promise.all([
     supabase.from("torneos").select("*").eq("id", id).maybeSingle(),
-    supabase.from("ligas_pool").select("*").order("nombre"),
+    supabase
+      .from("ligas_pool")
+      .select("*")
+      .eq("activa", true)
+      .in("slug", ["ranking", "pool"])
+      .order("nombre"),
     listarCamposGolf(),
     obtenerCategoriasExtras(),
   ]);

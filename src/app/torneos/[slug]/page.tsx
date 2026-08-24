@@ -147,6 +147,43 @@ export default async function TorneoDetallePage({
         </div>
       ) : null}
 
+      {torneo.premios.length > 0 ? (
+        <div className="mt-6 card-ajag p-5">
+          <h2 className="mb-3 font-display text-base font-semibold text-ajag-verde-900">
+            Premios
+          </h2>
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {torneo.premios.map((cat) => {
+              const rango =
+                cat.handicap_desde != null && cat.handicap_hasta != null
+                  ? `Hándicap ${cat.handicap_desde}–${cat.handicap_hasta}`
+                  : cat.handicap_hasta != null
+                    ? `Hándicap hasta ${cat.handicap_hasta}`
+                    : cat.handicap_desde != null
+                      ? `Hándicap desde ${cat.handicap_desde}`
+                      : null;
+              return (
+                <div key={cat.nombre}>
+                  <p className="text-sm font-medium text-ajag-verde-900">{cat.nombre}</p>
+                  {rango ? <p className="text-xs text-ajag-gris-500">{rango}</p> : null}
+                  <ul className="mt-1.5 flex flex-col gap-1">
+                    {cat.premios.map((premio) => (
+                      <li
+                        key={premio}
+                        className="flex items-center gap-1.5 text-sm text-ajag-verde-900"
+                      >
+                        <Trophy size={13} className="shrink-0 text-ajag-oro-600" />
+                        {premio}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      ) : null}
+
       {torneo.extras.length > 0 ? (
         <div className="mt-6 card-ajag p-5">
           <h2 className="mb-3 font-display text-base font-semibold text-ajag-verde-900">
@@ -211,6 +248,15 @@ export default async function TorneoDetallePage({
           >
             Ver cuadro de salidas
           </Link>
+        ) : torneo.horarios_pdf_url ? (
+          <a
+            href={torneo.horarios_pdf_url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex flex-1 items-center justify-center rounded-2xl border border-ajag-verde-700 px-5 py-3 text-sm font-medium text-ajag-verde-700 transition hover:bg-ajag-verde-50"
+          >
+            Ver horarios (PDF)
+          </a>
         ) : null}
         {(nResultados ?? 0) > 0 ? (
           <Link

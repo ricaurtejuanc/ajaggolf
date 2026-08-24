@@ -78,7 +78,7 @@ export default async function TorneosPage() {
           {pasados.length > 0 ? (
             <div className="mt-12">
               <h2 className="mb-4 font-display text-xl font-semibold text-ajag-verde-900">
-                Torneos anteriores
+                Torneos disputados
               </h2>
               <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
                 {pasados.map((torneo) => (

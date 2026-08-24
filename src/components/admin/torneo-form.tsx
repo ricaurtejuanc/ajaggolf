@@ -4,6 +4,8 @@ import { useActionState, useState } from "react";
 import { PosterUploader } from "./poster-uploader";
 import { TeesInput } from "./tees-input";
 import { CampoGolfInput } from "./campo-golf-input";
+import { PremiosEditor } from "./premios-editor";
+import { HorariosPdfUploader } from "./horarios-pdf-uploader";
 import type { EstadoTorneoForm } from "@/app/admin/torneos/actions";
 import type { CategoriaExtra, LigaPool, ModoSalida, Torneo } from "@/types/database";
 
@@ -235,7 +237,7 @@ export function TorneoForm({
         />
         <div>
           <label htmlFor="liga_pool_id" className="text-sm font-medium text-ajag-verde-900">
-            Liga / Pool
+            Puntúa para Ranking/Pool
           </label>
           <select
             id="liga_pool_id"
@@ -250,6 +252,12 @@ export function TorneoForm({
               </option>
             ))}
           </select>
+          {ligas.length === 0 ? (
+            <p className="mt-1 text-xs text-ajag-gris-500">
+              No hay ningún Ranking ni Pool dado de alta todavía (Admin → Ligas y Pool, con
+              slug &quot;ranking&quot; o &quot;pool&quot;).
+            </p>
+          ) : null}
         </div>
       </div>
 
@@ -333,6 +341,10 @@ export function TorneoForm({
           ))}
         </div>
       </div>
+
+      <PremiosEditor premiosIniciales={torneo?.premios ?? []} />
+
+      <HorariosPdfUploader pdfUrlInicial={torneo?.horarios_pdf_url} />
 
       {state.error ? <p className="text-sm text-ajag-rojo-600">{state.error}</p> : null}
 

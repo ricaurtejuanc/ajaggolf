@@ -114,6 +114,13 @@ export type CampoGolf = {
   created_at: string;
 };
 
+export type PremioCategoria = {
+  nombre: string;
+  handicap_desde: number | null;
+  handicap_hasta: number | null;
+  premios: string[];
+};
+
 export type Torneo = {
   id: string;
   nombre: string;
@@ -138,6 +145,8 @@ export type Torneo = {
   tees_consecutivo: number[];
   modo_pago: ModoPagoTorneo;
   extras: string[];
+  premios: PremioCategoria[];
+  horarios_pdf_url: string | null;
   liga_pool_id: string | null;
   estado: EstadoTorneo;
   created_by: string | null;

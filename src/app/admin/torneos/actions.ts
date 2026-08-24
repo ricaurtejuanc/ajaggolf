@@ -10,6 +10,7 @@ import type {
   ModoAsignacionSalida,
   ModoPagoTorneo,
   ModoSalida,
+  PremioCategoria,
 } from "@/types/database";
 
 export type EstadoTorneoForm = { ok: boolean; error: string | null };
@@ -21,6 +22,37 @@ function slugify(texto: string): string {
     .replace(/[̀-ͯ]/g, "") // quita acentos (á -> a + combining mark)
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/(^-|-$)/g, "");
+}
+
+function leerPremios(formData: FormData): PremioCategoria[] {
+  let crudo: unknown;
+  try {
+    crudo = JSON.parse(String(formData.get("premios") ?? "[]"));
+  } catch {
+    return [];
+  }
+  if (!Array.isArray(crudo)) return [];
+
+  return crudo
+    .map((cat) => {
+      if (typeof cat !== "object" || cat === null) return null;
+      const nombre = String((cat as { nombre?: unknown }).nombre ?? "").trim();
+      const premiosCrudo = (cat as { premios?: unknown }).premios;
+      if (!nombre || !Array.isArray(premiosCrudo)) return null;
+      const premios = premiosCrudo
+        .map((p) => String(p ?? "").trim())
+        .filter((p): p is string => p.length > 0);
+      if (premios.length === 0) return null;
+      const desde = Number((cat as { handicap_desde?: unknown }).handicap_desde);
+      const hasta = Number((cat as { handicap_hasta?: unknown }).handicap_hasta);
+      return {
+        nombre,
+        handicap_desde: Number.isFinite(desde) ? desde : null,
+        handicap_hasta: Number.isFinite(hasta) ? hasta : null,
+        premios,
+      };
+    })
+    .filter((c): c is PremioCategoria => c != null);
 }
 
 function leerCamposTorneo(formData: FormData) {
@@ -55,6 +87,8 @@ function leerCamposTorneo(formData: FormData) {
     poster_url: String(formData.get("poster_url") ?? "").trim() || null,
     poster_focal_x: Number.isNaN(focalX) ? 50 : clamp(focalX),
     poster_focal_y: Number.isNaN(focalY) ? 50 : clamp(focalY),
+    premios: leerPremios(formData),
+    horarios_pdf_url: String(formData.get("horarios_pdf_url") ?? "").trim() || null,
     precio_cents: Math.round(parseFloat(precioEuros || "0") * 100),
     precio_socio_cents: precioSocioEuros ? Math.round(parseFloat(precioSocioEuros) * 100) : null,
     cupo_maximo: cupoRaw ? parseInt(cupoRaw, 10) : null,
