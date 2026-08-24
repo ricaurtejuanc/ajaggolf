@@ -124,7 +124,7 @@ export async function inscribirse(
         });
       }
 
-      redirect("/cuenta");
+      redirect("/cuenta?inscrito=1");
     }
 
     const { error } = await supabase.from("inscripciones").upsert(
@@ -144,7 +144,15 @@ export async function inscribirse(
 
     if (error) return { ok: false, error: error.message };
 
-    redirect("/carrito");
+    if (email) {
+      await enviarEmailInscripcionRecibida({
+        destinatario: email,
+        nombre,
+        items: [{ torneoNombre: torneo.nombre, torneoFecha: torneo.fecha, precioCents: precioAplicable }],
+      });
+    }
+
+    redirect("/carrito?inscrito=1");
   }
 
   // Invitado: sin sesión (ni siquiera anónima). No hay auth.uid() que pase

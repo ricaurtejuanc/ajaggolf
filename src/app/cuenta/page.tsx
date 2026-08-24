@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import type { ComponentProps } from "react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { CheckCircle2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { asegurarJugadorParaUsuario } from "@/lib/data/jugadores";
 import { obtenerBizumNumero } from "@/lib/data/configuracion";
@@ -11,7 +12,12 @@ import { PedidosList } from "./pedidos-list";
 
 export const metadata: Metadata = { title: "Mi cuenta" };
 
-export default async function CuentaPage() {
+export default async function CuentaPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ inscrito?: string }>;
+}) {
+  const { inscrito } = await searchParams;
   const supabase = await createClient();
   const {
     data: { user },
@@ -58,6 +64,14 @@ export default async function CuentaPage() {
         </div>
         <SignOutButton />
       </div>
+
+      {inscrito === "1" ? (
+        <div className="mt-4 flex items-center gap-2 rounded-xl bg-ajag-verde-50 px-4 py-3 text-sm font-medium text-ajag-verde-900">
+          <CheckCircle2 size={18} className="shrink-0 text-ajag-verde-700" />
+          Tu inscripción se ha realizado correctamente. Te hemos enviado un email de
+          confirmación.
+        </div>
+      ) : null}
 
       <section className="mt-8">
         <h2 className="mb-3 font-display text-lg font-semibold text-ajag-verde-900">
