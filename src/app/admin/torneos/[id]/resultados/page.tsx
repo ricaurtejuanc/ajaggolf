@@ -8,7 +8,8 @@ import {
 } from "@/lib/data/resultados";
 import { emparejarConInscritos, type FilaExtraidaPdf } from "@/lib/resultados/extraer-pdf";
 import { DocumentoUploader } from "./documento-uploader";
-import { ResultadosForm, filaVacia, type FilaResultado } from "./resultados-form";
+import { ResultadosForm } from "./resultados-form";
+import { filaVacia, type FilaResultado } from "./fila-resultado";
 import { DocumentoActual } from "./documento-actual";
 import { GanadoresPremiosForm } from "./ganadores-premios-form";
 import { PosicionesLigaForm } from "./posiciones-liga-form";
