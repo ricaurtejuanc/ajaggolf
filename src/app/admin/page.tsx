@@ -12,15 +12,12 @@ export default async function AdminDashboardPage() {
   const hace7dias = new Date(Date.now() - 7 * 86400000).toISOString();
 
   const [
-    { count: torneosPublicados },
+    { count: torneosTotal },
     { count: pagosPendientes },
     { count: consultasSinLeer },
     { count: visitas7dias },
   ] = await Promise.all([
-    supabase
-      .from("torneos")
-      .select("id", { count: "exact", head: true })
-      .eq("estado", "publicado"),
+    supabase.from("torneos").select("id", { count: "exact", head: true }),
     supabase
       .from("pedidos_pago")
       .select("id", { count: "exact", head: true })
@@ -36,7 +33,7 @@ export default async function AdminDashboardPage() {
   ]);
 
   const stats = [
-    { label: "Torneos publicados", value: torneosPublicados ?? 0, href: "/admin/torneos" },
+    { label: "Torneos", value: torneosTotal ?? 0, href: "/admin/torneos" },
     { label: "Pagos por confirmar", value: pagosPendientes ?? 0, href: "/admin/pedidos" },
     { label: "Consultas sin leer", value: consultasSinLeer ?? 0, href: "/admin/consultas" },
     { label: "Visitas (7 días)", value: visitas7dias ?? 0, href: null },
