@@ -64,34 +64,35 @@ export function PerfilForm({ jugador }: { jugador: Jugador }) {
         </div>
       </div>
 
-      <div>
-        <label htmlFor="licencia_federativa" className="text-sm font-medium text-ajag-verde-900">
-          Licencia federativa
-        </label>
-        <input
-          id="licencia_federativa"
-          name="licencia_federativa"
-          defaultValue={jugador.licencia_federativa ?? ""}
-          className="mt-1 w-full max-w-xs rounded-xl border border-ajag-gris-200 px-4 py-2.5 text-sm outline-none focus:border-ajag-verde-600"
-        />
-      </div>
-
-      <div>
-        <label htmlFor="handicap" className="text-sm font-medium text-ajag-verde-900">
-          Hándicap
-        </label>
-        <input
-          id="handicap"
-          name="handicap"
-          type="number"
-          step="0.1"
-          placeholder="Ej. 18.4"
-          defaultValue={jugador.handicap ?? ""}
-          className="mt-1 w-full max-w-[10rem] rounded-xl border border-ajag-gris-200 px-4 py-2.5 text-sm outline-none focus:border-ajag-verde-600"
-        />
-        <p className="mt-1 text-xs text-ajag-gris-500">
-          Se usa para agrupar automáticamente las salidas por nivel.
-        </p>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div>
+          <label htmlFor="licencia_federativa" className="text-sm font-medium text-ajag-verde-900">
+            Licencia federativa
+          </label>
+          <input
+            id="licencia_federativa"
+            name="licencia_federativa"
+            defaultValue={jugador.licencia_federativa ?? ""}
+            className="mt-1 w-full rounded-xl border border-ajag-gris-200 px-4 py-2.5 text-sm outline-none focus:border-ajag-verde-600"
+          />
+        </div>
+        <div>
+          <label htmlFor="handicap" className="text-sm font-medium text-ajag-verde-900">
+            Hándicap
+          </label>
+          <input
+            id="handicap"
+            name="handicap"
+            type="number"
+            step="0.1"
+            placeholder="Ej. 18.4"
+            defaultValue={jugador.handicap ?? ""}
+            className="mt-1 w-full rounded-xl border border-ajag-gris-200 px-4 py-2.5 text-sm outline-none focus:border-ajag-verde-600"
+          />
+          <p className="mt-1 text-xs text-ajag-gris-500">
+            Se usa para agrupar automáticamente las salidas por nivel.
+          </p>
+        </div>
       </div>
 
       <div>
