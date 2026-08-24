@@ -1,33 +1,12 @@
 import type { Metadata } from "next";
 import { listarTorneosPublicos, obtenerEstadoClasificacionPorTorneos } from "@/lib/data/torneos";
-import { obtenerLigaOficial, listarLigasActivas } from "@/lib/data/ligas";
-import { createClient } from "@/lib/supabase/server";
+import { listarLigasActivas } from "@/lib/data/ligas";
 import { ClasificacionesTabs } from "./clasificaciones-tabs";
-import type { ClasificacionPublica, TipoLigaOficial } from "@/types/database";
 
 export const metadata: Metadata = { title: "Clasificaciones" };
 
-async function obtenerLigaConClasificacion(tipo: TipoLigaOficial) {
-  const resultado = await obtenerLigaOficial(tipo);
-  if (!resultado) return null;
-
-  const supabase = await createClient();
-  const { data: clasificacion } = await supabase
-    .from("clasificacion_publica")
-    .select("*")
-    .eq("liga_pool_id", resultado.liga.id)
-    .order("puntos_totales", { ascending: false });
-
-  return { liga: resultado.liga, clasificacion: (clasificacion ?? []) as ClasificacionPublica[] };
-}
-
 export default async function LigasPage() {
-  const [torneos, ranking, pool, ligas] = await Promise.all([
-    listarTorneosPublicos(),
-    obtenerLigaConClasificacion("ranking"),
-    obtenerLigaConClasificacion("pool"),
-    listarLigasActivas(),
-  ]);
+  const [torneos, ligas] = await Promise.all([listarTorneosPublicos(), listarLigasActivas()]);
   const estadoClasificacion = await obtenerEstadoClasificacionPorTorneos(torneos);
 
   return (
@@ -36,15 +15,13 @@ export default async function LigasPage() {
         Clasificaciones
       </h1>
       <p className="mt-2 max-w-2xl text-ajag-gris-500">
-        Consulta la clasificación de cada torneo, el Ranking general, el Pool
-        y el resto de ligas de AJAG.
+        Consulta la clasificación de cada torneo y de cada liga de AJAG,
+        incluido el Ranking y el Pool oficiales.
       </p>
 
       <ClasificacionesTabs
         torneos={torneos}
         estadoClasificacion={estadoClasificacion}
-        ranking={ranking}
-        pool={pool}
         ligas={ligas}
       />
     </div>

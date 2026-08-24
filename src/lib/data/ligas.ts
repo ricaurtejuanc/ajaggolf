@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
-import type { LigaPool, TipoLigaOficial, Torneo } from "@/types/database";
+import type { LigaPool, Torneo } from "@/types/database";
 
 async function obtenerLigaConTorneos(
   liga: LigaPool | null,
@@ -39,19 +39,4 @@ export async function listarLigasActivas(): Promise<LigaPool[]> {
     .order("nombre", { ascending: true });
 
   return data ?? [];
-}
-
-/** Devuelve la liga marcada como Ranking o Pool oficial, sea cual sea su nombre/slug. */
-export async function obtenerLigaOficial(
-  tipo: TipoLigaOficial,
-): Promise<{ liga: LigaPool; torneos: Torneo[] } | null> {
-  const supabase = await createClient();
-  const { data: liga } = await supabase
-    .from("ligas_pool")
-    .select("*")
-    .eq("tipo_oficial", tipo)
-    .eq("activa", true)
-    .maybeSingle();
-
-  return obtenerLigaConTorneos(liga);
 }
