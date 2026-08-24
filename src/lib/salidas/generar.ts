@@ -52,28 +52,131 @@ export function ordenarPorHandicap(jugadores: JugadorParaSalida[]): JugadorParaS
   });
 }
 
-/** Agrupa por nivel: jugadores de handicap similar quedan en el mismo grupo. */
-function agruparPorHandicap(jugadores: JugadorParaSalida[]): JugadorParaSalida[][] {
-  const ordenados = ordenarPorHandicap(jugadores);
-  const tamanos = calcularTamanosGrupos(ordenados.length);
+/**
+ * Agrupa jugadores en "bloques" que deben quedar en el mismo grupo de
+ * salida porque alguno pidió jugar con otro (juega_con_licencias). Se
+ * calcula por componentes conexas: si A quiere jugar con B y B con C, los
+ * tres acaban en el mismo bloque aunque la petición no sea mutua. Un
+ * bloque nunca supera los 4 jugadores (tamaño máximo de un grupo de golf):
+ * si una cadena de peticiones forma un grupo más grande, se trocea en
+ * trozos de 4 y el resto queda como conflicto para que el admin lo revise
+ * (detectarConflictos), en vez de forzar un grupo imposible.
+ */
+function formarBloques(jugadores: JugadorParaSalida[]): JugadorParaSalida[][] {
+  const porLicencia = new Map<string, JugadorParaSalida>();
+  for (const j of jugadores) {
+    if (j.licenciaFederativa) porLicencia.set(j.licenciaFederativa, j);
+  }
+
+  const padre = new Map<string, string>();
+  for (const j of jugadores) padre.set(j.inscripcionId, j.inscripcionId);
+
+  const raiz = (id: string): string => {
+    let r = id;
+    while (padre.get(r) !== r) r = padre.get(r)!;
+    let actual = id;
+    while (padre.get(actual) !== r) {
+      const siguiente = padre.get(actual)!;
+      padre.set(actual, r);
+      actual = siguiente;
+    }
+    return r;
+  };
+
+  for (const j of jugadores) {
+    for (const licencia of j.juegaConLicencias) {
+      const companero = porLicencia.get(licencia);
+      if (!companero) continue;
+      const ra = raiz(j.inscripcionId);
+      const rb = raiz(companero.inscripcionId);
+      if (ra !== rb) padre.set(ra, rb);
+    }
+  }
+
+  const porRaiz = new Map<string, JugadorParaSalida[]>();
+  for (const j of jugadores) {
+    const r = raiz(j.inscripcionId);
+    const lista = porRaiz.get(r);
+    if (lista) lista.push(j);
+    else porRaiz.set(r, [j]);
+  }
+
+  const bloques: JugadorParaSalida[][] = [];
+  for (const bloque of porRaiz.values()) {
+    for (let i = 0; i < bloque.length; i += 4) {
+      bloques.push(bloque.slice(i, i + 4));
+    }
+  }
+  return bloques;
+}
+
+function promedioHandicap(bloque: JugadorParaSalida[]): number {
+  const conHandicap = bloque.filter((j) => j.handicap != null);
+  if (conHandicap.length === 0) return Number.POSITIVE_INFINITY;
+  return conHandicap.reduce((suma, j) => suma + (j.handicap ?? 0), 0) / conHandicap.length;
+}
+
+/**
+ * Reparte bloques (jugadores que deben quedar juntos) en grupos de hasta 4,
+ * en el orden dado, sin romper ningún bloque: cada bloque entra en el
+ * primer grupo abierto donde quepa, o abre uno nuevo. Al final intenta
+ * fusionar los grupos que se hayan quedado con 1-2 jugadores sueltos en
+ * otro grupo con hueco, para no dejar grupos pequeños si se puede evitar.
+ */
+function empaquetarBloques(bloquesOrdenados: JugadorParaSalida[][]): JugadorParaSalida[][] {
   const grupos: JugadorParaSalida[][] = [];
-  let cursor = 0;
-  for (const tamano of tamanos) {
-    grupos.push(ordenados.slice(cursor, cursor + tamano));
-    cursor += tamano;
+  for (const bloque of bloquesOrdenados) {
+    const destino = grupos.find((g) => g.length + bloque.length <= 4);
+    if (destino) destino.push(...bloque);
+    else grupos.push([...bloque]);
+  }
+  for (let i = grupos.length - 1; i >= 0; i--) {
+    if (grupos[i].length >= 3) continue;
+    const destino = grupos.find((g, j) => j !== i && g.length + grupos[i].length <= 4);
+    if (destino) {
+      destino.push(...grupos[i]);
+      grupos.splice(i, 1);
+    }
   }
   return grupos;
 }
 
-/** Mezcla niveles: reparte en "abanico" para que cada grupo tenga variedad de hándicap. */
+/**
+ * Agrupa por nivel (jugadores de handicap similar quedan en el mismo
+ * grupo), respetando quién ha pedido jugar con quién.
+ */
+function agruparPorHandicap(jugadores: JugadorParaSalida[]): JugadorParaSalida[][] {
+  const bloques = formarBloques(jugadores).sort(
+    (a, b) => promedioHandicap(a) - promedioHandicap(b),
+  );
+  return empaquetarBloques(bloques);
+}
+
+/**
+ * Mezcla niveles (reparte en "abanico" para que cada grupo tenga variedad
+ * de hándicap), respetando quién ha pedido jugar con quién.
+ */
 function agruparMixto(jugadores: JugadorParaSalida[]): JugadorParaSalida[][] {
-  const ordenados = ordenarPorHandicap(jugadores);
-  const tamanos = calcularTamanosGrupos(ordenados.length);
-  const grupos: JugadorParaSalida[][] = tamanos.map(() => []);
-  ordenados.forEach((jugador, i) => {
-    grupos[i % grupos.length].push(jugador);
-  });
-  return grupos;
+  const bloques = formarBloques(jugadores).sort(
+    (a, b) => promedioHandicap(a) - promedioHandicap(b),
+  );
+  const numGrupos = Math.max(1, Math.round(jugadores.length / 4));
+  const cubos: JugadorParaSalida[][] = Array.from({ length: numGrupos }, () => []);
+  let cursor = 0;
+  for (const bloque of bloques) {
+    let colocado = false;
+    for (let vuelta = 0; vuelta < cubos.length; vuelta++) {
+      const indice = cursor % cubos.length;
+      cursor++;
+      if (cubos[indice].length + bloque.length <= 4) {
+        cubos[indice].push(...bloque);
+        colocado = true;
+        break;
+      }
+    }
+    if (!colocado) cubos.push([...bloque]);
+  }
+  return cubos.filter((c) => c.length > 0);
 }
 
 /**
@@ -101,18 +204,39 @@ function asignarConsecutivo(
   });
 }
 
-/** Reparte los grupos entre los hoyos de salida de un shotgun (con dobles si se indican). */
+/**
+ * Reparte los grupos entre los hoyos de salida de un shotgun. Todos salen
+ * a la hora indicada; en los hoyos doblados sale un segundo grupo 10
+ * minutos después. Un hoyo marcado como doblado cuenta como hoyo de
+ * salida aunque no se haya marcado aparte en "hoyos de salida".
+ */
 function asignarShotgun(
   grupos: JugadorParaSalida[][],
-  config: { hoyosSalida: number[]; hoyosDoblados: number[] },
+  config: { horaInicio: string; hoyosSalida: number[]; hoyosDoblados: number[] },
 ): Omit<GrupoGenerado, "jugadores">[] {
-  const slots = [...config.hoyosSalida, ...config.hoyosDoblados];
-  if (slots.length === 0) slots.push(1);
-  return grupos.map((_, i) => ({
-    numeroGrupo: i + 1,
-    hoyoSalida: slots[i % slots.length],
-    horaSalida: null,
-  }));
+  const [h, m] = config.horaInicio.split(":").map(Number);
+  const inicioMinutos = h * 60 + m;
+  const formatoHora = (minutos: number) => {
+    const hh = String(Math.floor(minutos / 60) % 24).padStart(2, "0");
+    const mm = String(minutos % 60).padStart(2, "0");
+    return `${hh}:${mm}:00`;
+  };
+
+  const hoyosBase = [...new Set([...config.hoyosSalida, ...config.hoyosDoblados])].sort(
+    (a, b) => a - b,
+  );
+  const slots: { hoyo: number; hora: string }[] = [];
+  for (const hoyo of hoyosBase.length > 0 ? hoyosBase : [1]) {
+    slots.push({ hoyo, hora: formatoHora(inicioMinutos) });
+    if (config.hoyosDoblados.includes(hoyo)) {
+      slots.push({ hoyo, hora: formatoHora(inicioMinutos + 10) });
+    }
+  }
+
+  return grupos.map((_, i) => {
+    const slot = slots[i % slots.length];
+    return { numeroGrupo: i + 1, hoyoSalida: slot.hoyo, horaSalida: slot.hora };
+  });
 }
 
 /**
@@ -172,6 +296,7 @@ export interface ConfigConsecutivo {
 }
 
 export interface ConfigShotgun {
+  horaInicio: string;
   hoyosSalida: number[];
   hoyosDoblados: number[];
 }

@@ -53,12 +53,6 @@ export function GenerarSalidasForm({
     return copia;
   }
 
-  function alternarHoyoSalida(hoyo: number) {
-    setHoyosSalida((prev) => alternar(prev, hoyo));
-    // Si se quita un hoyo de "salida", deja de tener sentido marcarlo doblado.
-    setHoyosDoblados((prev) => (prev.has(hoyo) && hoyosSalida.has(hoyo) ? alternar(prev, hoyo) : prev));
-  }
-
   return (
     <form action={formAction} className="card-ajag flex flex-col gap-4 p-5">
       <div className="flex items-center justify-between">
@@ -178,6 +172,19 @@ export function GenerarSalidasForm({
         </div>
       ) : (
         <div className="flex flex-col gap-4">
+          <div className="sm:w-1/2">
+            <label htmlFor="hora_inicio" className="block text-sm font-medium text-ajag-verde-900">
+              Hora de salida (a tiro)
+            </label>
+            <input
+              id="hora_inicio"
+              name="hora_inicio"
+              type="time"
+              defaultValue={(configExistente.hora_inicio as string) ?? "08:00"}
+              className="mt-1 w-full rounded-xl border border-ajag-gris-200 px-4 py-2.5 text-sm outline-none focus:border-ajag-verde-600"
+            />
+          </div>
+
           <div>
             <span className="text-sm font-medium text-ajag-verde-900">Hoyos de salida</span>
             <div className="mt-1.5 grid grid-cols-6 gap-1.5 sm:grid-cols-9">
@@ -191,7 +198,7 @@ export function GenerarSalidasForm({
                     name="hoyos_salida"
                     value={hoyo}
                     checked={hoyosSalida.has(hoyo)}
-                    onChange={() => alternarHoyoSalida(hoyo)}
+                    onChange={() => setHoyosSalida((prev) => alternar(prev, hoyo))}
                     className="sr-only"
                   />
                   {hoyo}
@@ -200,32 +207,32 @@ export function GenerarSalidasForm({
             </div>
           </div>
 
-          {hoyosSalida.size > 0 ? (
-            <div>
-              <span className="text-sm font-medium text-ajag-verde-900">Hoyos doblados</span>
-              <p className="mt-0.5 text-xs text-ajag-gris-500">
-                Marca los hoyos, de entre los de salida, donde salgan dos grupos a la vez.
-              </p>
-              <div className="mt-1.5 grid grid-cols-6 gap-1.5 sm:grid-cols-9">
-                {TODOS_LOS_HOYOS.filter((hoyo) => hoyosSalida.has(hoyo)).map((hoyo) => (
-                  <label
-                    key={hoyo}
-                    className="flex items-center justify-center gap-1 rounded-lg border border-ajag-gris-200 py-1.5 text-sm text-ajag-gris-500 has-[:checked]:border-ajag-oro-500 has-[:checked]:bg-ajag-oro-500/10 has-[:checked]:text-ajag-oro-600"
-                  >
-                    <input
-                      type="checkbox"
-                      name="hoyos_doblados"
-                      value={hoyo}
-                      checked={hoyosDoblados.has(hoyo)}
-                      onChange={() => setHoyosDoblados((prev) => alternar(prev, hoyo))}
-                      className="sr-only"
-                    />
-                    {hoyo}
-                  </label>
-                ))}
-              </div>
+          <div>
+            <span className="text-sm font-medium text-ajag-verde-900">Hoyos doblados</span>
+            <p className="mt-0.5 text-xs text-ajag-gris-500">
+              Marca los hoyos donde salgan dos grupos: el segundo sale 10 minutos después del
+              primero. Si el hoyo no estaba marcado como hoyo de salida, se añade
+              automáticamente.
+            </p>
+            <div className="mt-1.5 grid grid-cols-6 gap-1.5 sm:grid-cols-9">
+              {TODOS_LOS_HOYOS.map((hoyo) => (
+                <label
+                  key={hoyo}
+                  className="flex items-center justify-center gap-1 rounded-lg border border-ajag-gris-200 py-1.5 text-sm text-ajag-gris-500 has-[:checked]:border-ajag-oro-500 has-[:checked]:bg-ajag-oro-500/10 has-[:checked]:text-ajag-oro-600"
+                >
+                  <input
+                    type="checkbox"
+                    name="hoyos_doblados"
+                    value={hoyo}
+                    checked={hoyosDoblados.has(hoyo)}
+                    onChange={() => setHoyosDoblados((prev) => alternar(prev, hoyo))}
+                    className="sr-only"
+                  />
+                  {hoyo}
+                </label>
+              ))}
             </div>
-          ) : null}
+          </div>
         </div>
       )}
 

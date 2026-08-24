@@ -38,7 +38,9 @@ export async function generarSalidas(
 
   let config: Record<string, unknown>;
   let configConsecutivo: { horaInicio: string; intervaloMinutos: number; tees: number[] } | undefined;
-  let configShotgun: { hoyosSalida: number[]; hoyosDoblados: number[] } | undefined;
+  let configShotgun:
+    | { horaInicio: string; hoyosSalida: number[]; hoyosDoblados: number[] }
+    | undefined;
 
   if (modo === "consecutivo") {
     const horaInicio = String(formData.get("hora_inicio") ?? "08:00");
@@ -57,19 +59,22 @@ export async function generarSalidas(
       tees: configConsecutivo.tees,
     };
   } else {
+    const horaInicio = String(formData.get("hora_inicio") ?? "08:00");
     const hoyosSalida = formData
       .getAll("hoyos_salida")
       .map((v) => parseInt(String(v), 10))
       .filter((n) => !Number.isNaN(n) && n >= 1 && n <= 18);
+    // Un hoyo doblado no tiene por qué estar marcado aparte como "de
+    // salida": marcarlo como doblado ya implica que se sale de ahí.
     const hoyosDoblados = formData
       .getAll("hoyos_doblados")
       .map((v) => parseInt(String(v), 10))
-      .filter((n) => !Number.isNaN(n) && n >= 1 && n <= 18 && hoyosSalida.includes(n));
-    if (hoyosSalida.length === 0) {
+      .filter((n) => !Number.isNaN(n) && n >= 1 && n <= 18);
+    if (hoyosSalida.length === 0 && hoyosDoblados.length === 0) {
       return { ok: false, error: "Indica al menos un hoyo de salida." };
     }
-    configShotgun = { hoyosSalida, hoyosDoblados };
-    config = { hoyos_salida: hoyosSalida, hoyos_doblados: hoyosDoblados };
+    configShotgun = { horaInicio, hoyosSalida, hoyosDoblados };
+    config = { hora_inicio: horaInicio, hoyos_salida: hoyosSalida, hoyos_doblados: hoyosDoblados };
   }
 
   const resultado = generarCuadroSalidas({
