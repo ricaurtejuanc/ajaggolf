@@ -66,11 +66,8 @@ export default async function AdminResultadosPage({
   return (
     <div>
       <div className="mb-6">
-        <Link
-          href={`/admin/torneos/${id}/editar`}
-          className="text-sm text-ajag-gris-500 hover:underline"
-        >
-          ← {torneo.nombre}
+        <Link href="/admin/torneos" className="text-sm text-ajag-gris-500 hover:underline">
+          ← Torneos
         </Link>
         <h1 className="font-display text-2xl font-semibold text-ajag-verde-900">
           Resultados
