@@ -91,6 +91,42 @@ export function LigaForm({
 
       <TablaPuntosEditor tablaInicial={liga?.tabla_puntos ?? {}} />
 
+      <div>
+        <span className="text-sm font-medium text-ajag-verde-900">Tipo</span>
+        <div className="mt-1 flex flex-col gap-2">
+          <label className="flex items-center gap-2 text-sm text-ajag-gris-500">
+            <input
+              type="radio"
+              name="tipo_oficial"
+              value=""
+              defaultChecked={!liga?.tipo_oficial}
+            />
+            Liga normal
+          </label>
+          <label className="flex items-center gap-2 text-sm text-ajag-gris-500">
+            <input
+              type="radio"
+              name="tipo_oficial"
+              value="ranking"
+              defaultChecked={liga?.tipo_oficial === "ranking"}
+            />
+            Es el Ranking oficial (aparecerá para elegir al crear torneos)
+          </label>
+          <label className="flex items-center gap-2 text-sm text-ajag-gris-500">
+            <input
+              type="radio"
+              name="tipo_oficial"
+              value="pool"
+              defaultChecked={liga?.tipo_oficial === "pool"}
+            />
+            Es el Pool oficial (aparecerá para elegir al crear torneos)
+          </label>
+        </div>
+        <p className="mt-1 text-xs text-ajag-gris-500">
+          Solo puede haber una liga marcada como Ranking oficial y una como Pool oficial.
+        </p>
+      </div>
+
       <label className="flex items-center gap-2 text-sm text-ajag-verde-900">
         <input type="checkbox" name="activa" defaultChecked={liga?.activa ?? true} />
         Liga activa (visible públicamente)

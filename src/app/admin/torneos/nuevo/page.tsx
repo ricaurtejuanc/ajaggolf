@@ -14,7 +14,7 @@ export default async function NuevoTorneoPage() {
       .from("ligas_pool")
       .select("*")
       .eq("activa", true)
-      .in("slug", ["ranking", "pool"])
+      .not("tipo_oficial", "is", null)
       .order("nombre"),
     listarCamposGolf(),
     obtenerCategoriasExtras(),

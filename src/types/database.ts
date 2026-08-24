@@ -93,6 +93,8 @@ export type Jugador = {
   updated_at: string;
 };
 
+export type TipoLigaOficial = "ranking" | "pool";
+
 export type LigaPool = {
   id: string;
   nombre: string;
@@ -103,6 +105,7 @@ export type LigaPool = {
   temporada: string | null;
   tabla_puntos: Record<string, number>;
   activa: boolean;
+  tipo_oficial: TipoLigaOficial | null;
   organizador_id: string | null;
   created_at: string;
 };

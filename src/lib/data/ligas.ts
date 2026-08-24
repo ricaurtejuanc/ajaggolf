@@ -1,5 +1,21 @@
 import { createClient } from "@/lib/supabase/server";
-import type { LigaPool, Torneo } from "@/types/database";
+import type { LigaPool, TipoLigaOficial, Torneo } from "@/types/database";
+
+async function obtenerLigaConTorneos(
+  liga: LigaPool | null,
+): Promise<{ liga: LigaPool; torneos: Torneo[] } | null> {
+  if (!liga) return null;
+
+  const supabase = await createClient();
+  const { data: torneos } = await supabase
+    .from("torneos")
+    .select("*")
+    .eq("liga_pool_id", liga.id)
+    .in("estado", ["publicado", "cerrado", "finalizado"])
+    .order("fecha", { ascending: true });
+
+  return { liga, torneos: torneos ?? [] };
+}
 
 export async function obtenerLigaPorSlug(
   slug: string,
@@ -11,14 +27,20 @@ export async function obtenerLigaPorSlug(
     .eq("slug", slug)
     .maybeSingle();
 
-  if (!liga) return null;
+  return obtenerLigaConTorneos(liga);
+}
 
-  const { data: torneos } = await supabase
-    .from("torneos")
+/** Devuelve la liga marcada como Ranking o Pool oficial, sea cual sea su nombre/slug. */
+export async function obtenerLigaOficial(
+  tipo: TipoLigaOficial,
+): Promise<{ liga: LigaPool; torneos: Torneo[] } | null> {
+  const supabase = await createClient();
+  const { data: liga } = await supabase
+    .from("ligas_pool")
     .select("*")
-    .eq("liga_pool_id", liga.id)
-    .in("estado", ["publicado", "cerrado", "finalizado"])
-    .order("fecha", { ascending: true });
+    .eq("tipo_oficial", tipo)
+    .eq("activa", true)
+    .maybeSingle();
 
-  return { liga, torneos: torneos ?? [] };
+  return obtenerLigaConTorneos(liga);
 }

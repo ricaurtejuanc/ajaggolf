@@ -76,3 +76,16 @@ body {
   border: 1px solid var(--ajag-gris-100);
   box-shadow: 0 1px 2px rgba(16, 38, 26, 0.04);
 }
+
+/* Safari/Chrome en iOS hacen zoom automático al enfocar un campo con
+   font-size menor de 16px, y no deshacen el zoom al desenfocar. Los
+   formularios usan text-sm (14px); forzamos 16px solo en los campos y
+   solo en móvil para evitar el zoom sin cambiar la tipografía en el
+   resto de la app. */
+@media (max-width: 639px) {
+  input,
+  select,
+  textarea {
+    font-size: 16px;
+  }
+}

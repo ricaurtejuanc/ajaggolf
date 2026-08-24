@@ -4,8 +4,12 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getUsuarioAdmin } from "@/lib/auth";
+import type { TipoLigaOficial } from "@/types/database";
 
 export type EstadoLigaForm = { ok: boolean; error: string | null };
+
+const MENSAJE_TIPO_OFICIAL_DUPLICADO =
+  "Ya hay otra liga marcada con ese tipo. Quítale antes el Ranking/Pool oficial a esa liga.";
 
 function slugify(texto: string): string {
   return texto
@@ -31,6 +35,9 @@ function leerTablaPuntos(formData: FormData): Record<string, number> {
 function leerCamposLiga(formData: FormData) {
   const nombre = String(formData.get("nombre") ?? "").trim();
   const slugInput = String(formData.get("slug") ?? "").trim();
+  const tipoOficialRaw = String(formData.get("tipo_oficial") ?? "").trim();
+  const tipoOficial: TipoLigaOficial | null =
+    tipoOficialRaw === "ranking" || tipoOficialRaw === "pool" ? tipoOficialRaw : null;
 
   return {
     nombre,
@@ -40,6 +47,7 @@ function leerCamposLiga(formData: FormData) {
     reglas: String(formData.get("reglas") ?? "").trim() || null,
     temporada: String(formData.get("temporada") ?? "").trim() || null,
     tabla_puntos: leerTablaPuntos(formData),
+    tipo_oficial: tipoOficial,
     activa: formData.get("activa") === "on",
   };
 }
@@ -64,7 +72,11 @@ export async function crearLiga(
     .select("id")
     .single();
 
-  if (error || !data) return { ok: false, error: error?.message ?? "Error al crear la liga." };
+  if (error || !data) {
+    const mensaje =
+      error?.code === "23505" ? MENSAJE_TIPO_OFICIAL_DUPLICADO : (error?.message ?? "Error al crear la liga.");
+    return { ok: false, error: mensaje };
+  }
 
   revalidatePath("/admin/ligas");
   revalidatePath("/ligas");
@@ -88,7 +100,10 @@ export async function actualizarLiga(
   const supabase = await createClient();
   const { error } = await supabase.from("ligas_pool").update(campos).eq("id", ligaId);
 
-  if (error) return { ok: false, error: error.message };
+  if (error) {
+    const mensaje = error.code === "23505" ? MENSAJE_TIPO_OFICIAL_DUPLICADO : error.message;
+    return { ok: false, error: mensaje };
+  }
 
   revalidatePath("/admin/ligas");
   revalidatePath(`/admin/ligas/${ligaId}/editar`);

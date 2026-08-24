@@ -241,8 +241,9 @@ export function TorneoForm({
           <select
             id="liga_pool_id"
             name="liga_pool_id"
+            disabled={ligas.length === 0}
             defaultValue={torneo?.liga_pool_id ?? ""}
-            className="mt-1 w-full rounded-xl border border-ajag-gris-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-ajag-verde-600"
+            className="mt-1 w-full rounded-xl border border-ajag-gris-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-ajag-verde-600 disabled:bg-ajag-gris-100 disabled:text-ajag-gris-500"
           >
             <option value="">Ninguna</option>
             {ligas.map((liga) => (
@@ -253,8 +254,8 @@ export function TorneoForm({
           </select>
           {ligas.length === 0 ? (
             <p className="mt-1 text-xs text-ajag-gris-500">
-              No hay ningún Ranking ni Pool dado de alta todavía (Admin → Ligas y Pool, con
-              slug &quot;ranking&quot; o &quot;pool&quot;).
+              No hay ningún Ranking ni Pool dado de alta todavía. Ve a Admin → Ligas y Pool,
+              crea uno y márcalo como &quot;Ranking oficial&quot; o &quot;Pool oficial&quot;.
             </p>
           ) : null}
         </div>

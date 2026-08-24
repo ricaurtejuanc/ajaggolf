@@ -1,14 +1,14 @@
 import type { Metadata } from "next";
 import { listarTorneosConClasificacion } from "@/lib/data/torneos";
-import { obtenerLigaPorSlug } from "@/lib/data/ligas";
+import { obtenerLigaOficial } from "@/lib/data/ligas";
 import { createClient } from "@/lib/supabase/server";
 import { ClasificacionesTabs } from "./clasificaciones-tabs";
-import type { ClasificacionPublica } from "@/types/database";
+import type { ClasificacionPublica, TipoLigaOficial } from "@/types/database";
 
 export const metadata: Metadata = { title: "Clasificaciones" };
 
-async function obtenerLigaConClasificacion(slug: string) {
-  const resultado = await obtenerLigaPorSlug(slug);
+async function obtenerLigaConClasificacion(tipo: TipoLigaOficial) {
+  const resultado = await obtenerLigaOficial(tipo);
   if (!resultado) return null;
 
   const supabase = await createClient();

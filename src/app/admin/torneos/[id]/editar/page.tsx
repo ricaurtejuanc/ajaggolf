@@ -23,7 +23,7 @@ export default async function EditarTorneoPage({
       .from("ligas_pool")
       .select("*")
       .eq("activa", true)
-      .in("slug", ["ranking", "pool"])
+      .not("tipo_oficial", "is", null)
       .order("nombre"),
     listarCamposGolf(),
     obtenerCategoriasExtras(),
