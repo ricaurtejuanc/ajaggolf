@@ -246,9 +246,11 @@ function leerPosiciones(formData: FormData): Record<string, string> {
 /**
  * Genera la clasificación de un torneo de liga/pool a partir de los
  * ganadores de cada puesto que puntúa (según la tabla_puntos de la liga),
- * en vez de pedir la clasificación completa fila a fila. Sustituye por
- * completo los resultados existentes del torneo (mismo comportamiento que
- * guardarResultados) y recalcula la clasificación global de la liga.
+ * en vez de pedir la clasificación completa fila a fila. Solo toca las
+ * filas de los puestos que se están asignando (crea o actualiza la del
+ * jugador ganador, y "desaloja" al que ocupaba antes ese puesto si ha
+ * cambiado): no borra el resto de la tabla de resultados del torneo, para
+ * no perder filas ya rellenadas a mano con golpes u otros datos.
  */
 export async function guardarPosicionesLiga(
   torneoId: string,
@@ -266,23 +268,62 @@ export async function guardarPosicionesLiga(
 
   const supabase = await createClient();
 
-  const [{ data: torneo }, { data: liga }, confirmados] = await Promise.all([
+  const [{ data: torneo }, { data: liga }, confirmados, { data: existentes }] = await Promise.all([
     supabase.from("torneos").select("slug").eq("id", torneoId).maybeSingle(),
     supabase.from("ligas_pool").select("tabla_puntos").eq("id", ligaPoolId).maybeSingle(),
     obtenerInscritosConfirmadosParaResultados(torneoId),
+    supabase.from("resultados").select("id, inscripcion_id, posicion").eq("torneo_id", torneoId),
   ]);
   if (!torneo) return { ok: false, error: "Torneo no encontrado." };
   if (!liga) return { ok: false, error: "Liga no encontrada." };
 
   const tablaPuntos = liga.tabla_puntos as Record<string, number>;
   const porInscripcion = new Map(confirmados.map((c) => [c.inscripcionId, c]));
+  const filaPorInscripcion = new Map(
+    (existentes ?? [])
+      .filter((r): r is typeof r & { inscripcion_id: string } => r.inscripcion_id != null)
+      .map((r) => [r.inscripcion_id, r]),
+  );
+  const posicionesNumericas = Object.keys(posiciones)
+    .map((p) => parseInt(p, 10))
+    .filter((n) => Number.isFinite(n));
 
-  const filas = Object.entries(posiciones)
-    .map(([posicionStr, inscripcionId]) => {
-      const inscrito = porInscripcion.get(inscripcionId);
-      const posicion = parseInt(posicionStr, 10);
-      if (!inscrito || !Number.isFinite(posicion)) return null;
-      return {
+  // Si un puesto cambia de ganador, la fila del jugador que lo ocupaba
+  // antes deja de tener ese puesto (para no dejar a dos jugadores con el
+  // mismo puesto), pero conserva el resto de sus datos.
+  const idsADesasignar = (existentes ?? [])
+    .filter(
+      (r) =>
+        r.posicion != null &&
+        posicionesNumericas.includes(r.posicion) &&
+        posiciones[String(r.posicion)] !== r.inscripcion_id,
+    )
+    .map((r) => r.id);
+  if (idsADesasignar.length > 0) {
+    const { error } = await supabase
+      .from("resultados")
+      .update({ posicion: null, puntos: null })
+      .in("id", idsADesasignar);
+    if (error) return { ok: false, error: error.message };
+  }
+
+  let filasResueltas = 0;
+  for (const [posicionStr, inscripcionId] of Object.entries(posiciones)) {
+    const inscrito = porInscripcion.get(inscripcionId);
+    const posicion = parseInt(posicionStr, 10);
+    if (!inscrito || !Number.isFinite(posicion)) continue;
+    filasResueltas++;
+    const puntos = tablaPuntos[posicionStr] ?? tablaPuntos.resto ?? 0;
+
+    const filaExistente = filaPorInscripcion.get(inscripcionId);
+    if (filaExistente) {
+      const { error } = await supabase
+        .from("resultados")
+        .update({ posicion, puntos, estado: "publicado" })
+        .eq("id", filaExistente.id);
+      if (error) return { ok: false, error: error.message };
+    } else {
+      const { error } = await supabase.from("resultados").insert({
         torneo_id: torneoId,
         jugador_id: inscrito.jugadorId,
         inscripcion_id: inscrito.inscripcionId,
@@ -290,18 +331,15 @@ export async function guardarPosicionesLiga(
         licencia_federativa: inscrito.licenciaFederativa,
         handicap: inscrito.handicap,
         posicion,
-        puntos: tablaPuntos[posicionStr] ?? tablaPuntos.resto ?? 0,
-        golpes: null as number | null,
-        estado: "publicado" as const,
-      };
-    })
-    .filter((f): f is NonNullable<typeof f> => f != null);
+        puntos,
+        golpes: null,
+        estado: "publicado",
+      });
+      if (error) return { ok: false, error: error.message };
+    }
+  }
 
-  if (filas.length === 0) return { ok: false, error: "No se pudo resolver ningún puesto." };
-
-  await supabase.from("resultados").delete().eq("torneo_id", torneoId);
-  const { error } = await supabase.from("resultados").insert(filas);
-  if (error) return { ok: false, error: error.message };
+  if (filasResueltas === 0) return { ok: false, error: "No se pudo resolver ningún puesto." };
 
   await recalcularClasificacionGlobal(ligaPoolId);
 
