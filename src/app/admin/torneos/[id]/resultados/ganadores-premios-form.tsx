@@ -3,16 +3,19 @@
 import { useActionState, useState } from "react";
 import { Plus, Trophy, X } from "lucide-react";
 import { actualizarGanadoresPremios, type EstadoGanadores } from "./actions";
+import type { InscritoParaResultado } from "@/lib/data/resultados";
 import type { PremioCategoria } from "@/types/database";
 
 export function GanadoresPremiosForm({
   torneoId,
   premios,
   ganadoresIniciales,
+  confirmados,
 }: {
   torneoId: string;
   premios: PremioCategoria[];
   ganadoresIniciales: Record<string, string[]>;
+  confirmados: InscritoParaResultado[];
 }) {
   const accion = actualizarGanadoresPremios.bind(null, torneoId);
   const [state, formAction, pending] = useActionState<EstadoGanadores, FormData>(accion, {
@@ -57,10 +60,16 @@ export function GanadoresPremiosForm({
         <Trophy size={17} className="text-ajag-oro-600" /> Cuadro de honor
       </h2>
       <p className="mb-4 text-xs text-ajag-gris-500">
-        Escribe el nombre del ganador de cada premio. En premios como Drive más largo o
-        Par 3 más cercano puedes añadir varios ganadores (uno por hoyo). Se mostrará
-        públicamente en la ficha del torneo y en la clasificación.
+        Elige el ganador de cada premio entre los inscritos confirmados. En premios como
+        Drive más largo o Par 3 más cercano puedes añadir varios ganadores (uno por hoyo).
+        Se mostrará públicamente en la ficha del torneo y en la clasificación.
       </p>
+
+      {confirmados.length === 0 ? (
+        <p className="mb-4 text-xs text-ajag-oro-600">
+          Todavía no hay ningún inscrito confirmado en este torneo.
+        </p>
+      ) : null}
 
       <input type="hidden" name="ganadores" value={JSON.stringify(ganadores)} />
 
@@ -80,14 +89,23 @@ export function GanadoresPremiosForm({
                     <div className="flex flex-1 flex-col gap-1.5">
                       {nombres.map((nombre, indiceGanador) => (
                         <div key={indiceGanador} className="flex items-center gap-2">
-                          <input
-                            placeholder="Nombre del ganador"
+                          <select
                             value={nombre}
                             onChange={(e) =>
                               actualizarNombre(clave, indiceGanador, e.target.value)
                             }
-                            className="w-full rounded-lg border border-ajag-gris-200 px-3 py-1.5 text-sm outline-none focus:border-ajag-verde-600"
-                          />
+                            className="w-full rounded-lg border border-ajag-gris-200 bg-white px-3 py-1.5 text-sm outline-none focus:border-ajag-verde-600"
+                          >
+                            <option value="">Selecciona un inscrito</option>
+                            {confirmados.map((c) => (
+                              <option key={c.inscripcionId} value={c.nombreCompleto}>
+                                {c.nombreCompleto}
+                              </option>
+                            ))}
+                            {nombre && !confirmados.some((c) => c.nombreCompleto === nombre) ? (
+                              <option value={nombre}>{nombre} (no está en la lista)</option>
+                            ) : null}
+                          </select>
                           {nombres.length > 1 ? (
                             <button
                               type="button"

@@ -2,7 +2,10 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { obtenerInscritosConfirmadosParaResultados } from "@/lib/data/resultados";
+import {
+  obtenerInscritosConfirmadosParaResultados,
+  type InscritoParaResultado,
+} from "@/lib/data/resultados";
 import { emparejarConInscritos, type FilaExtraidaPdf } from "@/lib/resultados/extraer-pdf";
 import { DocumentoUploader } from "./documento-uploader";
 import { ResultadosForm, filaVacia, type FilaResultado } from "./resultados-form";
@@ -26,13 +29,16 @@ export default async function AdminResultadosPage({
     .maybeSingle();
   if (!torneo) notFound();
 
-  const { data: documento } = await supabase
-    .from("resultados_pdf_uploads")
-    .select("*")
-    .eq("torneo_id", id)
-    .order("created_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
+  const [{ data: documento }, confirmados] = await Promise.all([
+    supabase
+      .from("resultados_pdf_uploads")
+      .select("*")
+      .eq("torneo_id", id)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+    obtenerInscritosConfirmadosParaResultados(id),
+  ]);
 
   return (
     <div>
@@ -58,6 +64,7 @@ export default async function AdminResultadosPage({
         torneoId={id}
         premios={torneo.premios}
         ganadoresIniciales={torneo.premios_ganadores}
+        confirmados={confirmados}
       />
 
       {torneo.liga_pool_id ? (
@@ -65,6 +72,7 @@ export default async function AdminResultadosPage({
           <TablaResultados
             torneoId={id}
             formatoPuntuacion={torneo.formato_puntuacion}
+            confirmados={confirmados}
             documentoFilasExtraidas={
               (documento?.filas_extraidas as { filas?: FilaExtraidaPdf[] } | null)?.filas ?? []
             }
@@ -84,10 +92,12 @@ export default async function AdminResultadosPage({
 async function TablaResultados({
   torneoId,
   formatoPuntuacion,
+  confirmados,
   documentoFilasExtraidas,
 }: {
   torneoId: string;
   formatoPuntuacion: "stableford" | "medal_play";
+  confirmados: InscritoParaResultado[];
   documentoFilasExtraidas: FilaExtraidaPdf[];
 }) {
   const supabase = await createClient();
@@ -112,7 +122,6 @@ async function TablaResultados({
       }),
     );
   } else {
-    const confirmados = await obtenerInscritosConfirmadosParaResultados(torneoId);
     const sugerencias =
       documentoFilasExtraidas.length > 0
         ? emparejarConInscritos(documentoFilasExtraidas, confirmados)
