@@ -59,6 +59,9 @@ export default async function AdminTorneosPage() {
               <Link href={`/admin/torneos/${torneo.id}/editar`} className={claseBoton}>
                 Editar
               </Link>
+              <Link href={`/admin/torneos/${torneo.id}/inscritos`} className={claseBoton}>
+                Inscritos
+              </Link>
               <Link href={`/admin/torneos/${torneo.id}/resultados`} className={claseBoton}>
                 Resultados
               </Link>
