@@ -27,8 +27,11 @@ jobs:
           espera_segundos=15
 
           for i in $(seq 1 "$intentos"); do
+            # target=production excluye los deployments de preview (uno por
+            # cada push a ramas de feature), que si no llenan la lista y
+            # tapan el deployment de producción que nos interesa.
             respuesta=$(curl -sS -H "Authorization: Bearer $VERCEL_TOKEN" \
-              "https://api.vercel.com/v6/deployments?limit=20")
+              "https://api.vercel.com/v6/deployments?target=production&limit=20")
 
             estado=$(echo "$respuesta" | node -e '
               let data = "";
