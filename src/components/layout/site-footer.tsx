@@ -34,6 +34,16 @@ export function SiteFooter() {
       </div>
       <div className="border-t border-ajag-gris-100 px-4 py-4 text-center text-xs text-ajag-gris-500">
         © {new Date().getFullYear()} AJAG Golf. Todos los derechos reservados.
+        <br />
+        Powered by{" "}
+        <a
+          href="https://www.aftergolf.es"
+          target="_blank"
+          rel="noreferrer"
+          className="font-medium hover:text-ajag-verde-700 hover:underline"
+        >
+          AfterGolf Torneos
+        </a>
       </div>
     </footer>
   );
