@@ -84,7 +84,7 @@ export async function crearLiga(
 
   revalidatePath("/admin/ligas");
   revalidatePath("/ligas");
-  redirect(`/admin/ligas/${data.id}/editar`);
+  redirect("/admin/ligas");
 }
 
 export async function actualizarLiga(
@@ -120,7 +120,7 @@ export async function actualizarLiga(
   revalidatePath(`/admin/ligas/${ligaId}/editar`);
   revalidatePath("/ligas");
   if (data) revalidatePath(`/ligas/${data.slug}`);
-  return { ok: true, error: null };
+  redirect("/admin/ligas");
 }
 
 export async function eliminarLiga(ligaId: string) {
