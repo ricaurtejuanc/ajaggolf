@@ -7,6 +7,8 @@ import { obtenerJugadoresConfirmados } from "@/lib/data/salidas";
 import {
   generarCuadroSalidas,
   detectarConflictos,
+  calcularTamanosGrupos,
+  ordenarPorHandicap,
   type JugadorParaSalida,
 } from "@/lib/salidas/generar";
 import type { ModoAsignacionSalida, ModoSalida } from "@/types/database";
@@ -224,6 +226,77 @@ export async function moverJugador(
     .maybeSingle();
   if (salida) await recalcularConflictos(salida.id);
 
+  revalidatePath(`/admin/torneos/${torneoId}/salidas`);
+}
+
+/**
+ * Reparte por hándicap a los jugadores confirmados que todavía no están en
+ * ningún grupo (p.ej. porque el admin ya colocó a mano los grupos
+ * "organizados" y quiere que el resto se rellene solo). Respeta los grupos
+ * y jugadores ya asignados: solo ocupa los huecos que falten en cada grupo
+ * hasta su tamaño objetivo (3-4), en orden de hándicap ascendente.
+ */
+export async function autocompletarPorHandicap(torneoId: string) {
+  const admin = await getUsuarioAdmin();
+  if (!admin) return;
+
+  const supabase = await createClient();
+
+  const { data: salidaRaw } = await supabase
+    .from("salidas")
+    .select("id, grupos_salida(id, numero_grupo, grupo_salida_jugadores(inscripcion_id, orden))")
+    .eq("torneo_id", torneoId)
+    .maybeSingle();
+  if (!salidaRaw) return;
+
+  const salida = salidaRaw as unknown as {
+    id: string;
+    grupos_salida: {
+      id: string;
+      numero_grupo: number;
+      grupo_salida_jugadores: { inscripcion_id: string; orden: number }[];
+    }[];
+  };
+  const grupos = salida.grupos_salida.slice().sort((a, b) => a.numero_grupo - b.numero_grupo);
+  if (grupos.length === 0) return;
+
+  const idsAsignados = new Set(
+    grupos.flatMap((g) => g.grupo_salida_jugadores.map((gj) => gj.inscripcion_id)),
+  );
+  const confirmados = await obtenerJugadoresConfirmados(torneoId);
+  const sinAsignar = ordenarPorHandicap(
+    confirmados.filter((j) => !idsAsignados.has(j.inscripcionId)),
+  );
+  if (sinAsignar.length === 0) return;
+
+  const tamanos = calcularTamanosGrupos(confirmados.length);
+  let cursor = 0;
+
+  for (let i = 0; i < grupos.length; i++) {
+    const grupo = grupos[i];
+    const actuales = grupo.grupo_salida_jugadores.length;
+    const esUltimoGrupo = i === grupos.length - 1;
+    // El último grupo absorbe todo lo que sobre, para no dejar a nadie sin
+    // sitio si el número de confirmados cambió desde que se generó el cuadro.
+    const huecos = esUltimoGrupo ? sinAsignar.length - cursor : Math.max(0, (tamanos[i] ?? actuales) - actuales);
+    if (huecos <= 0) continue;
+
+    const aInsertar = sinAsignar.slice(cursor, cursor + huecos);
+    cursor += aInsertar.length;
+    if (aInsertar.length === 0) continue;
+
+    let siguienteOrden =
+      actuales > 0 ? Math.max(...grupo.grupo_salida_jugadores.map((gj) => gj.orden)) + 1 : 1;
+    const filas = aInsertar.map((j) => ({
+      grupo_salida_id: grupo.id,
+      inscripcion_id: j.inscripcionId,
+      orden: siguienteOrden++,
+    }));
+    const { error } = await supabase.from("grupo_salida_jugadores").insert(filas);
+    if (error) return;
+  }
+
+  await recalcularConflictos(salida.id);
   revalidatePath(`/admin/torneos/${torneoId}/salidas`);
 }
 

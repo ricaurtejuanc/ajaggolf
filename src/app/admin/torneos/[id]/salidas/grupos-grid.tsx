@@ -1,8 +1,8 @@
 "use client";
 
 import { useTransition } from "react";
-import { AlertTriangle } from "lucide-react";
-import { moverJugador } from "./actions";
+import { AlertTriangle, Wand2 } from "lucide-react";
+import { moverJugador, autocompletarPorHandicap } from "./actions";
 
 export interface JugadorEnGrupoVista {
   inscripcionId: string;
@@ -42,6 +42,10 @@ export function GruposGrid({
     startTransition(() =>
       moverJugador(torneoId, inscripcionId, valor === "" ? null : valor),
     );
+  }
+
+  function autocompletar() {
+    startTransition(() => autocompletarPorHandicap(torneoId));
   }
 
   return (
@@ -122,8 +126,24 @@ export function GruposGrid({
 
       {sinAsignar.length > 0 ? (
         <div className="card-ajag p-4">
-          <p className="mb-3 font-display text-sm font-semibold text-ajag-verde-900">
-            Sin asignar ({sinAsignar.length})
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+            <p className="font-display text-sm font-semibold text-ajag-verde-900">
+              Sin asignar ({sinAsignar.length})
+            </p>
+            <button
+              type="button"
+              disabled={pending}
+              onClick={autocompletar}
+              className="flex items-center gap-1.5 rounded-full bg-ajag-verde-700 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-ajag-verde-600 disabled:opacity-60"
+            >
+              <Wand2 size={13} />
+              {pending ? "Repartiendo..." : "Autocompletar por hándicap"}
+            </button>
+          </div>
+          <p className="mb-3 text-xs text-ajag-gris-500">
+            Coloca antes a mano los grupos ya organizados (con el selector de cada jugador) y
+            luego usa este botón: rellena los huecos que queden con el resto de jugadores
+            ordenados por hándicap.
           </p>
           <ul className="flex flex-col gap-2">
             {sinAsignar.map((j) => (

@@ -43,7 +43,7 @@ export function calcularTamanosGrupos(n: number): number[] {
   return tamanos;
 }
 
-function ordenarPorHandicap(jugadores: JugadorParaSalida[]): JugadorParaSalida[] {
+export function ordenarPorHandicap(jugadores: JugadorParaSalida[]): JugadorParaSalida[] {
   return [...jugadores].sort((a, b) => {
     if (a.handicap == null && b.handicap == null) return 0;
     if (a.handicap == null) return 1;

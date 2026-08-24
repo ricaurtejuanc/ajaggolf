@@ -114,10 +114,14 @@ export function GenerarSalidasForm({
             defaultValue={salidaExistente?.modo_asignacion ?? modoAsignacionDefecto}
             className="mt-1 w-full rounded-xl border border-ajag-gris-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-ajag-verde-600"
           >
+            <option value="manual">Personalizado (coloco primero los grupos organizados)</option>
             <option value="handicap">Automático por hándicap</option>
-            <option value="manual">Personalizado (lo armo yo)</option>
             <option value="mixto">Mezcla de niveles</option>
           </select>
+          <p className="mt-1 text-xs text-ajag-gris-500">
+            Recomendado: elige Personalizado, coloca a mano los grupos ya organizados y luego
+            pulsa &quot;Autocompletar por hándicap&quot; más abajo para rellenar el resto.
+          </p>
         </div>
       </div>
 
