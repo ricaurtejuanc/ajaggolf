@@ -22,6 +22,7 @@ export function GanadoresPremiosForm({
     ok: false,
     error: null,
   });
+  const [premiosState, setPremiosState] = useState<PremioCategoria[]>(premios);
   const [ganadores, setGanadores] = useState<Record<string, string[]>>(() => {
     const inicial: Record<string, string[]> = {};
     premios.forEach((cat, indiceCategoria) => {
@@ -34,7 +35,7 @@ export function GanadoresPremiosForm({
     return inicial;
   });
 
-  if (premios.length === 0) return null;
+  if (premiosState.length === 0) return null;
 
   function actualizarNombre(clave: string, indice: number, valor: string) {
     setGanadores((prev) => ({
@@ -54,6 +55,27 @@ export function GanadoresPremiosForm({
     }));
   }
 
+  function actualizarNombrePremio(indiceCategoria: number, indicePremio: number, valor: string) {
+    setPremiosState((prev) =>
+      prev.map((cat, i) =>
+        i === indiceCategoria
+          ? { ...cat, premios: cat.premios.map((p, j) => (j === indicePremio ? valor : p)) }
+          : cat,
+      ),
+    );
+  }
+
+  // Los premios nuevos siempre se añaden al final de la categoría: las claves
+  // de ganadores usan el índice del premio, así que insertar o reordenar en
+  // medio rompería la asignación de ganadores ya guardados.
+  function anadirPremio(indiceCategoria: number) {
+    setPremiosState((prev) =>
+      prev.map((cat, i) =>
+        i === indiceCategoria ? { ...cat, premios: [...cat.premios, ""] } : cat,
+      ),
+    );
+  }
+
   return (
     <form action={formAction} className="card-ajag mb-6 p-5">
       <h2 className="mb-1 flex items-center gap-2 font-display text-base font-semibold text-ajag-verde-900">
@@ -62,6 +84,7 @@ export function GanadoresPremiosForm({
       <p className="mb-4 text-xs text-ajag-gris-500">
         Elige el ganador de cada premio entre los inscritos confirmados. En premios como
         Drive más largo o Par 3 más cercano puedes añadir varios ganadores (uno por hoyo).
+        Si falta algún premio (por ejemplo, tercer clasificado) puedes añadirlo aquí mismo.
         Se mostrará públicamente en la ficha del torneo y en la clasificación.
       </p>
 
@@ -72,9 +95,10 @@ export function GanadoresPremiosForm({
       ) : null}
 
       <input type="hidden" name="ganadores" value={JSON.stringify(ganadores)} />
+      <input type="hidden" name="premios" value={JSON.stringify(premiosState)} />
 
       <div className="flex flex-col gap-5">
-        {premios.map((cat, indiceCategoria) => (
+        {premiosState.map((cat, indiceCategoria) => (
           <div key={indiceCategoria}>
             <p className="text-sm font-medium text-ajag-verde-900">{cat.nombre}</p>
             <div className="mt-2 flex flex-col gap-3">
@@ -83,9 +107,14 @@ export function GanadoresPremiosForm({
                 const nombres = ganadores[clave] ?? [""];
                 return (
                   <div key={clave} className="flex flex-col gap-1 sm:flex-row sm:gap-3">
-                    <span className="w-56 shrink-0 pt-1.5 text-sm text-ajag-gris-500">
-                      {premio}
-                    </span>
+                    <input
+                      value={premio}
+                      onChange={(e) =>
+                        actualizarNombrePremio(indiceCategoria, indicePremio, e.target.value)
+                      }
+                      placeholder="Nombre del premio"
+                      className="h-fit w-56 shrink-0 rounded-lg border border-ajag-gris-200 bg-white px-2 py-1.5 text-sm outline-none focus:border-ajag-verde-600"
+                    />
                     <div className="flex flex-1 flex-col gap-1.5">
                       {nombres.map((nombre, indiceGanador) => (
                         <div key={indiceGanador} className="flex items-center gap-2">
@@ -129,6 +158,13 @@ export function GanadoresPremiosForm({
                   </div>
                 );
               })}
+              <button
+                type="button"
+                onClick={() => anadirPremio(indiceCategoria)}
+                className="flex w-fit items-center gap-1 text-xs font-medium text-ajag-oro-600 hover:underline"
+              >
+                <Plus size={13} /> Añadir premio en {cat.nombre}
+              </button>
             </div>
           </div>
         ))}

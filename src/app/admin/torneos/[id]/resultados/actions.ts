@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getUsuarioAdmin } from "@/lib/auth";
 import { extraerFilasPdf } from "@/lib/resultados/extraer-pdf";
 import { recalcularClasificacionGlobal } from "@/lib/clasificacion/recalcular";
+import { leerPremiosDesdeFormData } from "@/lib/premios";
 
 export type EstadoDocumento = { ok: boolean; error: string | null };
 
@@ -75,7 +76,7 @@ export async function guardarResultados(
 
   const { data: torneo } = await supabase
     .from("torneos")
-    .select("id, liga_pool_id")
+    .select("id, liga_pool_id, slug")
     .eq("id", torneoId)
     .maybeSingle();
   if (!torneo) return { ok: false, error: "Torneo no encontrado." };
@@ -129,6 +130,7 @@ export async function guardarResultados(
 
   revalidatePath(`/admin/torneos/${torneoId}/resultados`);
   revalidatePath(`/torneos`);
+  revalidatePath(`/torneos/${torneo.slug}/clasificacion`);
   return { ok: true, error: null };
 }
 
@@ -142,8 +144,15 @@ export async function publicarDocumento(torneoId: string, documentoId: string) {
     .update({ estado: "publicado", publicado_at: new Date().toISOString() })
     .eq("id", documentoId);
 
+  const { data: torneo } = await supabase
+    .from("torneos")
+    .select("slug")
+    .eq("id", torneoId)
+    .maybeSingle();
+
   revalidatePath(`/admin/torneos/${torneoId}/resultados`);
   revalidatePath("/torneos");
+  if (torneo) revalidatePath(`/torneos/${torneo.slug}/clasificacion`);
 }
 
 export async function despublicarDocumento(torneoId: string, documentoId: string) {
@@ -153,7 +162,14 @@ export async function despublicarDocumento(torneoId: string, documentoId: string
   const supabase = await createClient();
   await supabase.from("resultados_pdf_uploads").update({ estado: "preview" }).eq("id", documentoId);
 
+  const { data: torneo } = await supabase
+    .from("torneos")
+    .select("slug")
+    .eq("id", torneoId)
+    .maybeSingle();
+
   revalidatePath(`/admin/torneos/${torneoId}/resultados`);
+  if (torneo) revalidatePath(`/torneos/${torneo.slug}/clasificacion`);
 }
 
 export type EstadoGanadores = { ok: boolean; error: string | null };
@@ -187,11 +203,12 @@ export async function actualizarGanadoresPremios(
   if (!admin) return { ok: false, error: "No autorizado." };
 
   const ganadores = leerGanadores(formData);
+  const premios = leerPremiosDesdeFormData(formData);
 
   const supabase = await createClient();
   const { data: torneo, error } = await supabase
     .from("torneos")
-    .update({ premios_ganadores: ganadores })
+    .update({ premios_ganadores: ganadores, premios })
     .eq("id", torneoId)
     .select("slug")
     .single();
@@ -199,6 +216,9 @@ export async function actualizarGanadoresPremios(
   if (error) return { ok: false, error: error.message };
 
   revalidatePath(`/admin/torneos/${torneoId}/resultados`);
-  if (torneo) revalidatePath(`/torneos/${torneo.slug}`);
+  if (torneo) {
+    revalidatePath(`/torneos/${torneo.slug}`);
+    revalidatePath(`/torneos/${torneo.slug}/clasificacion`);
+  }
   return { ok: true, error: null };
 }

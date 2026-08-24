@@ -64,24 +64,19 @@ export default async function AdminInscritosPage({
             <thead>
               <tr className="border-b border-ajag-gris-100 text-xs uppercase tracking-wide text-ajag-gris-500">
                 <th className="px-4 py-3 font-medium">Nombre</th>
-                <th className="px-4 py-3 font-medium">Contacto</th>
+                <th className="px-4 py-3 font-medium">Licencia</th>
                 <th className="px-4 py-3 font-medium">Hándicap</th>
                 <th className="px-4 py-3 font-medium">Socio</th>
                 <th className="px-4 py-3 font-medium">Precio</th>
                 <th className="px-4 py-3 font-medium">Estado</th>
+                <th className="px-4 py-3 font-medium">Email</th>
               </tr>
             </thead>
             <tbody>
               {inscritos.map((i) => (
                 <tr key={i.inscripcionId} className="border-b border-ajag-gris-100 last:border-0">
                   <td className="px-4 py-3 font-medium text-ajag-verde-900">{i.nombreCompleto}</td>
-                  <td className="px-4 py-3 text-ajag-gris-500">
-                    <div className="flex flex-col">
-                      {i.email ? <span>{i.email}</span> : null}
-                      {i.telefono ? <span>{i.telefono}</span> : null}
-                      {!i.email && !i.telefono ? <span>—</span> : null}
-                    </div>
-                  </td>
+                  <td className="px-4 py-3 text-ajag-gris-500">{i.licenciaFederativa ?? "—"}</td>
                   <td className="px-4 py-3 text-ajag-gris-500">{i.handicap ?? "—"}</td>
                   <td className="px-4 py-3 text-ajag-gris-500">{i.esSocio ? "Sí" : "No"}</td>
                   <td className="px-4 py-3 text-ajag-gris-500">{formatearPrecio(i.precioCents)}</td>
@@ -92,6 +87,7 @@ export default async function AdminInscritosPage({
                       {etiquetaEstado[i.estado] ?? i.estado}
                     </span>
                   </td>
+                  <td className="px-4 py-3 text-ajag-gris-500">{i.email ?? "—"}</td>
                 </tr>
               ))}
             </tbody>
