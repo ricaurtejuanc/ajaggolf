@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { getUsuarioAdmin } from "@/lib/auth";
+import { hayCuadroDeHonor } from "@/components/torneos/cuadro-de-honor";
 import type { Torneo } from "@/types/database";
 
 export async function listarTorneosPublicos(): Promise<Torneo[]> {
@@ -86,7 +87,12 @@ export async function obtenerEstadoClasificacionPorTorneos(
   ]);
 
   for (const torneo of torneos) {
-    resultado[torneo.id] = { disponible: idsConClasificacion.has(torneo.id) };
+    // La clasificación también está "disponible" si solo hay cuadro de
+    // honor (ganadores de premios) aunque no haya tabla de resultados ni
+    // PDF publicado todavía.
+    resultado[torneo.id] = {
+      disponible: idsConClasificacion.has(torneo.id) || hayCuadroDeHonor(torneo),
+    };
   }
 
   return resultado;

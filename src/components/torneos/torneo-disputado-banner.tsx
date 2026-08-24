@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { Trophy } from "lucide-react";
 import { formatearFecha } from "@/lib/format";
 import type { Torneo } from "@/types/database";
 
@@ -19,15 +18,6 @@ export function TorneoDisputadoBanner({
   horariosHref: string | null;
   clasificacionDisponible: boolean;
 }) {
-  const ganadores = torneo.premios.flatMap((cat, indiceCategoria) =>
-    cat.premios
-      .map((premio, indicePremio) => ({
-        premio,
-        nombres: torneo.premios_ganadores[`${indiceCategoria}-${indicePremio}`] ?? [],
-      }))
-      .filter((g) => g.nombres.length > 0),
-  );
-
   return (
     <div className="card-ajag flex flex-col gap-3 p-5 sm:flex-row sm:items-center sm:justify-between">
       <div>
@@ -40,18 +30,6 @@ export function TorneoDisputadoBanner({
         >
           {torneo.nombre}
         </Link>
-
-        {ganadores.length > 0 ? (
-          <ul className="mt-2 flex flex-col gap-0.5">
-            {ganadores.map((g) => (
-              <li key={g.premio} className="flex items-center gap-1.5 text-sm text-ajag-gris-500">
-                <Trophy size={13} className="shrink-0 text-ajag-oro-600" />
-                {g.premio}:{" "}
-                <span className="font-medium text-ajag-verde-900">{g.nombres.join(", ")}</span>
-              </li>
-            ))}
-          </ul>
-        ) : null}
       </div>
 
       <div className="flex shrink-0 flex-wrap items-center gap-2">

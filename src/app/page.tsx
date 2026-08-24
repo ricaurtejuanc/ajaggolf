@@ -41,6 +41,12 @@ export default async function Home() {
             >
               Horarios
             </Link>
+            <Link
+              href="/patrocinadores"
+              className="rounded-full border border-white/40 px-6 py-3 text-sm font-medium text-white transition hover:bg-white/10"
+            >
+              Patrocinadores
+            </Link>
           </div>
         </div>
       </section>
