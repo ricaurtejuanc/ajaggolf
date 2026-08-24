@@ -42,7 +42,7 @@ const caracteristicas = [
 ];
 
 const MAILTO =
-  "mailto:ricaurtejuanc@gmail.com?subject=Quiero%20AfterGolf%20Torneos%20para%20mi%20club";
+  "mailto:info@aftergolf.es?subject=Quiero%20AfterGolf%20Torneos%20para%20mi%20club";
 
 export default function ProductoLandingPage() {
   return (
