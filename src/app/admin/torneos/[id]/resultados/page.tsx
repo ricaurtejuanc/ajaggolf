@@ -8,11 +8,12 @@ import {
 } from "@/lib/data/resultados";
 import { emparejarConInscritos, type FilaExtraidaPdf } from "@/lib/resultados/extraer-pdf";
 import { DocumentoUploader } from "./documento-uploader";
-import { ResultadosForm } from "./resultados-form";
+import { ResultadosForm, type CategoriaClasificacion } from "./resultados-form";
 import { filaVacia, type FilaResultado } from "./fila-resultado";
 import { DocumentoActual } from "./documento-actual";
 import { GanadoresPremiosForm } from "./ganadores-premios-form";
 import { PosicionesLigaForm } from "./posiciones-liga-form";
+import { ClasificacionGeneralToggle } from "./clasificacion-general-toggle";
 import type { Resultado } from "@/types/database";
 
 export const metadata: Metadata = { title: "Resultados · Admin" };
@@ -99,12 +100,24 @@ export default async function AdminResultadosPage({
             sugerenciasPosicion={sugerenciasPosicion}
             resultados={resultados ?? []}
           />
-          <TablaResultados
-            torneoId={id}
-            formatoPuntuacion={torneo.formato_puntuacion}
-            confirmados={confirmados}
-            documentoFilasExtraidas={documentoFilasExtraidas}
-            resultados={resultados ?? []}
+          <ClasificacionGeneralToggle
+            hayDocumento={Boolean(documento)}
+            tablaManual={
+              <TablaResultados
+                torneoId={id}
+                formatoPuntuacion={torneo.formato_puntuacion}
+                confirmados={confirmados}
+                documentoFilasExtraidas={documentoFilasExtraidas}
+                resultados={resultados ?? []}
+                categorias={torneo.premios
+                  .filter((c) => !c.categoria_unica)
+                  .map((c) => ({
+                    nombre: c.nombre,
+                    handicapDesde: c.handicap_desde,
+                    handicapHasta: c.handicap_hasta,
+                  }))}
+              />
+            }
           />
         </div>
       ) : (
@@ -184,12 +197,14 @@ function TablaResultados({
   confirmados,
   documentoFilasExtraidas,
   resultados,
+  categorias,
 }: {
   torneoId: string;
   formatoPuntuacion: "stableford" | "medal_play";
   confirmados: InscritoParaResultado[];
   documentoFilasExtraidas: FilaExtraidaPdf[];
   resultados: Resultado[];
+  categorias: CategoriaClasificacion[];
 }) {
   let filasIniciales: FilaResultado[];
 
@@ -230,6 +245,7 @@ function TablaResultados({
       torneoId={torneoId}
       formatoPuntuacion={formatoPuntuacion}
       filasIniciales={filasIniciales}
+      categorias={categorias}
     />
   );
 }
