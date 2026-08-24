@@ -62,8 +62,10 @@ export function ordenarPorHandicap(jugadores: JugadorParaSalida[]): JugadorParaS
  * trozos de 4 y el resto queda como conflicto para que el admin lo revise
  * (detectarConflictos), en vez de forzar un grupo imposible.
  */
-function formarBloques(jugadores: JugadorParaSalida[]): JugadorParaSalida[][] {
-  const porLicencia = new Map<string, JugadorParaSalida>();
+export function formarBloques<
+  T extends { inscripcionId: string; licenciaFederativa: string | null; juegaConLicencias: string[] },
+>(jugadores: T[]): T[][] {
+  const porLicencia = new Map<string, T>();
   for (const j of jugadores) {
     if (j.licenciaFederativa) porLicencia.set(j.licenciaFederativa, j);
   }
@@ -93,7 +95,7 @@ function formarBloques(jugadores: JugadorParaSalida[]): JugadorParaSalida[][] {
     }
   }
 
-  const porRaiz = new Map<string, JugadorParaSalida[]>();
+  const porRaiz = new Map<string, T[]>();
   for (const j of jugadores) {
     const r = raiz(j.inscripcionId);
     const lista = porRaiz.get(r);
@@ -101,7 +103,7 @@ function formarBloques(jugadores: JugadorParaSalida[]): JugadorParaSalida[][] {
     else porRaiz.set(r, [j]);
   }
 
-  const bloques: JugadorParaSalida[][] = [];
+  const bloques: T[][] = [];
   for (const bloque of porRaiz.values()) {
     for (let i = 0; i < bloque.length; i += 4) {
       bloques.push(bloque.slice(i, i + 4));

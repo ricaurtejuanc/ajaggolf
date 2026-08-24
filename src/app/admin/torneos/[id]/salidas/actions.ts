@@ -235,6 +235,45 @@ export async function moverJugador(
 }
 
 /**
+ * Igual que moverJugador pero para un bloque de jugadores que quieren jugar
+ * juntos (piden "juega con" entre ellos): se asignan todos al mismo grupo
+ * en una sola acción, en vez de moverlos uno a uno.
+ */
+export async function moverBloque(
+  torneoId: string,
+  inscripcionIds: string[],
+  nuevoGrupoSalidaId: string | null,
+) {
+  const admin = await getUsuarioAdmin();
+  if (!admin) return;
+  if (inscripcionIds.length === 0) return;
+
+  const supabase = await createClient();
+
+  if (nuevoGrupoSalidaId === null) {
+    await supabase.from("grupo_salida_jugadores").delete().in("inscripcion_id", inscripcionIds);
+  } else {
+    await supabase.from("grupo_salida_jugadores").upsert(
+      inscripcionIds.map((inscripcionId) => ({
+        grupo_salida_id: nuevoGrupoSalidaId,
+        inscripcion_id: inscripcionId,
+        orden: 1,
+      })),
+      { onConflict: "inscripcion_id" },
+    );
+  }
+
+  const { data: salida } = await supabase
+    .from("salidas")
+    .select("id")
+    .eq("torneo_id", torneoId)
+    .maybeSingle();
+  if (salida) await recalcularConflictos(salida.id);
+
+  revalidatePath(`/admin/torneos/${torneoId}/salidas`);
+}
+
+/**
  * Reparte por hándicap a los jugadores confirmados que todavía no están en
  * ningún grupo (p.ej. porque el admin ya colocó a mano los grupos
  * "organizados" y quiere que el resto se rellene solo). Respeta los grupos

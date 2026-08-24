@@ -98,6 +98,11 @@ export default async function AdminSalidasPage({
     });
   }
 
+  const nombresPorLicencia: Record<string, string> = {};
+  for (const j of jugadoresConfirmados) {
+    if (j.licenciaFederativa) nombresPorLicencia[j.licenciaFederativa] = j.nombre;
+  }
+
   const sinAsignar: JugadorEnGrupoVista[] = jugadoresConfirmados
     .filter((j) => !idsAsignados.has(j.inscripcionId))
     .map((j) => ({
@@ -154,6 +159,7 @@ export default async function AdminSalidasPage({
             grupos={grupos}
             jugadoresPorGrupo={jugadoresPorGrupo}
             sinAsignar={sinAsignar}
+            nombresPorLicencia={nombresPorLicencia}
           />
         </div>
       ) : null}

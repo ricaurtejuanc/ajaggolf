@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { AlertTriangle, Search, Wand2, X } from "lucide-react";
-import { moverJugador, autocompletarPorHandicap } from "./actions";
+import { AlertTriangle, Search, Users, Wand2, X } from "lucide-react";
+import { moverJugador, moverBloque, autocompletarPorHandicap } from "./actions";
+import { formarBloques } from "@/lib/salidas/generar";
 
 export interface JugadorEnGrupoVista {
   inscripcionId: string;
@@ -27,17 +28,26 @@ export function GruposGrid({
   grupos,
   jugadoresPorGrupo,
   sinAsignar,
+  nombresPorLicencia,
 }: {
   torneoId: string;
   grupos: GrupoVista[];
   jugadoresPorGrupo: Record<string, JugadorEnGrupoVista[]>;
   sinAsignar: JugadorEnGrupoVista[];
+  nombresPorLicencia: Record<string, string>;
 }) {
   const [pending, startTransition] = useTransition();
   const [busqueda, setBusqueda] = useState("");
 
-  const sinAsignarFiltrados = sinAsignar.filter((j) =>
-    j.nombre.toLowerCase().includes(busqueda.trim().toLowerCase()),
+  function nombreDeLicencia(licencia: string): string {
+    return nombresPorLicencia[licencia] ?? licencia;
+  }
+
+  // Junta en un mismo bloque a quienes se han pedido jugar juntos, para
+  // poder asignarlos todos al mismo grupo de una vez en vez de uno a uno.
+  const bloques = formarBloques(sinAsignar);
+  const bloquesFiltrados = bloques.filter((bloque) =>
+    bloque.some((j) => j.nombre.toLowerCase().includes(busqueda.trim().toLowerCase())),
   );
 
   const conflictos = grupos
@@ -48,6 +58,10 @@ export function GruposGrid({
     startTransition(() =>
       moverJugador(torneoId, inscripcionId, valor === "" ? null : valor),
     );
+  }
+
+  function moverBloqueCompleto(inscripcionIds: string[], valor: string) {
+    startTransition(() => moverBloque(torneoId, inscripcionIds, valor === "" ? null : valor));
   }
 
   function autocompletar() {
@@ -174,43 +188,84 @@ export function GruposGrid({
               </button>
             ) : null}
           </div>
-          {sinAsignarFiltrados.length === 0 ? (
+          {bloquesFiltrados.length === 0 ? (
             <p className="py-2 text-center text-xs text-ajag-gris-500">
               Ningún jugador sin asignar coincide con &quot;{busqueda}&quot;.
             </p>
           ) : null}
           <ul className="flex flex-col gap-2">
-            {sinAsignarFiltrados.map((j) => (
-              <li
-                key={j.inscripcionId}
-                className="flex items-center justify-between gap-2 rounded-lg border border-ajag-gris-100 px-3 py-2 text-sm"
-              >
-                <div>
-                  <span className="font-medium text-ajag-verde-900">{j.nombre}</span>
-                  <span className="ml-2 text-xs text-ajag-gris-500">
-                    Hcp {j.handicap ?? "—"}
-                    {j.juegaConLicencias.length > 0
-                      ? ` · quiere jugar con: ${j.juegaConLicencias.join(", ")}`
-                      : ""}
-                  </span>
-                </div>
-                <select
-                  disabled={pending}
-                  defaultValue=""
-                  onChange={(e) => mover(j.inscripcionId, e.target.value)}
-                  className="rounded-lg border border-ajag-gris-200 bg-white px-2 py-1 text-xs outline-none"
+            {bloquesFiltrados.map((bloque) =>
+              bloque.length > 1 ? (
+                <li
+                  key={bloque.map((j) => j.inscripcionId).join("-")}
+                  className="rounded-lg border border-ajag-oro-500 bg-ajag-oro-500/10 px-3 py-2 text-sm"
                 >
-                  <option value="" disabled>
-                    Asignar a...
-                  </option>
-                  {grupos.map((g) => (
-                    <option key={g.id} value={g.id}>
-                      Grupo {g.numeroGrupo}
+                  <div className="mb-1.5 flex items-center gap-1.5 text-xs font-medium text-ajag-oro-600">
+                    <Users size={13} /> Quieren jugar juntos
+                  </div>
+                  <ul className="mb-2 space-y-0.5">
+                    {bloque.map((j) => (
+                      <li key={j.inscripcionId} className="flex items-center justify-between">
+                        <span className="font-medium text-ajag-verde-900">{j.nombre}</span>
+                        <span className="text-xs text-ajag-gris-500">Hcp {j.handicap ?? "—"}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  <select
+                    disabled={pending}
+                    defaultValue=""
+                    onChange={(e) =>
+                      moverBloqueCompleto(
+                        bloque.map((j) => j.inscripcionId),
+                        e.target.value,
+                      )
+                    }
+                    className="w-full rounded-lg border border-ajag-gris-200 bg-white px-2 py-1 text-xs outline-none"
+                  >
+                    <option value="" disabled>
+                      Asignar los {bloque.length} a...
                     </option>
-                  ))}
-                </select>
-              </li>
-            ))}
+                    {grupos.map((g) => (
+                      <option key={g.id} value={g.id}>
+                        Grupo {g.numeroGrupo}
+                      </option>
+                    ))}
+                  </select>
+                </li>
+              ) : (
+                bloque.map((j) => (
+                  <li
+                    key={j.inscripcionId}
+                    className="flex items-center justify-between gap-2 rounded-lg border border-ajag-gris-100 px-3 py-2 text-sm"
+                  >
+                    <div>
+                      <span className="font-medium text-ajag-verde-900">{j.nombre}</span>
+                      <span className="ml-2 text-xs text-ajag-gris-500">
+                        Hcp {j.handicap ?? "—"}
+                        {j.juegaConLicencias.length > 0
+                          ? ` · quiere jugar con: ${j.juegaConLicencias.map(nombreDeLicencia).join(", ")}`
+                          : ""}
+                      </span>
+                    </div>
+                    <select
+                      disabled={pending}
+                      defaultValue=""
+                      onChange={(e) => mover(j.inscripcionId, e.target.value)}
+                      className="rounded-lg border border-ajag-gris-200 bg-white px-2 py-1 text-xs outline-none"
+                    >
+                      <option value="" disabled>
+                        Asignar a...
+                      </option>
+                      {grupos.map((g) => (
+                        <option key={g.id} value={g.id}>
+                          Grupo {g.numeroGrupo}
+                        </option>
+                      ))}
+                    </select>
+                  </li>
+                ))
+              ),
+            )}
           </ul>
         </div>
       ) : null}
