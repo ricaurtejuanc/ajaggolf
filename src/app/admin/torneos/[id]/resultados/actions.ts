@@ -6,6 +6,7 @@ import { getUsuarioAdmin } from "@/lib/auth";
 import { extraerFilasPdf } from "@/lib/resultados/extraer-pdf";
 import { recalcularClasificacionGlobal } from "@/lib/clasificacion/recalcular";
 import { leerPremiosDesdeFormData } from "@/lib/premios";
+import { obtenerInscritosConfirmadosParaResultados } from "@/lib/data/resultados";
 
 export type EstadoDocumento = { ok: boolean; error: string | null };
 
@@ -220,5 +221,92 @@ export async function actualizarGanadoresPremios(
     revalidatePath(`/torneos/${torneo.slug}`);
     revalidatePath(`/torneos/${torneo.slug}/clasificacion`);
   }
+  return { ok: true, error: null };
+}
+
+export type EstadoPosicionesLiga = { ok: boolean; error: string | null };
+
+function leerPosiciones(formData: FormData): Record<string, string> {
+  let crudo: unknown;
+  try {
+    crudo = JSON.parse(String(formData.get("posiciones") ?? "{}"));
+  } catch {
+    return {};
+  }
+  if (typeof crudo !== "object" || crudo === null) return {};
+
+  const posiciones: Record<string, string> = {};
+  for (const [posicion, inscripcionId] of Object.entries(crudo as Record<string, unknown>)) {
+    const valor = String(inscripcionId ?? "").trim();
+    if (valor) posiciones[posicion] = valor;
+  }
+  return posiciones;
+}
+
+/**
+ * Genera la clasificación de un torneo de liga/pool a partir de los
+ * ganadores de cada puesto que puntúa (según la tabla_puntos de la liga),
+ * en vez de pedir la clasificación completa fila a fila. Sustituye por
+ * completo los resultados existentes del torneo (mismo comportamiento que
+ * guardarResultados) y recalcula la clasificación global de la liga.
+ */
+export async function guardarPosicionesLiga(
+  torneoId: string,
+  ligaPoolId: string,
+  _prevState: EstadoPosicionesLiga,
+  formData: FormData,
+): Promise<EstadoPosicionesLiga> {
+  const admin = await getUsuarioAdmin();
+  if (!admin) return { ok: false, error: "No autorizado." };
+
+  const posiciones = leerPosiciones(formData);
+  if (Object.keys(posiciones).length === 0) {
+    return { ok: false, error: "Asigna al menos un puesto." };
+  }
+
+  const supabase = await createClient();
+
+  const [{ data: torneo }, { data: liga }, confirmados] = await Promise.all([
+    supabase.from("torneos").select("slug").eq("id", torneoId).maybeSingle(),
+    supabase.from("ligas_pool").select("tabla_puntos").eq("id", ligaPoolId).maybeSingle(),
+    obtenerInscritosConfirmadosParaResultados(torneoId),
+  ]);
+  if (!torneo) return { ok: false, error: "Torneo no encontrado." };
+  if (!liga) return { ok: false, error: "Liga no encontrada." };
+
+  const tablaPuntos = liga.tabla_puntos as Record<string, number>;
+  const porInscripcion = new Map(confirmados.map((c) => [c.inscripcionId, c]));
+
+  const filas = Object.entries(posiciones)
+    .map(([posicionStr, inscripcionId]) => {
+      const inscrito = porInscripcion.get(inscripcionId);
+      const posicion = parseInt(posicionStr, 10);
+      if (!inscrito || !Number.isFinite(posicion)) return null;
+      return {
+        torneo_id: torneoId,
+        jugador_id: inscrito.jugadorId,
+        inscripcion_id: inscrito.inscripcionId,
+        nombre_mostrado: inscrito.nombreCompleto,
+        licencia_federativa: inscrito.licenciaFederativa,
+        handicap: inscrito.handicap,
+        posicion,
+        puntos: tablaPuntos[posicionStr] ?? tablaPuntos.resto ?? 0,
+        golpes: null as number | null,
+        estado: "publicado" as const,
+      };
+    })
+    .filter((f): f is NonNullable<typeof f> => f != null);
+
+  if (filas.length === 0) return { ok: false, error: "No se pudo resolver ningún puesto." };
+
+  await supabase.from("resultados").delete().eq("torneo_id", torneoId);
+  const { error } = await supabase.from("resultados").insert(filas);
+  if (error) return { ok: false, error: error.message };
+
+  await recalcularClasificacionGlobal(ligaPoolId);
+
+  revalidatePath(`/admin/torneos/${torneoId}/resultados`);
+  revalidatePath("/torneos");
+  revalidatePath(`/torneos/${torneo.slug}/clasificacion`);
   return { ok: true, error: null };
 }

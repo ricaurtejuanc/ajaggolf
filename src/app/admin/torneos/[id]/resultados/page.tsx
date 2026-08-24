@@ -11,6 +11,7 @@ import { DocumentoUploader } from "./documento-uploader";
 import { ResultadosForm, filaVacia, type FilaResultado } from "./resultados-form";
 import { DocumentoActual } from "./documento-actual";
 import { GanadoresPremiosForm } from "./ganadores-premios-form";
+import { PosicionesLigaForm } from "./posiciones-liga-form";
 
 export const metadata: Metadata = { title: "Resultados · Admin" };
 
@@ -69,6 +70,11 @@ export default async function AdminResultadosPage({
 
       {torneo.liga_pool_id ? (
         <div className="mt-6">
+          <PosicionesLiga
+            torneoId={id}
+            ligaPoolId={torneo.liga_pool_id}
+            confirmados={confirmados}
+          />
           <TablaResultados
             torneoId={id}
             formatoPuntuacion={torneo.formato_puntuacion}
@@ -86,6 +92,54 @@ export default async function AdminResultadosPage({
         </p>
       )}
     </div>
+  );
+}
+
+async function PosicionesLiga({
+  torneoId,
+  ligaPoolId,
+  confirmados,
+}: {
+  torneoId: string;
+  ligaPoolId: string;
+  confirmados: InscritoParaResultado[];
+}) {
+  const supabase = await createClient();
+  const [{ data: liga }, { data: resultados }] = await Promise.all([
+    supabase.from("ligas_pool").select("tabla_puntos").eq("id", ligaPoolId).maybeSingle(),
+    supabase
+      .from("resultados")
+      .select("posicion, inscripcion_id")
+      .eq("torneo_id", torneoId)
+      .not("posicion", "is", null)
+      .not("inscripcion_id", "is", null),
+  ]);
+  if (!liga) return null;
+
+  const tablaPuntos = liga.tabla_puntos as Record<string, number>;
+  const posiciones = Object.keys(tablaPuntos)
+    .filter((k) => k !== "resto")
+    .map(Number)
+    .filter((n) => Number.isFinite(n))
+    .sort((a, b) => a - b);
+  if (posiciones.length === 0) return null;
+
+  const posicionesIniciales: Record<string, string> = {};
+  for (const r of resultados ?? []) {
+    if (r.posicion != null && r.inscripcion_id && posiciones.includes(r.posicion)) {
+      posicionesIniciales[String(r.posicion)] = r.inscripcion_id;
+    }
+  }
+
+  return (
+    <PosicionesLigaForm
+      torneoId={torneoId}
+      ligaPoolId={ligaPoolId}
+      posiciones={posiciones}
+      tablaPuntos={tablaPuntos}
+      confirmados={confirmados}
+      posicionesIniciales={posicionesIniciales}
+    />
   );
 }
 
