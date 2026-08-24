@@ -30,16 +30,16 @@ export default async function Home() {
               Ver calendario
             </Link>
             <Link
-              href="/clasificaciones"
-              className="rounded-full border border-white/40 px-6 py-3 text-sm font-medium text-white transition hover:bg-white/10"
-            >
-              Clasificaciones
-            </Link>
-            <Link
               href="/horarios"
               className="rounded-full border border-white/40 px-6 py-3 text-sm font-medium text-white transition hover:bg-white/10"
             >
               Horarios
+            </Link>
+            <Link
+              href="/clasificaciones"
+              className="rounded-full border border-white/40 px-6 py-3 text-sm font-medium text-white transition hover:bg-white/10"
+            >
+              Clasificaciones
             </Link>
             <Link
               href="/patrocinadores"

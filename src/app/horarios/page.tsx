@@ -11,7 +11,11 @@ export default async function HorariosPage() {
   const idsConSalida = await obtenerIdsConSalidaPublicada(torneos.map((t) => t.id));
 
   const activos = torneos.filter((t) => t.estado === "publicado");
-  const disputados = torneos.filter((t) => t.estado !== "publicado");
+  // Los disputados van de fecha más reciente a más antigua (más cerca de hoy primero).
+  const disputados = torneos
+    .filter((t) => t.estado !== "publicado")
+    .slice()
+    .reverse();
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-10">

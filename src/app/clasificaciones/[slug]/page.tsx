@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 import Image from "next/image";
+import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Trophy } from "lucide-react";
+import { Trophy, CalendarDays } from "lucide-react";
 import { obtenerLigaPorSlug } from "@/lib/data/ligas";
 import { createClient } from "@/lib/supabase/server";
-import { TorneoCard } from "@/components/torneos/torneo-card";
+import { formatearFecha } from "@/lib/format";
 import { ClasificacionLigaTable, type FilaClasificacionLiga } from "./clasificacion-liga-table";
 
 export async function generateMetadata({
@@ -76,6 +77,15 @@ export default async function LigaDetallePage({
     detalle: detallePorJugador.get(c.jugador_id) ?? [],
   }));
 
+  // Próximos primero (fecha más cercana), y los ya disputados de más
+  // reciente a más antiguo (también más cerca de hoy primero).
+  const torneosProximos = torneos.filter((t) => t.estado === "publicado");
+  const torneosDisputados = torneos
+    .filter((t) => t.estado !== "publicado")
+    .slice()
+    .reverse();
+  const torneosOrdenados = [...torneosProximos, ...torneosDisputados];
+
   return (
     <div className="mx-auto max-w-5xl px-4 py-10">
       {liga.imagen_url ? (
@@ -127,12 +137,24 @@ export default async function LigaDetallePage({
       <h2 className="mt-10 mb-4 font-display text-xl font-semibold text-ajag-verde-900">
         Torneos que puntúan
       </h2>
-      {torneos.length === 0 ? (
+      {torneosOrdenados.length === 0 ? (
         <p className="text-ajag-gris-500">Todavía no hay torneos asignados a esta liga.</p>
       ) : (
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {torneos.map((torneo) => (
-            <TorneoCard key={torneo.id} torneo={torneo} />
+        <div className="flex flex-col gap-3">
+          {torneosOrdenados.map((torneo) => (
+            <Link
+              key={torneo.id}
+              href={`/torneos/${torneo.slug}`}
+              className="card-ajag flex items-center justify-between gap-3 p-4 transition hover:shadow-md"
+            >
+              <div>
+                <p className="text-xs font-medium uppercase tracking-wide text-ajag-oro-600">
+                  {formatearFecha(torneo.fecha)}
+                </p>
+                <p className="font-display font-semibold text-ajag-verde-900">{torneo.nombre}</p>
+              </div>
+              <CalendarDays size={18} className="shrink-0 text-ajag-verde-700" />
+            </Link>
           ))}
         </div>
       )}
