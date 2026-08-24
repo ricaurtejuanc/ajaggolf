@@ -79,9 +79,9 @@ export default async function LigaDetallePage({
 
   // Próximos primero (fecha más cercana), y los ya disputados de más
   // reciente a más antiguo (también más cerca de hoy primero).
-  const torneosProximos = torneos.filter((t) => t.estado === "publicado");
+  const torneosProximos = torneos.filter((t) => t.estado === "publicado" || t.estado === "cerrado");
   const torneosDisputados = torneos
-    .filter((t) => t.estado !== "publicado")
+    .filter((t) => t.estado === "finalizado")
     .slice()
     .reverse();
   const torneosOrdenados = [...torneosProximos, ...torneosDisputados];
