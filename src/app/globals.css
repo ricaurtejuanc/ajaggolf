@@ -24,6 +24,28 @@
   --ajag-gris-200: #d9dcd6;
   --ajag-gris-500: #6b7368;
 
+  /* Identidad AfterGolf (extraída de aftergolf.es y su logo), solo para
+     la landing /producto — no se usa en el resto del sitio de AJAG. */
+  --aftergolf-verde-950: #0a2415;
+  --aftergolf-verde-900: #164026;
+  --aftergolf-verde-800: #1a4d2c;
+  --aftergolf-verde-700: #1c6134;
+  --aftergolf-verde-600: #1f7a3e;
+  --aftergolf-verde-500: #2e9950;
+  --aftergolf-verde-100: #dbf3e0;
+  --aftergolf-verde-50: #f0faf2;
+
+  --aftergolf-oro-700: #9a733a;
+  --aftergolf-oro-600: #b3894a;
+  --aftergolf-oro-500: #c9a35f;
+  --aftergolf-oro-200: #e2d3ac;
+  --aftergolf-oro-100: #efe6cf;
+
+  --aftergolf-crema: #fdfbf4;
+  --aftergolf-crema-200: #f6f1e3;
+
+  --aftergolf-granate: #a51e25;
+
   --radius-card: 1rem;
 }
 
@@ -51,6 +73,26 @@
   --color-ajag-gris-100: var(--ajag-gris-100);
   --color-ajag-gris-200: var(--ajag-gris-200);
   --color-ajag-gris-500: var(--ajag-gris-500);
+
+  --color-aftergolf-verde-950: var(--aftergolf-verde-950);
+  --color-aftergolf-verde-900: var(--aftergolf-verde-900);
+  --color-aftergolf-verde-800: var(--aftergolf-verde-800);
+  --color-aftergolf-verde-700: var(--aftergolf-verde-700);
+  --color-aftergolf-verde-600: var(--aftergolf-verde-600);
+  --color-aftergolf-verde-500: var(--aftergolf-verde-500);
+  --color-aftergolf-verde-100: var(--aftergolf-verde-100);
+  --color-aftergolf-verde-50: var(--aftergolf-verde-50);
+
+  --color-aftergolf-oro-700: var(--aftergolf-oro-700);
+  --color-aftergolf-oro-600: var(--aftergolf-oro-600);
+  --color-aftergolf-oro-500: var(--aftergolf-oro-500);
+  --color-aftergolf-oro-200: var(--aftergolf-oro-200);
+  --color-aftergolf-oro-100: var(--aftergolf-oro-100);
+
+  --color-aftergolf-crema: var(--aftergolf-crema);
+  --color-aftergolf-crema-200: var(--aftergolf-crema-200);
+
+  --color-aftergolf-granate: var(--aftergolf-granate);
 }
 
 body {
@@ -75,6 +117,20 @@ body {
   border-radius: var(--radius-card);
   border: 1px solid var(--ajag-gris-100);
   box-shadow: 0 1px 2px rgba(16, 38, 26, 0.04);
+}
+
+/* Identidad AfterGolf: fondo cálido en vez de la franja verde de AJAG. */
+.bg-aftergolf-hero {
+  background-image:
+    radial-gradient(circle at 85% 0%, rgba(201, 163, 95, 0.16), transparent 50%),
+    linear-gradient(180deg, var(--aftergolf-crema) 0%, var(--aftergolf-crema-200) 100%);
+}
+
+.card-aftergolf {
+  background: #fff;
+  border-radius: var(--radius-card);
+  border: 1px solid var(--aftergolf-oro-200);
+  box-shadow: 0 1px 2px rgba(28, 97, 52, 0.06);
 }
 
 /* Safari/Chrome en iOS hacen zoom automático al enfocar un campo con
