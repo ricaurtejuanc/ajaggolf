@@ -1,8 +1,8 @@
 import { Trophy } from "lucide-react";
 import type { Torneo } from "@/types/database";
 
-export function CuadroDeHonor({ torneo }: { torneo: Torneo }) {
-  const categorias = torneo.premios
+function categoriasConGanadores(torneo: Torneo) {
+  return torneo.premios
     .map((cat, indiceCategoria) => ({
       nombre: cat.nombre,
       premios: cat.premios
@@ -13,6 +13,14 @@ export function CuadroDeHonor({ torneo }: { torneo: Torneo }) {
         .filter((p) => p.ganadores.length > 0),
     }))
     .filter((cat) => cat.premios.length > 0);
+}
+
+export function hayCuadroDeHonor(torneo: Torneo): boolean {
+  return categoriasConGanadores(torneo).length > 0;
+}
+
+export function CuadroDeHonor({ torneo }: { torneo: Torneo }) {
+  const categorias = categoriasConGanadores(torneo);
 
   if (categorias.length === 0) return null;
 

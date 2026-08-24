@@ -34,8 +34,14 @@ function agruparPorMes(torneos: Torneo[]) {
 export default async function TorneosPage() {
   const torneos = await listarTorneosPublicos();
   const proximos = torneos.filter((t) => t.estado === "publicado");
-  const pasados = torneos.filter((t) => t.estado !== "publicado");
+  // Los disputados van de más reciente a más antiguo (orden inverso al de
+  // "próximos"), agrupados por mes igual que los próximos.
+  const pasados = torneos
+    .filter((t) => t.estado !== "publicado")
+    .slice()
+    .reverse();
   const proximosPorMes = agruparPorMes(proximos);
+  const pasadosPorMes = agruparPorMes(pasados);
 
   const supabase = await createClient();
   const [inscritosPorTorneo, estadoClasificacion] = await Promise.all([
@@ -83,19 +89,29 @@ export default async function TorneosPage() {
             </div>
           ) : null}
 
-          {pasados.length > 0 ? (
+          {pasadosPorMes.length > 0 ? (
             <div className="mt-12">
               <h2 className="mb-4 font-display text-xl font-semibold text-ajag-verde-900">
                 Torneos disputados
               </h2>
-              <div className="flex flex-col gap-4">
-                {pasados.map((torneo) => (
-                  <TorneoDisputadoBanner
-                    key={torneo.id}
-                    torneo={torneo}
-                    clasificacionDisponible={estadoClasificacion[torneo.id]?.disponible ?? false}
-                    pdfUrl={estadoClasificacion[torneo.id]?.pdfUrl ?? null}
-                  />
+              <div className="flex flex-col gap-8">
+                {pasadosPorMes.map((grupo) => (
+                  <div key={grupo.etiqueta}>
+                    <h3 className="mb-3 text-xs font-medium uppercase tracking-wide text-ajag-gris-500">
+                      {grupo.etiqueta}
+                    </h3>
+                    <div className="flex flex-col gap-4">
+                      {grupo.torneos.map((torneo) => (
+                        <TorneoDisputadoBanner
+                          key={torneo.id}
+                          torneo={torneo}
+                          clasificacionDisponible={
+                            estadoClasificacion[torneo.id]?.disponible ?? false
+                          }
+                        />
+                      ))}
+                    </div>
+                  </div>
                 ))}
               </div>
             </div>

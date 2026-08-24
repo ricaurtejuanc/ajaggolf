@@ -8,6 +8,7 @@ import { createClient } from "@/lib/supabase/server";
 import { formatearFecha, formatearHora, formatearPrecio } from "@/lib/format";
 import { PosterLightbox } from "@/components/torneos/poster-lightbox";
 import { obtenerCategoriasExtras } from "@/lib/data/configuracion";
+import { hayCuadroDeHonor } from "@/components/torneos/cuadro-de-honor";
 
 const etiquetaFormato = {
   stableford: "Stableford",
@@ -77,6 +78,8 @@ export default async function TorneoDetallePage({
     torneo.tees_femenino.length ? `Damas: ${torneo.tees_femenino.join(", ")}` : null,
   ].filter((p): p is string => p != null);
   const textoTees = partesTees.length ? partesTees.join(" · ") : "Por confirmar";
+  const hayHorarios = Boolean(salidaPublicada) || Boolean(torneo.horarios_pdf_url);
+  const hayClasificacion = (nResultados ?? 0) > 0 || hayCuadroDeHonor(torneo);
   const textoPrecio =
     (torneo.precio_socio_cents != null
       ? `${formatearPrecio(torneo.precio_socio_cents)} socios · ${formatearPrecio(torneo.precio_cents)} no socios`
@@ -256,33 +259,37 @@ export default async function TorneoDetallePage({
         )}
       </div>
 
-      <div className="mt-4 flex flex-col gap-3 sm:flex-row">
-        {salidaPublicada ? (
-          <Link
-            href={`/torneos/${torneo.slug}/salidas`}
-            className="flex flex-1 items-center justify-center rounded-2xl border border-ajag-verde-700 px-5 py-3 text-sm font-medium text-ajag-verde-700 transition hover:bg-ajag-verde-50"
-          >
-            Ver cuadro de salidas
-          </Link>
-        ) : torneo.horarios_pdf_url ? (
-          <a
-            href={torneo.horarios_pdf_url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex flex-1 items-center justify-center rounded-2xl border border-ajag-verde-700 px-5 py-3 text-sm font-medium text-ajag-verde-700 transition hover:bg-ajag-verde-50"
-          >
-            Ver horarios (PDF)
-          </a>
-        ) : null}
-        {(nResultados ?? 0) > 0 ? (
-          <Link
-            href={`/torneos/${torneo.slug}/clasificacion`}
-            className="flex flex-1 items-center justify-center rounded-2xl border border-ajag-verde-700 px-5 py-3 text-sm font-medium text-ajag-verde-700 transition hover:bg-ajag-verde-50"
-          >
-            Ver clasificación
-          </Link>
-        ) : null}
-      </div>
+      {hayHorarios || hayClasificacion ? (
+        <div className="mt-4 flex flex-col gap-3 sm:flex-row">
+          {hayHorarios ? (
+            salidaPublicada ? (
+              <Link
+                href={`/torneos/${torneo.slug}/salidas`}
+                className="flex flex-1 items-center justify-center rounded-2xl border border-ajag-verde-700 px-5 py-3 text-sm font-medium text-ajag-verde-700 transition hover:bg-ajag-verde-50"
+              >
+                Horarios
+              </Link>
+            ) : (
+              <a
+                href={torneo.horarios_pdf_url!}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex flex-1 items-center justify-center rounded-2xl border border-ajag-verde-700 px-5 py-3 text-sm font-medium text-ajag-verde-700 transition hover:bg-ajag-verde-50"
+              >
+                Horarios
+              </a>
+            )
+          ) : null}
+          {hayClasificacion ? (
+            <Link
+              href={`/torneos/${torneo.slug}/clasificacion`}
+              className="flex flex-1 items-center justify-center rounded-2xl border border-ajag-verde-700 px-5 py-3 text-sm font-medium text-ajag-verde-700 transition hover:bg-ajag-verde-50"
+            >
+              Clasificaciones
+            </Link>
+          ) : null}
+        </div>
+      ) : null}
     </div>
   );
 }

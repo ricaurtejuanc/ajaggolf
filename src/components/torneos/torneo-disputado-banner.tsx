@@ -1,16 +1,14 @@
 import Link from "next/link";
-import { FileText, Trophy } from "lucide-react";
+import { Trophy } from "lucide-react";
 import { formatearFecha } from "@/lib/format";
 import type { Torneo } from "@/types/database";
 
 export function TorneoDisputadoBanner({
   torneo,
   clasificacionDisponible,
-  pdfUrl,
 }: {
   torneo: Torneo;
   clasificacionDisponible: boolean;
-  pdfUrl: string | null;
 }) {
   const ganadores = torneo.premios.flatMap((cat, indiceCategoria) =>
     cat.premios
@@ -48,16 +46,6 @@ export function TorneoDisputadoBanner({
       </div>
 
       <div className="flex shrink-0 flex-wrap items-center gap-2">
-        {pdfUrl ? (
-          <a
-            href={pdfUrl}
-            target="_blank"
-            rel="noreferrer"
-            className="flex items-center gap-1.5 rounded-full border border-ajag-gris-200 px-4 py-2 text-sm font-medium text-ajag-verde-900 transition hover:bg-ajag-verde-50"
-          >
-            <FileText size={15} /> Ver PDF
-          </a>
-        ) : null}
         {clasificacionDisponible ? (
           <Link
             href={`/torneos/${torneo.slug}/clasificacion`}

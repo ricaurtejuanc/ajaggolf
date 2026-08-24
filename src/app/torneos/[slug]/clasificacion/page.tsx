@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
+import type { ReactNode } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Trophy } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { obtenerTorneoPorSlug } from "@/lib/data/torneos";
-import { CuadroDeHonor } from "@/components/torneos/cuadro-de-honor";
+import { CuadroDeHonor, hayCuadroDeHonor } from "@/components/torneos/cuadro-de-honor";
+import { ClasificacionTabs } from "./clasificacion-tabs";
 
 export async function generateMetadata({
   params,
@@ -26,6 +28,7 @@ export default async function ClasificacionPage({
   if (!torneo) notFound();
 
   const supabase = await createClient();
+  const cuadroHonor = hayCuadroDeHonor(torneo) ? <CuadroDeHonor torneo={torneo} /> : null;
 
   if (torneo.liga_pool_id) {
     const { data: resultados } = await supabase
@@ -35,20 +38,12 @@ export default async function ClasificacionPage({
       .eq("estado", "publicado")
       .order("posicion", { ascending: true, nullsFirst: false });
 
-    if (!resultados || resultados.length === 0) notFound();
+    if ((!resultados || resultados.length === 0) && !cuadroHonor) notFound();
 
     const columnaPrincipal = torneo.formato_puntuacion === "stableford" ? "puntos" : "golpes";
-
-    return (
-      <div className="mx-auto max-w-3xl px-4 py-10">
-        <Link href={`/torneos/${slug}`} className="text-sm text-ajag-gris-500 hover:underline">
-          ← {torneo.nombre}
-        </Link>
-        <h1 className="mt-2 flex items-center gap-2 font-display text-2xl font-semibold text-ajag-verde-900">
-          <Trophy size={22} className="text-ajag-oro-600" /> Clasificación
-        </h1>
-
-        <div className="mt-6 overflow-x-auto rounded-2xl border border-ajag-gris-100 bg-white">
+    const tablaGeneral =
+      resultados && resultados.length > 0 ? (
+        <div className="overflow-x-auto rounded-2xl border border-ajag-gris-100 bg-white">
           <table className="w-full min-w-[480px] text-left text-sm">
             <thead className="border-b border-ajag-gris-100 text-xs uppercase text-ajag-gris-500">
               <tr>
@@ -76,10 +71,22 @@ export default async function ClasificacionPage({
             </tbody>
           </table>
         </div>
-
-        <div className="mt-6">
-          <CuadroDeHonor torneo={torneo} />
+      ) : (
+        <div className="card-ajag p-6 text-sm text-ajag-gris-500">
+          Todavía no hay clasificación general publicada.
         </div>
+      );
+
+    return (
+      <div className="mx-auto max-w-3xl px-4 py-10">
+        <Link href={`/torneos/${slug}`} className="text-sm text-ajag-gris-500 hover:underline">
+          ← {torneo.nombre}
+        </Link>
+        <h1 className="mt-2 flex items-center gap-2 font-display text-2xl font-semibold text-ajag-verde-900">
+          <Trophy size={22} className="text-ajag-oro-600" /> Clasificación
+        </h1>
+
+        <ClasificacionTabs general={tablaGeneral} cuadroHonor={cuadroHonor} />
       </div>
     );
   }
@@ -93,10 +100,42 @@ export default async function ClasificacionPage({
     .limit(1)
     .maybeSingle();
 
-  if (!documento) notFound();
+  if (!documento && !cuadroHonor) notFound();
 
-  const { data } = supabase.storage.from("resultados-pdf").getPublicUrl(documento.storage_path);
-  const esPdf = documento.storage_path.toLowerCase().endsWith(".pdf");
+  let general: ReactNode = (
+    <div className="card-ajag p-6 text-sm text-ajag-gris-500">
+      Todavía no hay clasificación general publicada.
+    </div>
+  );
+
+  if (documento) {
+    const { data } = supabase.storage.from("resultados-pdf").getPublicUrl(documento.storage_path);
+    const esPdf = documento.storage_path.toLowerCase().endsWith(".pdf");
+    general = (
+      <div>
+        {esPdf ? (
+          <div className="overflow-hidden rounded-2xl border border-ajag-gris-100">
+            <iframe src={data.publicUrl} className="h-[75vh] w-full" title="Clasificación" />
+          </div>
+        ) : (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={data.publicUrl}
+            alt={`Clasificación de ${torneo.nombre}`}
+            className="w-full rounded-2xl border border-ajag-gris-100"
+          />
+        )}
+        <a
+          href={data.publicUrl}
+          target="_blank"
+          rel="noreferrer"
+          className="mt-4 inline-block text-sm font-medium text-ajag-verde-700 hover:underline"
+        >
+          Abrir en una pestaña nueva ↗
+        </a>
+      </div>
+    );
+  }
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-10">
@@ -107,31 +146,7 @@ export default async function ClasificacionPage({
         <Trophy size={22} className="text-ajag-oro-600" /> Clasificación
       </h1>
 
-      {esPdf ? (
-        <div className="mt-6 overflow-hidden rounded-2xl border border-ajag-gris-100">
-          <iframe src={data.publicUrl} className="h-[75vh] w-full" title="Clasificación" />
-        </div>
-      ) : (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={data.publicUrl}
-          alt={`Clasificación de ${torneo.nombre}`}
-          className="mt-6 w-full rounded-2xl border border-ajag-gris-100"
-        />
-      )}
-
-      <a
-        href={data.publicUrl}
-        target="_blank"
-        rel="noreferrer"
-        className="mt-4 inline-block text-sm font-medium text-ajag-verde-700 hover:underline"
-      >
-        Abrir en una pestaña nueva ↗
-      </a>
-
-      <div className="mt-6">
-        <CuadroDeHonor torneo={torneo} />
-      </div>
+      <ClasificacionTabs general={general} cuadroHonor={cuadroHonor} />
     </div>
   );
 }
