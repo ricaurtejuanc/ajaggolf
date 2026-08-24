@@ -14,12 +14,13 @@ export async function recalcularClasificacionGlobal(ligaId: string): Promise<voi
 
   const { data: liga } = await supabase
     .from("ligas_pool")
-    .select("tabla_puntos")
+    .select("tabla_puntos, modo_puntuacion")
     .eq("id", ligaId)
     .maybeSingle();
   if (!liga) return;
 
   const tablaPuntos = liga.tabla_puntos as Record<string, number>;
+  const sumaStableford = liga.modo_puntuacion === "suma_stableford";
 
   const { data: torneos } = await supabase
     .from("torneos")
@@ -33,7 +34,7 @@ export async function recalcularClasificacionGlobal(ligaId: string): Promise<voi
 
   const { data: resultados } = await supabase
     .from("resultados")
-    .select("jugador_id, torneo_id, posicion")
+    .select("jugador_id, torneo_id, posicion, puntos")
     .in("torneo_id", torneoIds)
     .eq("estado", "publicado")
     .not("jugador_id", "is", null);
@@ -44,7 +45,9 @@ export async function recalcularClasificacionGlobal(ligaId: string): Promise<voi
     if (!r.jugador_id) continue;
     const entrada = acumulado.get(r.jugador_id) ?? { puntos: 0, torneos: new Set<string>() };
     entrada.torneos.add(r.torneo_id);
-    if (r.posicion != null) {
+    if (sumaStableford) {
+      entrada.puntos += r.puntos ?? 0;
+    } else if (r.posicion != null) {
       const puntos = tablaPuntos[String(r.posicion)] ?? tablaPuntos.resto ?? 0;
       entrada.puntos += puntos;
     }

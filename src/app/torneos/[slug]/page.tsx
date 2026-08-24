@@ -13,6 +13,9 @@ import { hayCuadroDeHonor } from "@/components/torneos/cuadro-de-honor";
 const etiquetaFormato = {
   stableford: "Stableford",
   medal_play: "Medal Play",
+  parejas: "Por parejas",
+  mejor_bola: "Mejor bola",
+  scramble: "Scramble",
 } as const;
 
 export async function generateMetadata({

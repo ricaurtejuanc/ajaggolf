@@ -26,6 +26,7 @@ export function LigaForm({
 }) {
   const [state, formAction, pending] = useActionState(action, { ok: false, error: null });
   const [nombre, setNombre] = useState(liga?.nombre ?? "");
+  const [modoPuntuacion, setModoPuntuacion] = useState(liga?.modo_puntuacion ?? "tabla_puntos");
   const slugPrevisualizado = liga ? liga.slug : slugify(nombre);
 
   return (
@@ -95,7 +96,36 @@ export function LigaForm({
         <p className="mt-1 text-xs text-ajag-gris-500">Se muestra públicamente en la página de la liga.</p>
       </div>
 
-      <TablaPuntosEditor tablaInicial={liga?.tabla_puntos ?? {}} />
+      <div>
+        <span className="text-sm font-medium text-ajag-verde-900">Cómo se puntúa</span>
+        <div className="mt-2 flex flex-col gap-2">
+          <label className="flex items-center gap-2 text-sm text-ajag-gris-500">
+            <input
+              type="radio"
+              name="modo_puntuacion"
+              value="tabla_puntos"
+              checked={modoPuntuacion === "tabla_puntos"}
+              onChange={() => setModoPuntuacion("tabla_puntos")}
+            />
+            Puntos por posición (tabla configurable: 1º, 2º, 3º...)
+          </label>
+          <label className="flex items-center gap-2 text-sm text-ajag-gris-500">
+            <input
+              type="radio"
+              name="modo_puntuacion"
+              value="suma_stableford"
+              checked={modoPuntuacion === "suma_stableford"}
+              onChange={() => setModoPuntuacion("suma_stableford")}
+            />
+            Sumatoria de puntos Stableford (se suman directamente los puntos que hace cada
+            jugador en cada torneo, sin tabla de posiciones)
+          </label>
+        </div>
+      </div>
+
+      {modoPuntuacion === "tabla_puntos" ? (
+        <TablaPuntosEditor tablaInicial={liga?.tabla_puntos ?? {}} />
+      ) : null}
 
       <div>
         <span className="text-sm font-medium text-ajag-verde-900">Tipo</span>

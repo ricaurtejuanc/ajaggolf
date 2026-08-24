@@ -7,6 +7,9 @@ import type { Torneo } from "@/types/database";
 const etiquetaFormato: Record<Torneo["formato_puntuacion"], string> = {
   stableford: "Stableford",
   medal_play: "Medal Play",
+  parejas: "Por parejas",
+  mejor_bola: "Mejor bola",
+  scramble: "Scramble",
 };
 
 const etiquetaEstado: Record<Torneo["estado"], string> = {

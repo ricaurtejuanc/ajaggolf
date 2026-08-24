@@ -39,6 +39,9 @@ function leerCamposLiga(formData: FormData) {
   const tipoOficialRaw = String(formData.get("tipo_oficial") ?? "").trim();
   const tipoOficial: TipoLigaOficial | null =
     tipoOficialRaw === "ranking" || tipoOficialRaw === "pool" ? tipoOficialRaw : null;
+  const modoPuntuacionRaw = String(formData.get("modo_puntuacion") ?? "").trim();
+  const modoPuntuacion: "tabla_puntos" | "suma_stableford" =
+    modoPuntuacionRaw === "suma_stableford" ? "suma_stableford" : "tabla_puntos";
 
   return {
     nombre,
@@ -46,7 +49,8 @@ function leerCamposLiga(formData: FormData) {
     imagen_url: String(formData.get("imagen_url") ?? "").trim() || null,
     reglas: String(formData.get("reglas") ?? "").trim() || null,
     temporada: String(formData.get("temporada") ?? "").trim() || null,
-    tabla_puntos: leerTablaPuntos(formData),
+    tabla_puntos: modoPuntuacion === "tabla_puntos" ? leerTablaPuntos(formData) : {},
+    modo_puntuacion: modoPuntuacion,
     tipo_oficial: tipoOficial,
     activa: formData.get("activa") === "on",
   };
@@ -61,7 +65,7 @@ export async function crearLiga(
 
   const campos = leerCamposLiga(formData);
   if (!campos.nombre) return { ok: false, error: "El nombre es obligatorio." };
-  if (Object.keys(campos.tabla_puntos).length === 0) {
+  if (campos.modo_puntuacion === "tabla_puntos" && Object.keys(campos.tabla_puntos).length === 0) {
     return { ok: false, error: "Define al menos una posición con puntos." };
   }
 
@@ -97,7 +101,7 @@ export async function actualizarLiga(
 
   const campos = leerCamposLiga(formData);
   if (!campos.nombre) return { ok: false, error: "El nombre es obligatorio." };
-  if (Object.keys(campos.tabla_puntos).length === 0) {
+  if (campos.modo_puntuacion === "tabla_puntos" && Object.keys(campos.tabla_puntos).length === 0) {
     return { ok: false, error: "Define al menos una posición con puntos." };
   }
 

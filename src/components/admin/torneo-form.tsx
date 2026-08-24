@@ -173,6 +173,9 @@ export function TorneoForm({
           options={[
             { value: "stableford", label: "Stableford" },
             { value: "medal_play", label: "Medal Play" },
+            { value: "parejas", label: "Por parejas" },
+            { value: "mejor_bola", label: "Mejor bola" },
+            { value: "scramble", label: "Scramble" },
           ]}
         />
         <div>

@@ -9,7 +9,12 @@
 // tipo con forma de objeto, no las interfaces.
 
 export type SexoJugador = "masculino" | "femenino";
-export type FormatoPuntuacion = "stableford" | "medal_play";
+export type FormatoPuntuacion =
+  | "stableford"
+  | "medal_play"
+  | "parejas"
+  | "mejor_bola"
+  | "scramble";
 export type ModoSalida = "consecutivo" | "shotgun";
 export type ModoAsignacionSalida = "handicap" | "manual" | "mixto";
 export type EstadoTorneo = "borrador" | "publicado" | "cerrado" | "finalizado";
@@ -104,6 +109,7 @@ export type LigaPool = {
   reglas: string | null;
   temporada: string | null;
   tabla_puntos: Record<string, number>;
+  modo_puntuacion: "tabla_puntos" | "suma_stableford";
   activa: boolean;
   tipo_oficial: TipoLigaOficial | null;
   organizador_id: string | null;
