@@ -11,11 +11,13 @@ export function GanadoresPremiosForm({
   premios,
   ganadoresIniciales,
   confirmados,
+  sugerenciasPosicion,
 }: {
   torneoId: string;
   premios: PremioCategoria[];
   ganadoresIniciales: Record<string, string[]>;
   confirmados: InscritoParaResultado[];
+  sugerenciasPosicion: Record<string, number>;
 }) {
   const accion = actualizarGanadoresPremios.bind(null, torneoId);
   const [state, formAction, pending] = useActionState<EstadoGanadores, FormData>(accion, {
@@ -23,13 +25,35 @@ export function GanadoresPremiosForm({
     error: null,
   });
   const [premiosState, setPremiosState] = useState<PremioCategoria[]>(premios);
+  const haySugerenciasPdf = Object.keys(sugerenciasPosicion).length > 0;
   const [ganadores, setGanadores] = useState<Record<string, string[]>>(() => {
     const inicial: Record<string, string[]> = {};
     premios.forEach((cat, indiceCategoria) => {
+      // Mejor candidato de la categoría según la clasificación del PDF/foto
+      // subido: solo se usa para sugerir el primer premio (normalmente "1er
+      // clasificado"); el resto de premios (2º, drive más largo...) no se
+      // pueden inferir de forma fiable de una clasificación general.
+      const candidatos = confirmados
+        .filter((c) => {
+          if (cat.categoria_unica) return true;
+          if (cat.handicap_desde == null || cat.handicap_hasta == null) return true;
+          return (
+            c.handicap != null && c.handicap >= cat.handicap_desde && c.handicap <= cat.handicap_hasta
+          );
+        })
+        .filter((c) => sugerenciasPosicion[c.inscripcionId] != null)
+        .sort((a, b) => sugerenciasPosicion[a.inscripcionId] - sugerenciasPosicion[b.inscripcionId]);
+
       cat.premios.forEach((_, indicePremio) => {
         const clave = `${indiceCategoria}-${indicePremio}`;
         const valores = ganadoresIniciales[clave];
-        inicial[clave] = valores && valores.length > 0 ? valores : [""];
+        if (valores && valores.length > 0) {
+          inicial[clave] = valores;
+        } else if (indicePremio === 0 && candidatos[0]) {
+          inicial[clave] = [candidatos[0].nombreCompleto];
+        } else {
+          inicial[clave] = [""];
+        }
       });
     });
     return inicial;
@@ -87,6 +111,13 @@ export function GanadoresPremiosForm({
         Si falta algún premio (por ejemplo, tercer clasificado) puedes añadirlo aquí mismo.
         Se mostrará públicamente en la ficha del torneo y en la clasificación.
       </p>
+
+      {haySugerenciasPdf ? (
+        <p className="mb-4 text-xs text-ajag-verde-700">
+          Hemos propuesto el primer clasificado de cada categoría a partir del PDF/foto
+          subido. Revisa que sea correcto antes de guardar.
+        </p>
+      ) : null}
 
       {confirmados.length === 0 ? (
         <p className="mb-4 text-xs text-ajag-oro-600">

@@ -12,6 +12,7 @@ export function PosicionesLigaForm({
   tablaPuntos,
   confirmados,
   posicionesIniciales,
+  sugeridoDesdePdf,
 }: {
   torneoId: string;
   ligaPoolId: string;
@@ -19,6 +20,7 @@ export function PosicionesLigaForm({
   tablaPuntos: Record<string, number>;
   confirmados: InscritoParaResultado[];
   posicionesIniciales: Record<string, string>;
+  sugeridoDesdePdf: boolean;
 }) {
   const accion = guardarPosicionesLiga.bind(null, torneoId, ligaPoolId);
   const [state, formAction, pending] = useActionState<EstadoPosicionesLiga, FormData>(accion, {
@@ -42,6 +44,13 @@ export function PosicionesLigaForm({
         este torneo y se sumará a la clasificación general de la liga. Si luego quieres afinar
         golpes o añadir más jugadores, puedes hacerlo abajo en la tabla de resultados.
       </p>
+
+      {sugeridoDesdePdf ? (
+        <p className="mb-4 text-xs text-ajag-verde-700">
+          Hemos propuesto estos puestos a partir del PDF/foto subido. Revisa que sean
+          correctos antes de guardar.
+        </p>
+      ) : null}
 
       {confirmados.length === 0 ? (
         <p className="mb-4 text-xs text-ajag-oro-600">

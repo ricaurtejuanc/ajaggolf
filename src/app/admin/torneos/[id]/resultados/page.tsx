@@ -41,6 +41,20 @@ export default async function AdminResultadosPage({
     obtenerInscritosConfirmadosParaResultados(id),
   ]);
 
+  const documentoFilasExtraidas =
+    (documento?.filas_extraidas as { filas?: FilaExtraidaPdf[] } | null)?.filas ?? [];
+  // Coincidencias del PDF/foto subido por nombre con los inscritos confirmados:
+  // se usan para autocompletar tanto el cuadro de honor como los puestos de
+  // la liga, así el admin solo tiene que revisar en vez de rellenar a mano.
+  const sugerenciasPdf =
+    documentoFilasExtraidas.length > 0
+      ? emparejarConInscritos(documentoFilasExtraidas, confirmados)
+      : new Map<string, FilaExtraidaPdf>();
+  const sugerenciasPosicion: Record<string, number> = {};
+  for (const [inscripcionId, fila] of sugerenciasPdf) {
+    sugerenciasPosicion[inscripcionId] = fila.posicion;
+  }
+
   return (
     <div>
       <div className="mb-6">
@@ -66,6 +80,7 @@ export default async function AdminResultadosPage({
         premios={torneo.premios}
         ganadoresIniciales={torneo.premios_ganadores}
         confirmados={confirmados}
+        sugerenciasPosicion={sugerenciasPosicion}
       />
 
       {torneo.liga_pool_id ? (
@@ -74,14 +89,13 @@ export default async function AdminResultadosPage({
             torneoId={id}
             ligaPoolId={torneo.liga_pool_id}
             confirmados={confirmados}
+            sugerenciasPosicion={sugerenciasPosicion}
           />
           <TablaResultados
             torneoId={id}
             formatoPuntuacion={torneo.formato_puntuacion}
             confirmados={confirmados}
-            documentoFilasExtraidas={
-              (documento?.filas_extraidas as { filas?: FilaExtraidaPdf[] } | null)?.filas ?? []
-            }
+            documentoFilasExtraidas={documentoFilasExtraidas}
           />
         </div>
       ) : (
@@ -99,10 +113,12 @@ async function PosicionesLiga({
   torneoId,
   ligaPoolId,
   confirmados,
+  sugerenciasPosicion,
 }: {
   torneoId: string;
   ligaPoolId: string;
   confirmados: InscritoParaResultado[];
+  sugerenciasPosicion: Record<string, number>;
 }) {
   const supabase = await createClient();
   const [{ data: liga }, { data: resultados }] = await Promise.all([
@@ -130,6 +146,17 @@ async function PosicionesLiga({
       posicionesIniciales[String(r.posicion)] = r.inscripcion_id;
     }
   }
+  // Si todavía no hay resultados guardados para un puesto, usa la coincidencia
+  // del PDF/foto subido (por nombre) como sugerencia de partida.
+  let sugeridoDesdePdf = false;
+  if (Object.keys(posicionesIniciales).length === 0) {
+    for (const [inscripcionId, posicion] of Object.entries(sugerenciasPosicion)) {
+      if (posiciones.includes(posicion)) {
+        posicionesIniciales[String(posicion)] = inscripcionId;
+        sugeridoDesdePdf = true;
+      }
+    }
+  }
 
   return (
     <PosicionesLigaForm
@@ -139,6 +166,7 @@ async function PosicionesLiga({
       tablaPuntos={tablaPuntos}
       confirmados={confirmados}
       posicionesIniciales={posicionesIniciales}
+      sugeridoDesdePdf={sugeridoDesdePdf}
     />
   );
 }
