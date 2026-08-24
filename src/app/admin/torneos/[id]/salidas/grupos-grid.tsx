@@ -1,7 +1,7 @@
 "use client";
 
-import { useTransition } from "react";
-import { AlertTriangle, Wand2 } from "lucide-react";
+import { useState, useTransition } from "react";
+import { AlertTriangle, Search, Wand2 } from "lucide-react";
 import { moverJugador, autocompletarPorHandicap } from "./actions";
 
 export interface JugadorEnGrupoVista {
@@ -33,6 +33,11 @@ export function GruposGrid({
   sinAsignar: JugadorEnGrupoVista[];
 }) {
   const [pending, startTransition] = useTransition();
+  const [busqueda, setBusqueda] = useState("");
+
+  const sinAsignarFiltrados = sinAsignar.filter((j) =>
+    j.nombre.toLowerCase().includes(busqueda.trim().toLowerCase()),
+  );
 
   const conflictos = grupos
     .flatMap((g) => jugadoresPorGrupo[g.id] ?? [])
@@ -145,8 +150,26 @@ export function GruposGrid({
             luego usa este botón: rellena los huecos que queden con el resto de jugadores
             ordenados por hándicap.
           </p>
+          <div className="relative mb-3">
+            <Search
+              size={15}
+              className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ajag-gris-500"
+            />
+            <input
+              type="text"
+              value={busqueda}
+              onChange={(e) => setBusqueda(e.target.value)}
+              placeholder="Buscar jugador..."
+              className="w-full rounded-lg border border-ajag-gris-200 bg-white py-2 pl-9 pr-3 text-sm outline-none focus:border-ajag-verde-600"
+            />
+          </div>
+          {sinAsignarFiltrados.length === 0 ? (
+            <p className="py-2 text-center text-xs text-ajag-gris-500">
+              Ningún jugador sin asignar coincide con &quot;{busqueda}&quot;.
+            </p>
+          ) : null}
           <ul className="flex flex-col gap-2">
-            {sinAsignar.map((j) => (
+            {sinAsignarFiltrados.map((j) => (
               <li
                 key={j.inscripcionId}
                 className="flex items-center justify-between gap-2 rounded-lg border border-ajag-gris-100 px-3 py-2 text-sm"
