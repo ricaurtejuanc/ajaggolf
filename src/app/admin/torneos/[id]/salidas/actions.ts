@@ -250,3 +250,27 @@ export async function despublicarSalidas(torneoId: string, salidaId: string) {
 
   revalidatePath(`/admin/torneos/${torneoId}/salidas`);
 }
+
+export type EstadoHorariosPdf = { ok: boolean; error: string | null };
+
+export async function actualizarHorariosPdf(
+  torneoId: string,
+  horariosPdfUrl: string | null,
+): Promise<EstadoHorariosPdf> {
+  const admin = await getUsuarioAdmin();
+  if (!admin) return { ok: false, error: "No autorizado." };
+
+  const supabase = await createClient();
+  const { data: torneo, error } = await supabase
+    .from("torneos")
+    .update({ horarios_pdf_url: horariosPdfUrl })
+    .eq("id", torneoId)
+    .select("slug")
+    .single();
+
+  if (error) return { ok: false, error: error.message };
+
+  revalidatePath(`/admin/torneos/${torneoId}/salidas`);
+  if (torneo) revalidatePath(`/torneos/${torneo.slug}`);
+  return { ok: true, error: null };
+}

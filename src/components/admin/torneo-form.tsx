@@ -5,7 +5,6 @@ import { PosterUploader } from "./poster-uploader";
 import { TeesInput } from "./tees-input";
 import { CampoGolfInput } from "./campo-golf-input";
 import { PremiosEditor } from "./premios-editor";
-import { HorariosPdfUploader } from "./horarios-pdf-uploader";
 import type { EstadoTorneoForm } from "@/app/admin/torneos/actions";
 import type { CategoriaExtra, LigaPool, ModoSalida, Torneo } from "@/types/database";
 
@@ -344,7 +343,9 @@ export function TorneoForm({
 
       <PremiosEditor premiosIniciales={torneo?.premios ?? []} />
 
-      <HorariosPdfUploader pdfUrlInicial={torneo?.horarios_pdf_url} />
+      <p className="text-xs text-ajag-gris-500">
+        Los horarios en PDF se suben desde la sección de Salidas del torneo, una vez creado.
+      </p>
 
       {state.error ? <p className="text-sm text-ajag-rojo-600">{state.error}</p> : null}
 

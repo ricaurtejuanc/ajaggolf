@@ -6,6 +6,7 @@ import { obtenerJugadoresConfirmados } from "@/lib/data/salidas";
 import { GenerarSalidasForm } from "./generar-form";
 import { GruposGrid, type GrupoVista, type JugadorEnGrupoVista } from "./grupos-grid";
 import { PublicarButton } from "./publicar-button";
+import { HorariosPdfUploader } from "./horarios-pdf-uploader";
 import type { Salida } from "@/types/database";
 
 export const metadata: Metadata = { title: "Salidas · Admin" };
@@ -46,7 +47,9 @@ export default async function AdminSalidasPage({
 
   const { data: torneo } = await supabase
     .from("torneos")
-    .select("id, nombre, slug, modo_salida, modo_asignacion_salida, tees_consecutivo")
+    .select(
+      "id, nombre, slug, modo_salida, modo_asignacion_salida, tees_consecutivo, horarios_pdf_url",
+    )
     .eq("id", id)
     .maybeSingle();
   if (!torneo) notFound();
@@ -143,6 +146,10 @@ export default async function AdminSalidasPage({
           />
         </div>
       ) : null}
+
+      <div className="mt-6">
+        <HorariosPdfUploader torneoId={id} pdfUrlInicial={torneo.horarios_pdf_url} />
+      </div>
     </div>
   );
 }

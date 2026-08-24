@@ -88,7 +88,6 @@ function leerCamposTorneo(formData: FormData) {
     poster_focal_x: Number.isNaN(focalX) ? 50 : clamp(focalX),
     poster_focal_y: Number.isNaN(focalY) ? 50 : clamp(focalY),
     premios: leerPremios(formData),
-    horarios_pdf_url: String(formData.get("horarios_pdf_url") ?? "").trim() || null,
     precio_cents: Math.round(parseFloat(precioEuros || "0") * 100),
     precio_socio_cents: precioSocioEuros ? Math.round(parseFloat(precioSocioEuros) * 100) : null,
     cupo_maximo: cupoRaw ? parseInt(cupoRaw, 10) : null,
