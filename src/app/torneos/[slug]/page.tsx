@@ -162,8 +162,9 @@ export default async function TorneoDetallePage({
           </h2>
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {torneo.premios.map((cat) => {
-              const rango =
-                cat.handicap_desde != null && cat.handicap_hasta != null
+              const rango = cat.categoria_unica
+                ? "Categoría única"
+                : cat.handicap_desde != null && cat.handicap_hasta != null
                   ? `Hándicap ${cat.handicap_desde}–${cat.handicap_hasta}`
                   : cat.handicap_hasta != null
                     ? `Hándicap hasta ${cat.handicap_hasta}`

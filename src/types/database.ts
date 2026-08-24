@@ -119,6 +119,7 @@ export type CampoGolf = {
 
 export type PremioCategoria = {
   nombre: string;
+  categoria_unica: boolean;
   handicap_desde: number | null;
   handicap_hasta: number | null;
   premios: string[];

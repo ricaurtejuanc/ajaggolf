@@ -11,7 +11,13 @@ export function PremiosEditor({ premiosIniciales }: { premiosIniciales: PremioCa
   function agregarCategoria() {
     setCategorias((prev) => [
       ...prev,
-      { nombre: `Categoría ${prev.length + 1}`, handicap_desde: null, handicap_hasta: null, premios: [] },
+      {
+        nombre: `Categoría ${prev.length + 1}`,
+        categoria_unica: false,
+        handicap_desde: null,
+        handicap_hasta: null,
+        premios: [],
+      },
     ]);
   }
 
@@ -58,9 +64,10 @@ export function PremiosEditor({ premiosIniciales }: { premiosIniciales: PremioCa
     <div>
       <span className="text-sm font-medium text-ajag-verde-900">Premios</span>
       <p className="mt-1 text-xs text-ajag-gris-500">
-        Crea una categoría por cada tramo de hándicap (o solo una para categoría única), y
-        añade dentro los premios que quieras. Usa una categoría sin hándicap para premios
-        aparte como Scratch, Mejor Dama o Mejor Senior.
+        Crea una categoría por cada tramo de hándicap y añade dentro los premios que quieras.
+        Marca &quot;Categoría única&quot; si el torneo no tiene tramos (por ejemplo, premios del
+        1º al 5º clasificado sin distinción de hándicap), o deja el hándicap en blanco sin
+        marcarla para premios aparte como Scratch, Mejor Dama o Mejor Senior.
       </p>
 
       <input type="hidden" name="premios" value={JSON.stringify(categorias)} />
@@ -84,35 +91,53 @@ export function PremiosEditor({ premiosIniciales }: { premiosIniciales: PremioCa
               </button>
             </div>
 
-            <div className="mt-2 flex items-center gap-2 text-xs text-ajag-gris-500">
-              <span>Hándicap</span>
+            <label className="mt-2 flex items-center gap-2 text-xs font-medium text-ajag-verde-900">
               <input
-                type="number"
-                step="0.1"
-                placeholder="desde"
-                value={cat.handicap_desde ?? ""}
+                type="checkbox"
+                checked={cat.categoria_unica}
                 onChange={(e) =>
                   actualizarCategoria(indiceCategoria, {
-                    handicap_desde: e.target.value === "" ? null : Number(e.target.value),
+                    categoria_unica: e.target.checked,
+                    handicap_desde: e.target.checked ? null : cat.handicap_desde,
+                    handicap_hasta: e.target.checked ? null : cat.handicap_hasta,
                   })
                 }
-                className="w-24 rounded-lg border border-ajag-gris-200 px-2 py-1 text-sm outline-none focus:border-ajag-verde-600"
+                className="size-4 rounded border-ajag-gris-200 text-ajag-verde-700 focus:ring-ajag-verde-600"
               />
-              <span>—</span>
-              <input
-                type="number"
-                step="0.1"
-                placeholder="hasta"
-                value={cat.handicap_hasta ?? ""}
-                onChange={(e) =>
-                  actualizarCategoria(indiceCategoria, {
-                    handicap_hasta: e.target.value === "" ? null : Number(e.target.value),
-                  })
-                }
-                className="w-24 rounded-lg border border-ajag-gris-200 px-2 py-1 text-sm outline-none focus:border-ajag-verde-600"
-              />
-              <span>(opcional)</span>
-            </div>
+              Categoría única (sin tramo de hándicap)
+            </label>
+
+            {!cat.categoria_unica ? (
+              <div className="mt-2 flex items-center gap-2 text-xs text-ajag-gris-500">
+                <span>Hándicap</span>
+                <input
+                  type="number"
+                  step="0.1"
+                  placeholder="desde"
+                  value={cat.handicap_desde ?? ""}
+                  onChange={(e) =>
+                    actualizarCategoria(indiceCategoria, {
+                      handicap_desde: e.target.value === "" ? null : Number(e.target.value),
+                    })
+                  }
+                  className="w-24 rounded-lg border border-ajag-gris-200 px-2 py-1 text-sm outline-none focus:border-ajag-verde-600"
+                />
+                <span>—</span>
+                <input
+                  type="number"
+                  step="0.1"
+                  placeholder="hasta"
+                  value={cat.handicap_hasta ?? ""}
+                  onChange={(e) =>
+                    actualizarCategoria(indiceCategoria, {
+                      handicap_hasta: e.target.value === "" ? null : Number(e.target.value),
+                    })
+                  }
+                  className="w-24 rounded-lg border border-ajag-gris-200 px-2 py-1 text-sm outline-none focus:border-ajag-verde-600"
+                />
+                <span>(opcional; déjalo en blanco para premios sin tramo, como Scratch)</span>
+              </div>
+            ) : null}
 
             <div className="mt-3 flex flex-col gap-2">
               {cat.premios.map((premio, indicePremio) => (

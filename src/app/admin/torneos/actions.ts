@@ -43,12 +43,14 @@ function leerPremios(formData: FormData): PremioCategoria[] {
         .map((p) => String(p ?? "").trim())
         .filter((p): p is string => p.length > 0);
       if (premios.length === 0) return null;
+      const categoriaUnica = (cat as { categoria_unica?: unknown }).categoria_unica === true;
       const desde = Number((cat as { handicap_desde?: unknown }).handicap_desde);
       const hasta = Number((cat as { handicap_hasta?: unknown }).handicap_hasta);
       return {
         nombre,
-        handicap_desde: Number.isFinite(desde) ? desde : null,
-        handicap_hasta: Number.isFinite(hasta) ? hasta : null,
+        categoria_unica: categoriaUnica,
+        handicap_desde: categoriaUnica || !Number.isFinite(desde) ? null : desde,
+        handicap_hasta: categoriaUnica || !Number.isFinite(hasta) ? null : hasta,
         premios,
       };
     })
