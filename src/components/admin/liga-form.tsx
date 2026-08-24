@@ -26,8 +26,7 @@ export function LigaForm({
 }) {
   const [state, formAction, pending] = useActionState(action, { ok: false, error: null });
   const [nombre, setNombre] = useState(liga?.nombre ?? "");
-  const [slug, setSlug] = useState(liga?.slug ?? "");
-  const slugPrevisualizado = slugify(slug || nombre);
+  const slugPrevisualizado = liga ? liga.slug : slugify(nombre);
 
   return (
     <form action={formAction} className="card-ajag flex flex-col gap-5 p-6">
@@ -48,19 +47,10 @@ export function LigaForm({
       </div>
 
       <div>
-        <label htmlFor="slug" className="text-sm font-medium text-ajag-verde-900">
-          URL (slug)
-        </label>
-        <input
-          id="slug"
-          name="slug"
-          placeholder="se genera automáticamente a partir del nombre si lo dejas vacío"
-          value={slug}
-          onChange={(e) => setSlug(e.target.value)}
-          className="mt-1 w-full rounded-xl border border-ajag-gris-200 px-4 py-2.5 text-sm outline-none focus:border-ajag-verde-600"
-        />
-        <p className="mt-1 truncate text-xs text-ajag-gris-500">
-          URL pública: /ligas/{slugPrevisualizado || "…"}
+        <span className="text-sm font-medium text-ajag-verde-900">URL pública</span>
+        <p className="mt-1 truncate text-sm text-ajag-gris-500">
+          /ligas/{slugPrevisualizado || "…"}
+          {liga ? " (no cambia aunque edites el nombre)" : " — se genera a partir del nombre"}
         </p>
       </div>
 
