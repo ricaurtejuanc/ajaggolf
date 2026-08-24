@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { X, ZoomIn } from "lucide-react";
 
 export function PosterLightbox({
@@ -59,6 +60,13 @@ export function PosterLightbox({
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4"
           onClick={() => setAbierto(false)}
         >
+          <Link
+            href="/torneos"
+            onClick={(e) => e.stopPropagation()}
+            className="absolute left-4 top-4 flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-2 text-sm font-medium text-white hover:bg-white/20"
+          >
+            ← Calendario
+          </Link>
           <button
             type="button"
             onClick={() => setAbierto(false)}
