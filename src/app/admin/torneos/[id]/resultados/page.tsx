@@ -12,6 +12,7 @@ import { ResultadosForm, filaVacia, type FilaResultado } from "./resultados-form
 import { DocumentoActual } from "./documento-actual";
 import { GanadoresPremiosForm } from "./ganadores-premios-form";
 import { PosicionesLigaForm } from "./posiciones-liga-form";
+import type { Resultado } from "@/types/database";
 
 export const metadata: Metadata = { title: "Resultados · Admin" };
 
@@ -30,7 +31,7 @@ export default async function AdminResultadosPage({
     .maybeSingle();
   if (!torneo) notFound();
 
-  const [{ data: documento }, confirmados] = await Promise.all([
+  const [{ data: documento }, confirmados, { data: resultados }] = await Promise.all([
     supabase
       .from("resultados_pdf_uploads")
       .select("*")
@@ -39,6 +40,11 @@ export default async function AdminResultadosPage({
       .limit(1)
       .maybeSingle(),
     obtenerInscritosConfirmadosParaResultados(id),
+    supabase
+      .from("resultados")
+      .select("*")
+      .eq("torneo_id", id)
+      .order("posicion", { ascending: true, nullsFirst: false }),
   ]);
 
   const documentoFilasExtraidas =
@@ -90,12 +96,14 @@ export default async function AdminResultadosPage({
             ligaPoolId={torneo.liga_pool_id}
             confirmados={confirmados}
             sugerenciasPosicion={sugerenciasPosicion}
+            resultados={resultados ?? []}
           />
           <TablaResultados
             torneoId={id}
             formatoPuntuacion={torneo.formato_puntuacion}
             confirmados={confirmados}
             documentoFilasExtraidas={documentoFilasExtraidas}
+            resultados={resultados ?? []}
           />
         </div>
       ) : (
@@ -114,22 +122,20 @@ async function PosicionesLiga({
   ligaPoolId,
   confirmados,
   sugerenciasPosicion,
+  resultados,
 }: {
   torneoId: string;
   ligaPoolId: string;
   confirmados: InscritoParaResultado[];
   sugerenciasPosicion: Record<string, number>;
+  resultados: Resultado[];
 }) {
   const supabase = await createClient();
-  const [{ data: liga }, { data: resultados }] = await Promise.all([
-    supabase.from("ligas_pool").select("tabla_puntos").eq("id", ligaPoolId).maybeSingle(),
-    supabase
-      .from("resultados")
-      .select("posicion, inscripcion_id")
-      .eq("torneo_id", torneoId)
-      .not("posicion", "is", null)
-      .not("inscripcion_id", "is", null),
-  ]);
+  const { data: liga } = await supabase
+    .from("ligas_pool")
+    .select("tabla_puntos")
+    .eq("id", ligaPoolId)
+    .maybeSingle();
   if (!liga) return null;
 
   const tablaPuntos = liga.tabla_puntos as Record<string, number>;
@@ -141,7 +147,7 @@ async function PosicionesLiga({
   if (posiciones.length === 0) return null;
 
   const posicionesIniciales: Record<string, string> = {};
-  for (const r of resultados ?? []) {
+  for (const r of resultados) {
     if (r.posicion != null && r.inscripcion_id && posiciones.includes(r.posicion)) {
       posicionesIniciales[String(r.posicion)] = r.inscripcion_id;
     }
@@ -171,27 +177,22 @@ async function PosicionesLiga({
   );
 }
 
-async function TablaResultados({
+function TablaResultados({
   torneoId,
   formatoPuntuacion,
   confirmados,
   documentoFilasExtraidas,
+  resultados,
 }: {
   torneoId: string;
   formatoPuntuacion: "stableford" | "medal_play";
   confirmados: InscritoParaResultado[];
   documentoFilasExtraidas: FilaExtraidaPdf[];
+  resultados: Resultado[];
 }) {
-  const supabase = await createClient();
-  const { data: resultados } = await supabase
-    .from("resultados")
-    .select("*")
-    .eq("torneo_id", torneoId)
-    .order("posicion", { ascending: true, nullsFirst: false });
-
   let filasIniciales: FilaResultado[];
 
-  if (resultados && resultados.length > 0) {
+  if (resultados.length > 0) {
     filasIniciales = resultados.map((r) =>
       filaVacia({
         inscripcionId: r.inscripcion_id,
