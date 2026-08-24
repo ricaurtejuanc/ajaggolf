@@ -2,7 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { ShoppingCart } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
-import { getUsuarioAdmin } from "@/lib/auth";
+import { getUsuarioActual, getUsuarioAdmin } from "@/lib/auth";
 import { MobileNav } from "./mobile-nav";
 
 const navLinks = [
@@ -16,9 +16,7 @@ const navLinks = [
 
 export async function SiteHeader() {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getUsuarioActual();
   const admin = user ? await getUsuarioAdmin() : null;
 
   let itemsCarrito = 0;
