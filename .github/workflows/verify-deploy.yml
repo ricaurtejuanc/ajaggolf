@@ -1,0 +1,66 @@
+name: Verificar deploy en Vercel
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Esperar y comprobar el deployment de Vercel para este commit
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          COMMIT_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+
+          if [ -z "${VERCEL_TOKEN:-}" ]; then
+            echo "::error::Falta el secreto VERCEL_TOKEN en este repositorio (Settings → Secrets and variables → Actions)."
+            exit 1
+          fi
+
+          echo "Buscando el deployment de Vercel para el commit $COMMIT_SHA..."
+
+          intentos=30
+          espera_segundos=15
+
+          for i in $(seq 1 "$intentos"); do
+            respuesta=$(curl -sS -H "Authorization: Bearer $VERCEL_TOKEN" \
+              "https://api.vercel.com/v6/deployments?limit=20")
+
+            estado=$(echo "$respuesta" | node -e '
+              let data = "";
+              process.stdin.on("data", (c) => (data += c));
+              process.stdin.on("end", () => {
+                const json = JSON.parse(data);
+                if (json.error) {
+                  console.error("VERCEL_API_ERROR: " + json.error.message);
+                  process.exit(2);
+                }
+                const sha = process.env.COMMIT_SHA;
+                const dep = (json.deployments || []).find(
+                  (d) => d.meta && d.meta.githubCommitSha === sha,
+                );
+                console.log(dep ? dep.readyState : "PENDING_NOT_FOUND");
+              });
+            ')
+
+            echo "[intento $i/$intentos] estado: $estado"
+
+            if [ "$estado" = "READY" ]; then
+              echo "✅ Deploy correcto en Vercel para $COMMIT_SHA."
+              exit 0
+            fi
+
+            if [ "$estado" = "ERROR" ] || [ "$estado" = "CANCELED" ]; then
+              echo "::error::El deploy en Vercel terminó en estado $estado para el commit $COMMIT_SHA."
+              exit 1
+            fi
+
+            sleep "$espera_segundos"
+          done
+
+          echo "::error::No se confirmó el deploy en Vercel tras $((intentos * espera_segundos / 60)) minutos de espera."
+          exit 1
