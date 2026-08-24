@@ -29,8 +29,8 @@ export default async function SalidasPublicasPage({
   if (torneo.horarios_pdf_url) {
     return (
       <div className="mx-auto max-w-4xl px-4 py-10">
-        <Link href={`/torneos/${slug}`} className="text-sm text-ajag-gris-500 hover:underline">
-          ← {torneo.nombre}
+        <Link href="/horarios" className="text-sm text-ajag-gris-500 hover:underline">
+          ← Horarios
         </Link>
         <h1 className="mt-2 font-display text-2xl font-semibold text-ajag-verde-900">
           Horarios
@@ -96,17 +96,37 @@ export default async function SalidasPublicasPage({
     (a, b) => a.numeroGrupo - b.numeroGrupo,
   );
 
+  const primerGrupo = gruposOrdenados[0];
+  const segundoGrupo = gruposOrdenados[1];
+  let detalle: string;
+  if (modo === "shotgun") {
+    detalle = primerGrupo?.horaSalida
+      ? `Salida a tiro (shotgun) a partir de las ${primerGrupo.horaSalida.slice(0, 5)}`
+      : "Salida a tiro (shotgun)";
+  } else {
+    const partes = ["Salidas consecutivas"];
+    if (primerGrupo?.hoyoSalida) partes.push(`desde el tee #${primerGrupo.hoyoSalida}`);
+    if (primerGrupo?.horaSalida) {
+      partes.push(`a partir de las ${primerGrupo.horaSalida.slice(0, 5)}`);
+    }
+    if (primerGrupo?.horaSalida && segundoGrupo?.horaSalida) {
+      const [h1, m1] = primerGrupo.horaSalida.split(":").map(Number);
+      const [h2, m2] = segundoGrupo.horaSalida.split(":").map(Number);
+      const intervalo = h2 * 60 + m2 - (h1 * 60 + m1);
+      if (intervalo > 0) partes.push(`con intervalos de ${intervalo}m`);
+    }
+    detalle = partes.join(" ");
+  }
+
   return (
     <div className="mx-auto max-w-4xl px-4 py-10">
-      <Link href={`/torneos/${slug}`} className="text-sm text-ajag-gris-500 hover:underline">
-        ← {torneo.nombre}
+      <Link href="/horarios" className="text-sm text-ajag-gris-500 hover:underline">
+        ← Horarios
       </Link>
       <h1 className="mt-2 font-display text-2xl font-semibold text-ajag-verde-900">
         Cuadro de salidas
       </h1>
-      <p className="text-sm text-ajag-gris-500">
-        {modo === "shotgun" ? "Salida a tiro (shotgun)" : "Salidas consecutivas"}
-      </p>
+      <p className="text-sm text-ajag-gris-500">{detalle}</p>
 
       <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {gruposOrdenados.map((grupo) => (

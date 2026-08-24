@@ -20,11 +20,29 @@ export default async function CuentaPage() {
 
   const jugador = await asegurarJugadorParaUsuario(supabase, user);
 
+  // Además de los pedidos hechos con la cuenta ya iniciada (user_id), hay
+  // que incluir los que se inscribieron como invitado antes de tener
+  // cuenta (pedido sin user_id) y cuya ficha de jugador se reclamó luego:
+  // si no, esas inscripciones desaparecen de "Mis inscripciones".
+  const { data: inscripcionesJugador } = await supabase
+    .from("inscripciones")
+    .select("pedido_pago_id")
+    .eq("jugador_id", jugador.id)
+    .not("pedido_pago_id", "is", null);
+  const idsPedidosInvitado = [
+    ...new Set((inscripcionesJugador ?? []).map((i) => i.pedido_pago_id).filter((id) => id)),
+  ];
+
+  const filtro =
+    idsPedidosInvitado.length > 0
+      ? `user_id.eq.${user.id},id.in.(${idsPedidosInvitado.join(",")})`
+      : `user_id.eq.${user.id}`;
+
   const [{ data: pedidos }, bizumNumero] = await Promise.all([
     supabase
       .from("pedidos_pago")
       .select("*, inscripciones(*, torneos(nombre, slug, fecha))")
-      .eq("user_id", user.id)
+      .or(filtro)
       .order("created_at", { ascending: false }),
     obtenerBizumNumero(),
   ]);

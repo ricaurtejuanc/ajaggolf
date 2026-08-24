@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { enviarEmailNuevaConsulta } from "@/lib/email";
 
 export type EstadoContacto = { ok: boolean; error: string | null };
 
@@ -23,5 +24,8 @@ export async function enviarConsulta(
     .insert({ nombre, email, telefono, mensaje });
 
   if (error) return { ok: false, error: "No se pudo enviar. Inténtalo de nuevo." };
+
+  await enviarEmailNuevaConsulta({ nombre, email, telefono, mensaje });
+
   return { ok: true, error: null };
 }

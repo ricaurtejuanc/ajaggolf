@@ -250,6 +250,7 @@ export type Resultado = {
   handicap: number | null;
   puntos: number | null;
   golpes: number | null;
+  estado_juego: "retirado" | "no_presentado" | null;
   estado: EstadoResultado;
   es_clasificacion_general: boolean;
   pdf_origen_id: string | null;
@@ -282,6 +283,8 @@ export type ConsultaContacto = {
   telefono: string | null;
   mensaje: string;
   leido: boolean;
+  respuesta: string | null;
+  respondido_at: string | null;
   created_at: string;
 };
 

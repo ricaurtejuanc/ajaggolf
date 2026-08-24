@@ -208,6 +208,7 @@ function TablaResultados({
         posicion: r.posicion != null ? String(r.posicion) : "",
         puntos: r.puntos != null ? String(r.puntos) : "",
         golpes: r.golpes != null ? String(r.golpes) : "",
+        estadoJuego: (r.estado_juego as "retirado" | "no_presentado" | null) ?? "",
       }),
     );
   } else {

@@ -95,9 +95,7 @@ export function ResultadosForm({
                   <th className="py-2 pr-2">
                     {columnaPrincipal === "puntos" ? "Puntos" : "Golpes"}
                   </th>
-                  <th className="py-2 pr-2">
-                    {columnaPrincipal === "puntos" ? "Golpes" : "Puntos"}
-                  </th>
+                  <th className="py-2 pr-2">Estado</th>
                   <th />
                 </tr>
               </thead>
@@ -150,21 +148,40 @@ export function ResultadosForm({
                         className="w-16 rounded-lg border border-ajag-gris-200 px-2 py-1.5 text-sm outline-none focus:border-ajag-verde-600"
                       />
                     </td>
-                    {(columnaPrincipal === "puntos"
-                      ? (["puntos", "golpes"] as const)
-                      : (["golpes", "puntos"] as const)
-                    ).map((campo) => (
-                      <td key={campo} className="py-1.5 pr-2">
-                        <input
-                          name={campo}
-                          type="number"
-                          step="0.1"
-                          value={fila[campo]}
-                          onChange={(e) => actualizarFila(fila.key, campo, e.target.value)}
-                          className="w-20 rounded-lg border border-ajag-gris-200 px-2 py-1.5 text-sm outline-none focus:border-ajag-verde-600"
-                        />
-                      </td>
-                    ))}
+                    <td className="py-1.5 pr-2">
+                      <input
+                        name={columnaPrincipal}
+                        type="number"
+                        step="0.1"
+                        value={fila[columnaPrincipal]}
+                        disabled={fila.estadoJuego !== ""}
+                        onChange={(e) => actualizarFila(fila.key, columnaPrincipal, e.target.value)}
+                        className="w-20 rounded-lg border border-ajag-gris-200 px-2 py-1.5 text-sm outline-none focus:border-ajag-verde-600 disabled:bg-ajag-gris-100"
+                      />
+                      <input
+                        type="hidden"
+                        name={columnaPrincipal === "puntos" ? "golpes" : "puntos"}
+                        value=""
+                      />
+                    </td>
+                    <td className="py-1.5 pr-2">
+                      <select
+                        name="estado_juego"
+                        value={fila.estadoJuego}
+                        onChange={(e) =>
+                          actualizarFila(
+                            fila.key,
+                            "estadoJuego",
+                            e.target.value as FilaResultado["estadoJuego"],
+                          )
+                        }
+                        className="rounded-lg border border-ajag-gris-200 bg-white px-2 py-1.5 text-xs outline-none focus:border-ajag-verde-600"
+                      >
+                        <option value="">Normal</option>
+                        <option value="retirado">Retirado</option>
+                        <option value="no_presentado">No presentado</option>
+                      </select>
+                    </td>
                     <td className="py-1.5">
                       <button
                         type="button"

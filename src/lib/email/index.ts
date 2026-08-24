@@ -3,6 +3,14 @@ import { formatearPrecio, formatearFecha } from "@/lib/format";
 
 const FROM = process.env.SMTP_FROM || "AJAG Golf <no-reply@localhost>";
 
+function escapeHtml(texto: string): string {
+  return texto
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
 function obtenerTransporte() {
   const host = process.env.SMTP_HOST;
   const port = process.env.SMTP_PORT;
@@ -109,6 +117,46 @@ export async function enviarEmailInscripcionRecibida(args: {
   );
 
   await enviar(args.destinatario, asunto, html);
+}
+
+export async function enviarEmailNuevaConsulta(args: {
+  nombre: string;
+  email: string;
+  telefono: string | null;
+  mensaje: string;
+}) {
+  const html = envoltorio(
+    "Nueva consulta de contacto",
+    `
+      <p style="color: #1f4d33; font-size: 14px; line-height: 1.5;">
+        <strong>${escapeHtml(args.nombre)}</strong> (${escapeHtml(args.email)}${args.telefono ? ` · ${escapeHtml(args.telefono)}` : ""})
+        ha escrito desde el formulario de contacto:
+      </p>
+      <p style="color: #1f4d33; font-size: 14px; line-height: 1.5; white-space: pre-line; background: #f3f6f3; border-radius: 8px; padding: 12px;">${escapeHtml(args.mensaje)}</p>
+    `,
+  );
+
+  await enviar("info@aftergolf.es", `Nueva consulta de ${args.nombre}`, html);
+}
+
+export async function enviarEmailRespuestaConsulta(args: {
+  destinatario: string;
+  nombre: string;
+  mensajeOriginal: string;
+  respuesta: string;
+}) {
+  const html = envoltorio(
+    "Respuesta a tu consulta",
+    `
+      <p style="color: #1f4d33; font-size: 14px; line-height: 1.5;">Hola ${escapeHtml(args.nombre)},</p>
+      <p style="color: #1f4d33; font-size: 14px; line-height: 1.5; white-space: pre-line;">${escapeHtml(args.respuesta)}</p>
+      <p style="color: #6b7a6f; font-size: 12px; line-height: 1.5; margin-top: 20px; border-top: 1px solid #e4e9e4; padding-top: 12px;">
+        Tu mensaje original: "${escapeHtml(args.mensajeOriginal)}"
+      </p>
+    `,
+  );
+
+  await enviar(args.destinatario, "Respuesta a tu consulta — AJAG Golf", html);
 }
 
 export async function enviarEmailInscripcionConfirmada(args: {

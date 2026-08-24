@@ -72,6 +72,7 @@ export async function guardarResultados(
   const posiciones = formData.getAll("posicion").map((v) => String(v).trim());
   const puntos = formData.getAll("puntos").map((v) => String(v).trim());
   const golpes = formData.getAll("golpes").map((v) => String(v).trim());
+  const estadosJuego = formData.getAll("estado_juego").map((v) => String(v).trim() || null);
 
   const supabase = await createClient();
 
@@ -93,6 +94,7 @@ export async function guardarResultados(
       posicion: posiciones[i] ? parseInt(posiciones[i], 10) : null,
       puntos: puntos[i] ? Number(puntos[i].replace(",", ".")) : null,
       golpes: golpes[i] ? Number(golpes[i].replace(",", ".")) : null,
+      estado_juego: estadosJuego[i] || null,
       estado: publicar ? "publicado" : "preview",
       // Esta tabla la rellena el admin fila a fila a mano: sí cuenta como
       // la clasificación general publicada del torneo (a diferencia de los

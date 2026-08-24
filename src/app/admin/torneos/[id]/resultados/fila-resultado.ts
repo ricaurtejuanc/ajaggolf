@@ -1,3 +1,5 @@
+export type EstadoJuego = "" | "retirado" | "no_presentado";
+
 export interface FilaResultado {
   key: number;
   inscripcionId: string | null;
@@ -7,6 +9,7 @@ export interface FilaResultado {
   posicion: string;
   puntos: string;
   golpes: string;
+  estadoJuego: EstadoJuego;
 }
 
 let contador = 0;
@@ -20,6 +23,7 @@ export function filaVacia(base: Partial<FilaResultado> = {}): FilaResultado {
     posicion: "",
     puntos: "",
     golpes: "",
+    estadoJuego: "",
     ...base,
   };
 }

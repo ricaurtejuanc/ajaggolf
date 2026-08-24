@@ -30,12 +30,13 @@ export default async function ClasificacionPage({
   const supabase = await createClient();
   const cuadroHonor = hayCuadroDeHonor(torneo) ? <CuadroDeHonor torneo={torneo} /> : null;
 
-  // Si el torneo pertenece a una liga/pool, "atrás" lleva a la clasificación
-  // de esa liga (de donde suele venir el usuario), no a la ficha del torneo.
+  // Si el torneo pertenece a una liga/pool, "atrás" lleva al listado
+  // general de clasificaciones (de donde suele venir el usuario), no a la
+  // ficha del torneo.
   const { data: liga } = torneo.liga_pool_id
     ? await supabase.from("ligas_pool").select("slug").eq("id", torneo.liga_pool_id).maybeSingle()
     : { data: null };
-  const hrefVolver = liga ? `/clasificaciones/${liga.slug}` : `/torneos/${slug}`;
+  const hrefVolver = liga ? "/clasificaciones" : `/torneos/${slug}`;
   const textoVolver = liga ? "Clasificaciones" : torneo.nombre;
 
   const { data: documento } = await supabase
@@ -121,7 +122,11 @@ export default async function ClasificacionPage({
                 <td className="px-4 py-3 text-ajag-verde-900">{r.nombre_mostrado}</td>
                 <td className="px-4 py-3 text-ajag-gris-500">{r.handicap ?? "—"}</td>
                 <td className="px-4 py-3 text-ajag-gris-500">
-                  {(columnaPrincipal === "puntos" ? r.puntos : r.golpes) ?? "—"}
+                  {r.estado_juego === "retirado"
+                    ? "Retirado"
+                    : r.estado_juego === "no_presentado"
+                      ? "No presentado"
+                      : ((columnaPrincipal === "puntos" ? r.puntos : r.golpes) ?? "—")}
                 </td>
               </tr>
             ))}
