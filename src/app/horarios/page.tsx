@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { CalendarDays } from "lucide-react";
 import { listarTorneosPublicos, obtenerIdsConSalidaPublicada } from "@/lib/data/torneos";
 import { formatearFecha } from "@/lib/format";
@@ -62,12 +63,10 @@ function ListaHorarios({
   return (
     <div className="flex flex-col gap-3">
       {torneos.map((torneo) => {
-        // El PDF oficial del club manda si existe; si no, se muestran los
-        // horarios generados por la app.
         const tienePdf = Boolean(torneo.horarios_pdf_url);
         const tieneSalida = idsConSalida.has(torneo.id);
         const disponible = tienePdf || tieneSalida;
-        const href = tienePdf ? (torneo.horarios_pdf_url ?? "") : `/torneos/${torneo.slug}/salidas`;
+        const href = `/torneos/${torneo.slug}/salidas`;
 
         const contenido = (
           <>
@@ -88,15 +87,13 @@ function ListaHorarios({
         );
 
         return disponible ? (
-          <a
+          <Link
             key={torneo.id}
             href={href}
-            target={tienePdf ? "_blank" : undefined}
-            rel={tienePdf ? "noreferrer" : undefined}
             className="card-ajag flex items-center justify-between gap-3 p-4 transition hover:shadow-md"
           >
             {contenido}
-          </a>
+          </Link>
         ) : (
           <div
             key={torneo.id}

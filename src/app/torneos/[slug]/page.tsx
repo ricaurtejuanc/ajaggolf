@@ -277,25 +277,12 @@ export default async function TorneoDetallePage({
       {hayHorarios || hayClasificacion ? (
         <div className="mt-4 flex flex-col gap-3 sm:flex-row">
           {hayHorarios ? (
-            // El PDF oficial del club manda si existe; si no, se muestran
-            // los horarios generados por la app.
-            torneo.horarios_pdf_url ? (
-              <a
-                href={torneo.horarios_pdf_url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex flex-1 items-center justify-center rounded-2xl border border-ajag-verde-700 px-5 py-3 text-sm font-medium text-ajag-verde-700 transition hover:bg-ajag-verde-50"
-              >
-                Horarios
-              </a>
-            ) : salidaPublicada ? (
-              <Link
-                href={`/torneos/${torneo.slug}/salidas`}
-                className="flex flex-1 items-center justify-center rounded-2xl border border-ajag-verde-700 px-5 py-3 text-sm font-medium text-ajag-verde-700 transition hover:bg-ajag-verde-50"
-              >
-                Horarios
-              </Link>
-            ) : null
+            <Link
+              href={`/torneos/${torneo.slug}/salidas`}
+              className="flex flex-1 items-center justify-center rounded-2xl border border-ajag-verde-700 px-5 py-3 text-sm font-medium text-ajag-verde-700 transition hover:bg-ajag-verde-50"
+            >
+              Horarios
+            </Link>
           ) : null}
           {hayClasificacion ? (
             <Link

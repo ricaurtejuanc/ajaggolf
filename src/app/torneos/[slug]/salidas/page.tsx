@@ -24,6 +24,36 @@ export default async function SalidasPublicasPage({
   const torneo = await obtenerTorneoPorSlug(slug);
   if (!torneo) notFound();
 
+  // El PDF oficial del club manda si existe: se embebe fijo, igual que la
+  // clasificación, en lugar de mostrar el cuadro generado por la app.
+  if (torneo.horarios_pdf_url) {
+    return (
+      <div className="mx-auto max-w-4xl px-4 py-10">
+        <Link href={`/torneos/${slug}`} className="text-sm text-ajag-gris-500 hover:underline">
+          ← {torneo.nombre}
+        </Link>
+        <h1 className="mt-2 font-display text-2xl font-semibold text-ajag-verde-900">
+          Horarios
+        </h1>
+        <div className="mt-6 overflow-hidden rounded-2xl border border-ajag-gris-100">
+          <iframe
+            src={`${torneo.horarios_pdf_url}#toolbar=0&navpanes=0&scrollbar=0&view=FitH`}
+            className="h-[75vh] w-full pointer-events-none"
+            title="Horarios"
+          />
+        </div>
+        <a
+          href={torneo.horarios_pdf_url}
+          target="_blank"
+          rel="noreferrer"
+          className="mt-4 inline-block text-sm font-medium text-ajag-verde-700 hover:underline"
+        >
+          Abrir en una pestaña nueva ↗
+        </a>
+      </div>
+    );
+  }
+
   const supabase = await createClient();
   const { data: filas } = await supabase
     .from("salidas_publicadas")
