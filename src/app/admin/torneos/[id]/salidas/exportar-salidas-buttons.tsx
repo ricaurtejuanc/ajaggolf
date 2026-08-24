@@ -25,6 +25,7 @@ export function ExportarSalidasButtons({
           Hora: g.horaSalida ? g.horaSalida.slice(0, 5) : "",
           Hoyo: g.hoyoSalida,
           Jugador: j.nombre,
+          Licencia: j.licenciaFederativa ?? "",
           Hándicap: j.handicap ?? "",
         })),
       );

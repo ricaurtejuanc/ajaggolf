@@ -10,7 +10,7 @@ export function MobileNav({
   isAdmin,
   itemsCarrito = 0,
 }: {
-  navLinks: { href: string; label: string }[];
+  navLinks: { href: string; label: string; external?: boolean }[];
   isLoggedIn: boolean;
   isAdmin: boolean;
   itemsCarrito?: number;
@@ -31,16 +31,29 @@ export function MobileNav({
       {open ? (
         <div className="absolute inset-x-0 top-16 border-b border-ajag-gris-100 bg-white px-4 py-4 shadow-lg">
           <nav className="flex flex-col gap-1">
-            {navLinks.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                onClick={() => setOpen(false)}
-                className="rounded-lg px-3 py-2.5 text-base font-medium text-ajag-verde-900 hover:bg-ajag-verde-50"
-              >
-                {link.label}
-              </Link>
-            ))}
+            {navLinks.map((link) =>
+              link.external ? (
+                <a
+                  key={link.href}
+                  href={link.href}
+                  target="_blank"
+                  rel="noreferrer"
+                  onClick={() => setOpen(false)}
+                  className="rounded-lg px-3 py-2.5 text-base font-medium text-ajag-verde-900 hover:bg-ajag-verde-50"
+                >
+                  {link.label}
+                </a>
+              ) : (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  onClick={() => setOpen(false)}
+                  className="rounded-lg px-3 py-2.5 text-base font-medium text-ajag-verde-900 hover:bg-ajag-verde-50"
+                >
+                  {link.label}
+                </Link>
+              ),
+            )}
             <div className="my-2 h-px bg-ajag-gris-100" />
             {isLoggedIn ? (
               <Link

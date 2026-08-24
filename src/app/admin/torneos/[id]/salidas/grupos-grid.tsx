@@ -9,6 +9,7 @@ export interface JugadorEnGrupoVista {
   nombre: string;
   handicap: number | null;
   sexo: string | null;
+  licenciaFederativa: string | null;
   juegaConLicencias: string[];
   conflictoJuegaCon: boolean;
   conflictoDetalle: string | null;

@@ -11,6 +11,7 @@ const navLinks = [
   { href: "/clasificaciones", label: "Clasificaciones" },
   { href: "/patrocinadores", label: "Patrocinadores" },
   { href: "/contacto", label: "Contacto" },
+  { href: "https://www.aftergolf.es", label: "Calculador de hándicap", external: true },
 ];
 
 export async function SiteHeader() {
@@ -48,15 +49,27 @@ export async function SiteHeader() {
         </Link>
 
         <nav className="hidden items-center gap-6 md:flex">
-          {navLinks.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className="text-sm font-medium text-ajag-verde-900/80 transition hover:text-ajag-verde-700"
-            >
-              {link.label}
-            </Link>
-          ))}
+          {navLinks.map((link) =>
+            link.external ? (
+              <a
+                key={link.href}
+                href={link.href}
+                target="_blank"
+                rel="noreferrer"
+                className="text-sm font-medium text-ajag-verde-900/80 transition hover:text-ajag-verde-700"
+              >
+                {link.label}
+              </a>
+            ) : (
+              <Link
+                key={link.href}
+                href={link.href}
+                className="text-sm font-medium text-ajag-verde-900/80 transition hover:text-ajag-verde-700"
+              >
+                {link.label}
+              </Link>
+            ),
+          )}
         </nav>
 
         <div className="hidden items-center gap-3 md:flex">
