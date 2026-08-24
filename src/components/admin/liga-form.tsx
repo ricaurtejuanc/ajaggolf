@@ -49,7 +49,7 @@ export function LigaForm({
       <div>
         <span className="text-sm font-medium text-ajag-verde-900">URL pública</span>
         <p className="mt-1 truncate text-sm text-ajag-gris-500">
-          /ligas/{slugPrevisualizado || "…"}
+          /clasificaciones/{slugPrevisualizado || "…"}
           {liga ? " (no cambia aunque edites el nombre)" : " — se genera a partir del nombre"}
         </p>
       </div>

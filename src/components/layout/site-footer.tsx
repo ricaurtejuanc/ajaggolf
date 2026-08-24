@@ -19,7 +19,7 @@ export function SiteFooter() {
           <p className="mb-2 font-medium text-ajag-verde-900">Navegación</p>
           <ul className="space-y-1.5 text-ajag-gris-500">
             <li><Link href="/torneos" className="hover:text-ajag-verde-700">Calendario de torneos</Link></li>
-            <li><Link href="/ligas" className="hover:text-ajag-verde-700">Clasificaciones</Link></li>
+            <li><Link href="/clasificaciones" className="hover:text-ajag-verde-700">Clasificaciones</Link></li>
             <li><Link href="/contacto" className="hover:text-ajag-verde-700">Contacto</Link></li>
           </ul>
         </div>

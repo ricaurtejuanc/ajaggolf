@@ -9,7 +9,7 @@ const navLinks = [
   { href: "/torneos", label: "Calendario" },
   { href: "/horarios", label: "Horarios" },
   { href: "/patrocinadores", label: "Patrocinadores" },
-  { href: "/ligas", label: "Clasificaciones" },
+  { href: "/clasificaciones", label: "Clasificaciones" },
   { href: "/contacto", label: "Contacto" },
 ];
 

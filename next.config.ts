@@ -14,6 +14,13 @@ const nextConfig: NextConfig = {
       { protocol: "https" as const, hostname: "*.supabase.co" },
     ],
   },
+  async redirects() {
+    return [
+      // /ligas se renombró a /clasificaciones; mantenemos el enlace antiguo vivo.
+      { source: "/ligas", destination: "/clasificaciones", permanent: true },
+      { source: "/ligas/:slug", destination: "/clasificaciones/:slug", permanent: true },
+    ];
+  },
 };
 
 export default nextConfig;

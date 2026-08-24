@@ -108,7 +108,7 @@ export default async function TorneoDetallePage({
       <div className="mt-6 flex flex-col gap-1">
         {liga ? (
           <Link
-            href={`/ligas/${liga.slug}`}
+            href={`/clasificaciones/${liga.slug}`}
             className="w-fit rounded-full bg-ajag-oro-500/20 px-3 py-1 text-xs font-medium text-ajag-oro-600"
           >
             Puntúa para {liga.nombre}

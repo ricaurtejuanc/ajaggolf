@@ -70,7 +70,7 @@ function PestanaLigas({ ligas }: { ligas: LigaPool[] }) {
       {ligas.map((liga) => (
         <Link
           key={liga.id}
-          href={`/ligas/${liga.slug}`}
+          href={`/clasificaciones/${liga.slug}`}
           className="card-ajag flex flex-col items-center gap-2 p-4 text-center transition hover:shadow-md"
         >
           <div className="relative flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-full bg-ajag-verde-50">
