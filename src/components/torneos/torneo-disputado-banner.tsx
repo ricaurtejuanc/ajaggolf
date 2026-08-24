@@ -16,9 +16,9 @@ export function TorneoDisputadoBanner({
     cat.premios
       .map((premio, indicePremio) => ({
         premio,
-        ganador: torneo.premios_ganadores[`${indiceCategoria}-${indicePremio}`],
+        nombres: torneo.premios_ganadores[`${indiceCategoria}-${indicePremio}`] ?? [],
       }))
-      .filter((g): g is { premio: string; ganador: string } => Boolean(g.ganador)),
+      .filter((g) => g.nombres.length > 0),
   );
 
   return (
@@ -39,7 +39,8 @@ export function TorneoDisputadoBanner({
             {ganadores.map((g) => (
               <li key={g.premio} className="flex items-center gap-1.5 text-sm text-ajag-gris-500">
                 <Trophy size={13} className="shrink-0 text-ajag-oro-600" />
-                {g.premio}: <span className="font-medium text-ajag-verde-900">{g.ganador}</span>
+                {g.premio}:{" "}
+                <span className="font-medium text-ajag-verde-900">{g.nombres.join(", ")}</span>
               </li>
             ))}
           </ul>

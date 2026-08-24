@@ -177,8 +177,8 @@ export default async function TorneoDetallePage({
                   {rango ? <p className="text-xs text-ajag-gris-500">{rango}</p> : null}
                   <ul className="mt-1.5 flex flex-col gap-1">
                     {cat.premios.map((premio, indicePremio) => {
-                      const ganador =
-                        torneo.premios_ganadores[`${indiceCategoria}-${indicePremio}`];
+                      const ganadores =
+                        torneo.premios_ganadores[`${indiceCategoria}-${indicePremio}`] ?? [];
                       return (
                         <li
                           key={premio}
@@ -186,8 +186,8 @@ export default async function TorneoDetallePage({
                         >
                           <Trophy size={13} className="mt-0.5 shrink-0 text-ajag-oro-600" />
                           {premio}
-                          {ganador ? (
-                            <span className="text-ajag-gris-500"> — {ganador}</span>
+                          {ganadores.length > 0 ? (
+                            <span className="text-ajag-gris-500"> — {ganadores.join(", ")}</span>
                           ) : null}
                         </li>
                       );

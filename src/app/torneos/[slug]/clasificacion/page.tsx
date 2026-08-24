@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { Trophy } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { obtenerTorneoPorSlug } from "@/lib/data/torneos";
+import { CuadroDeHonor } from "@/components/torneos/cuadro-de-honor";
 
 export async function generateMetadata({
   params,
@@ -75,6 +76,10 @@ export default async function ClasificacionPage({
             </tbody>
           </table>
         </div>
+
+        <div className="mt-6">
+          <CuadroDeHonor torneo={torneo} />
+        </div>
       </div>
     );
   }
@@ -123,6 +128,10 @@ export default async function ClasificacionPage({
       >
         Abrir en una pestaña nueva ↗
       </a>
+
+      <div className="mt-6">
+        <CuadroDeHonor torneo={torneo} />
+      </div>
     </div>
   );
 }

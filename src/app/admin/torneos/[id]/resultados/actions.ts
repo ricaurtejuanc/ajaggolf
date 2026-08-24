@@ -158,6 +158,26 @@ export async function despublicarDocumento(torneoId: string, documentoId: string
 
 export type EstadoGanadores = { ok: boolean; error: string | null };
 
+function leerGanadores(formData: FormData): Record<string, string[]> {
+  let crudo: unknown;
+  try {
+    crudo = JSON.parse(String(formData.get("ganadores") ?? "{}"));
+  } catch {
+    return {};
+  }
+  if (typeof crudo !== "object" || crudo === null) return {};
+
+  const ganadores: Record<string, string[]> = {};
+  for (const [clave, valores] of Object.entries(crudo as Record<string, unknown>)) {
+    if (!Array.isArray(valores)) continue;
+    const nombres = valores
+      .map((v) => String(v ?? "").trim())
+      .filter((v): v is string => v.length > 0);
+    if (nombres.length > 0) ganadores[clave] = nombres;
+  }
+  return ganadores;
+}
+
 export async function actualizarGanadoresPremios(
   torneoId: string,
   _prevState: EstadoGanadores,
@@ -166,12 +186,7 @@ export async function actualizarGanadoresPremios(
   const admin = await getUsuarioAdmin();
   if (!admin) return { ok: false, error: "No autorizado." };
 
-  const ganadores: Record<string, string> = {};
-  for (const [clave, valor] of formData.entries()) {
-    if (!clave.startsWith("ganador_")) continue;
-    const nombre = String(valor).trim();
-    if (nombre) ganadores[clave.slice("ganador_".length)] = nombre;
-  }
+  const ganadores = leerGanadores(formData);
 
   const supabase = await createClient();
   const { data: torneo, error } = await supabase

@@ -150,7 +150,7 @@ export type Torneo = {
   modo_pago: ModoPagoTorneo;
   extras: string[];
   premios: PremioCategoria[];
-  premios_ganadores: Record<string, string>;
+  premios_ganadores: Record<string, string[]>;
   horarios_pdf_url: string | null;
   liga_pool_id: string | null;
   estado: EstadoTorneo;
