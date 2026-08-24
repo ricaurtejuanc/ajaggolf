@@ -50,7 +50,7 @@ export default function ProductoLandingPage() {
     <div className="bg-aftergolf-crema">
       <section className="bg-aftergolf-hero px-4 py-16 text-center">
         <Image
-          src="/Logo_AfterGolf.webp"
+          src="/Logo_AfterGolf.svg"
           alt="AfterGolf"
           width={104}
           height={104}
