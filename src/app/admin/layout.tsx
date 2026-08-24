@@ -9,18 +9,12 @@ import {
   Settings,
   Medal,
   Handshake,
-  ClipboardList,
 } from "lucide-react";
 import { getUsuarioAdmin } from "@/lib/auth";
 
 const adminLinks = [
   { href: "/admin", label: "Resumen", icon: LayoutDashboard },
   { href: "/admin/torneos", label: "Torneos", icon: Trophy },
-  {
-    href: "/admin/torneos/990d69e5-e24c-4599-8978-3967fa0e041c/resultados",
-    label: "Resultados Ranking",
-    icon: ClipboardList,
-  },
   { href: "/admin/ligas", label: "Ligas y Pool", icon: Medal },
   { href: "/admin/patrocinadores", label: "Patrocinadores", icon: Handshake },
   { href: "/admin/pedidos", label: "Pagos", icon: Wallet },
