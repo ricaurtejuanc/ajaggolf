@@ -7,6 +7,7 @@ import { MobileNav } from "./mobile-nav";
 
 const navLinks = [
   { href: "/torneos", label: "Calendario" },
+  { href: "/horarios", label: "Horarios" },
   { href: "/ligas", label: "Clasificaciones" },
   { href: "/patrocinadores", label: "Patrocinadores" },
   { href: "/contacto", label: "Contacto" },

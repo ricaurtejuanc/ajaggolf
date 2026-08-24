@@ -30,6 +30,17 @@ export async function obtenerLigaPorSlug(
   return obtenerLigaConTorneos(liga);
 }
 
+export async function listarLigasActivas(): Promise<LigaPool[]> {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("ligas_pool")
+    .select("*")
+    .eq("activa", true)
+    .order("nombre", { ascending: true });
+
+  return data ?? [];
+}
+
 /** Devuelve la liga marcada como Ranking o Pool oficial, sea cual sea su nombre/slug. */
 export async function obtenerLigaOficial(
   tipo: TipoLigaOficial,

@@ -155,3 +155,35 @@ export async function despublicarDocumento(torneoId: string, documentoId: string
 
   revalidatePath(`/admin/torneos/${torneoId}/resultados`);
 }
+
+export type EstadoGanadores = { ok: boolean; error: string | null };
+
+export async function actualizarGanadoresPremios(
+  torneoId: string,
+  _prevState: EstadoGanadores,
+  formData: FormData,
+): Promise<EstadoGanadores> {
+  const admin = await getUsuarioAdmin();
+  if (!admin) return { ok: false, error: "No autorizado." };
+
+  const ganadores: Record<string, string> = {};
+  for (const [clave, valor] of formData.entries()) {
+    if (!clave.startsWith("ganador_")) continue;
+    const nombre = String(valor).trim();
+    if (nombre) ganadores[clave.slice("ganador_".length)] = nombre;
+  }
+
+  const supabase = await createClient();
+  const { data: torneo, error } = await supabase
+    .from("torneos")
+    .update({ premios_ganadores: ganadores })
+    .eq("id", torneoId)
+    .select("slug")
+    .single();
+
+  if (error) return { ok: false, error: error.message };
+
+  revalidatePath(`/admin/torneos/${torneoId}/resultados`);
+  if (torneo) revalidatePath(`/torneos/${torneo.slug}`);
+  return { ok: true, error: null };
+}

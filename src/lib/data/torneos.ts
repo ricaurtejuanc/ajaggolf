@@ -45,11 +45,21 @@ export async function obtenerTorneoPorSlug(slug: string): Promise<Torneo | null>
   return data;
 }
 
-export async function listarTorneosConClasificacion(): Promise<Torneo[]> {
-  const supabase = await createClient();
-  const torneos = await listarTorneosPublicos();
-  if (torneos.length === 0) return [];
+export type EstadoClasificacionTorneo = { disponible: boolean; pdfUrl: string | null };
 
+/**
+ * Para cada torneo, indica si ya hay una clasificación publicada (tabla de
+ * resultados si pertenece a una liga/pool, o PDF/foto si no) y, si la hay
+ * como documento, su URL pública. Se usa para mostrar el botón "Ver
+ * clasificación" habilitado o como "Aún no disponible".
+ */
+export async function obtenerEstadoClasificacionPorTorneos(
+  torneos: Torneo[],
+): Promise<Record<string, EstadoClasificacionTorneo>> {
+  const resultado: Record<string, EstadoClasificacionTorneo> = {};
+  if (torneos.length === 0) return resultado;
+
+  const supabase = await createClient();
   const idsConLiga = torneos.filter((t) => t.liga_pool_id).map((t) => t.id);
   const idsSinLiga = torneos.filter((t) => !t.liga_pool_id).map((t) => t.id);
 
@@ -64,18 +74,41 @@ export async function listarTorneosConClasificacion(): Promise<Torneo[]> {
     idsSinLiga.length > 0
       ? supabase
           .from("resultados_pdf_uploads")
-          .select("torneo_id")
+          .select("torneo_id, storage_path")
           .eq("estado", "publicado")
           .in("torneo_id", idsSinLiga)
       : Promise.resolve({ data: [] }),
   ]);
 
-  const idsConClasificacion = new Set([
-    ...(conResultados ?? []).map((r) => r.torneo_id),
-    ...(conPdf ?? []).map((r) => r.torneo_id),
-  ]);
+  const idsConClasificacion = new Set((conResultados ?? []).map((r) => r.torneo_id));
+  const pdfPorTorneo = new Map<string, string>();
+  for (const r of conPdf ?? []) {
+    idsConClasificacion.add(r.torneo_id);
+    pdfPorTorneo.set(r.torneo_id, r.storage_path);
+  }
 
-  return torneos.filter((t) => idsConClasificacion.has(t.id));
+  for (const torneo of torneos) {
+    const path = pdfPorTorneo.get(torneo.id);
+    const pdfUrl = path ? supabase.storage.from("resultados-pdf").getPublicUrl(path).data.publicUrl : null;
+    resultado[torneo.id] = { disponible: idsConClasificacion.has(torneo.id), pdfUrl };
+  }
+
+  return resultado;
+}
+
+/**
+ * Ids de torneos que ya tienen un cuadro de salidas publicado por la app
+ * (para la página de Horarios: el resto se apoya en horarios_pdf_url).
+ */
+export async function obtenerIdsConSalidaPublicada(torneoIds: string[]): Promise<Set<string>> {
+  if (torneoIds.length === 0) return new Set();
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("salidas")
+    .select("torneo_id")
+    .eq("estado", "publicado")
+    .in("torneo_id", torneoIds);
+  return new Set((data ?? []).map((s) => s.torneo_id));
 }
 
 export async function obtenerInscritosPorTorneo(

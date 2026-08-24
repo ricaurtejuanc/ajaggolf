@@ -161,7 +161,7 @@ export default async function TorneoDetallePage({
             Premios
           </h2>
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {torneo.premios.map((cat) => {
+            {torneo.premios.map((cat, indiceCategoria) => {
               const rango = cat.categoria_unica
                 ? "Categoría única"
                 : cat.handicap_desde != null && cat.handicap_hasta != null
@@ -176,15 +176,22 @@ export default async function TorneoDetallePage({
                   <p className="text-sm font-medium text-ajag-verde-900">{cat.nombre}</p>
                   {rango ? <p className="text-xs text-ajag-gris-500">{rango}</p> : null}
                   <ul className="mt-1.5 flex flex-col gap-1">
-                    {cat.premios.map((premio) => (
-                      <li
-                        key={premio}
-                        className="flex items-center gap-1.5 text-sm text-ajag-verde-900"
-                      >
-                        <Trophy size={13} className="shrink-0 text-ajag-oro-600" />
-                        {premio}
-                      </li>
-                    ))}
+                    {cat.premios.map((premio, indicePremio) => {
+                      const ganador =
+                        torneo.premios_ganadores[`${indiceCategoria}-${indicePremio}`];
+                      return (
+                        <li
+                          key={premio}
+                          className="flex items-center gap-1.5 text-sm text-ajag-verde-900"
+                        >
+                          <Trophy size={13} className="shrink-0 text-ajag-oro-600" />
+                          {premio}
+                          {ganador ? (
+                            <span className="text-ajag-gris-500"> — {ganador}</span>
+                          ) : null}
+                        </li>
+                      );
+                    })}
                   </ul>
                 </div>
               );

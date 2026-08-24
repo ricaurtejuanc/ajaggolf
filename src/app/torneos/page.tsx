@@ -1,7 +1,12 @@
 import type { Metadata } from "next";
-import { listarTorneosPublicos, obtenerInscritosPorTorneo } from "@/lib/data/torneos";
+import {
+  listarTorneosPublicos,
+  obtenerInscritosPorTorneo,
+  obtenerEstadoClasificacionPorTorneos,
+} from "@/lib/data/torneos";
 import { createClient } from "@/lib/supabase/server";
 import { TorneoCard } from "@/components/torneos/torneo-card";
+import { TorneoDisputadoBanner } from "@/components/torneos/torneo-disputado-banner";
 import type { Torneo } from "@/types/database";
 
 export const metadata: Metadata = { title: "Calendario de torneos" };
@@ -33,10 +38,13 @@ export default async function TorneosPage() {
   const proximosPorMes = agruparPorMes(proximos);
 
   const supabase = await createClient();
-  const inscritosPorTorneo = await obtenerInscritosPorTorneo(
-    supabase,
-    proximos.map((t) => t.id),
-  );
+  const [inscritosPorTorneo, estadoClasificacion] = await Promise.all([
+    obtenerInscritosPorTorneo(
+      supabase,
+      proximos.map((t) => t.id),
+    ),
+    obtenerEstadoClasificacionPorTorneos(pasados),
+  ]);
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-10">
@@ -80,9 +88,14 @@ export default async function TorneosPage() {
               <h2 className="mb-4 font-display text-xl font-semibold text-ajag-verde-900">
                 Torneos disputados
               </h2>
-              <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+              <div className="flex flex-col gap-4">
                 {pasados.map((torneo) => (
-                  <TorneoCard key={torneo.id} torneo={torneo} />
+                  <TorneoDisputadoBanner
+                    key={torneo.id}
+                    torneo={torneo}
+                    clasificacionDisponible={estadoClasificacion[torneo.id]?.disponible ?? false}
+                    pdfUrl={estadoClasificacion[torneo.id]?.pdfUrl ?? null}
+                  />
                 ))}
               </div>
             </div>

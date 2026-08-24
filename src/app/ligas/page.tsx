@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import { listarTorneosConClasificacion } from "@/lib/data/torneos";
-import { obtenerLigaOficial } from "@/lib/data/ligas";
+import { listarTorneosPublicos, obtenerEstadoClasificacionPorTorneos } from "@/lib/data/torneos";
+import { obtenerLigaOficial, listarLigasActivas } from "@/lib/data/ligas";
 import { createClient } from "@/lib/supabase/server";
 import { ClasificacionesTabs } from "./clasificaciones-tabs";
 import type { ClasificacionPublica, TipoLigaOficial } from "@/types/database";
@@ -22,11 +22,13 @@ async function obtenerLigaConClasificacion(tipo: TipoLigaOficial) {
 }
 
 export default async function LigasPage() {
-  const [torneos, ranking, pool] = await Promise.all([
-    listarTorneosConClasificacion(),
+  const [torneos, ranking, pool, ligas] = await Promise.all([
+    listarTorneosPublicos(),
     obtenerLigaConClasificacion("ranking"),
     obtenerLigaConClasificacion("pool"),
+    listarLigasActivas(),
   ]);
+  const estadoClasificacion = await obtenerEstadoClasificacionPorTorneos(torneos);
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-10">
@@ -34,11 +36,17 @@ export default async function LigasPage() {
         Clasificaciones
       </h1>
       <p className="mt-2 max-w-2xl text-ajag-gris-500">
-        Consulta la clasificación de cada torneo, el Ranking general y el
-        Pool de AJAG.
+        Consulta la clasificación de cada torneo, el Ranking general, el Pool
+        y el resto de ligas de AJAG.
       </p>
 
-      <ClasificacionesTabs torneos={torneos} ranking={ranking} pool={pool} />
+      <ClasificacionesTabs
+        torneos={torneos}
+        estadoClasificacion={estadoClasificacion}
+        ranking={ranking}
+        pool={pool}
+        ligas={ligas}
+      />
     </div>
   );
 }

@@ -7,6 +7,7 @@ import { emparejarConInscritos, type FilaExtraidaPdf } from "@/lib/resultados/ex
 import { DocumentoUploader } from "./documento-uploader";
 import { ResultadosForm, filaVacia, type FilaResultado } from "./resultados-form";
 import { DocumentoActual } from "./documento-actual";
+import { GanadoresPremiosForm } from "./ganadores-premios-form";
 
 export const metadata: Metadata = { title: "Resultados · Admin" };
 
@@ -20,7 +21,7 @@ export default async function AdminResultadosPage({
 
   const { data: torneo } = await supabase
     .from("torneos")
-    .select("id, nombre, slug, liga_pool_id, formato_puntuacion")
+    .select("id, nombre, slug, liga_pool_id, formato_puntuacion, premios, premios_ganadores")
     .eq("id", id)
     .maybeSingle();
   if (!torneo) notFound();
@@ -52,6 +53,12 @@ export default async function AdminResultadosPage({
       </div>
 
       {documento ? <DocumentoActual torneoId={id} documento={documento} /> : null}
+
+      <GanadoresPremiosForm
+        torneoId={id}
+        premios={torneo.premios}
+        ganadoresIniciales={torneo.premios_ganadores}
+      />
 
       {torneo.liga_pool_id ? (
         <div className="mt-6">
