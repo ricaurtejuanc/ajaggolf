@@ -31,6 +31,18 @@ export function TorneoForm({
 
   return (
     <form action={formAction} className="card-ajag flex flex-col gap-5 p-6">
+      <Select
+        id="estado"
+        label="Estado"
+        defaultValue={torneo?.estado ?? "borrador"}
+        options={[
+          { value: "borrador", label: "Borrador (oculto)" },
+          { value: "publicado", label: "Publicado" },
+          { value: "cerrado", label: "Completo" },
+          { value: "finalizado", label: "Finalizado" },
+        ]}
+      />
+
       <PosterUploader
         posterUrlInicial={torneo?.poster_url ?? null}
         focalXInicial={torneo?.poster_focal_x}
@@ -222,43 +234,30 @@ export function TorneoForm({
         </div>
       ) : null}
 
-      <div className="grid gap-4 sm:grid-cols-2">
-        <Select
-          id="estado"
-          label="Estado"
-          defaultValue={torneo?.estado ?? "borrador"}
-          options={[
-            { value: "borrador", label: "Borrador (oculto)" },
-            { value: "publicado", label: "Publicado" },
-            { value: "cerrado", label: "Cerrado" },
-            { value: "finalizado", label: "Finalizado" },
-          ]}
-        />
-        <div>
-          <label htmlFor="liga_pool_id" className="text-sm font-medium text-ajag-verde-900">
-            Puntúa para Ranking/Pool
-          </label>
-          <select
-            id="liga_pool_id"
-            name="liga_pool_id"
-            disabled={ligas.length === 0}
-            defaultValue={torneo?.liga_pool_id ?? ""}
-            className="mt-1 w-full rounded-xl border border-ajag-gris-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-ajag-verde-600 disabled:bg-ajag-gris-100 disabled:text-ajag-gris-500"
-          >
-            <option value="">Ninguna</option>
-            {ligas.map((liga) => (
-              <option key={liga.id} value={liga.id}>
-                {liga.nombre}
-              </option>
-            ))}
-          </select>
-          {ligas.length === 0 ? (
-            <p className="mt-1 text-xs text-ajag-gris-500">
-              No hay ningún Ranking ni Pool dado de alta todavía. Ve a Admin → Ligas y Pool,
-              crea uno y márcalo como &quot;Ranking oficial&quot; o &quot;Pool oficial&quot;.
-            </p>
-          ) : null}
-        </div>
+      <div>
+        <label htmlFor="liga_pool_id" className="text-sm font-medium text-ajag-verde-900">
+          Puntúa para Ranking/Pool
+        </label>
+        <select
+          id="liga_pool_id"
+          name="liga_pool_id"
+          disabled={ligas.length === 0}
+          defaultValue={torneo?.liga_pool_id ?? ""}
+          className="mt-1 w-full rounded-xl border border-ajag-gris-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-ajag-verde-600 disabled:bg-ajag-gris-100 disabled:text-ajag-gris-500"
+        >
+          <option value="">Ninguna</option>
+          {ligas.map((liga) => (
+            <option key={liga.id} value={liga.id}>
+              {liga.nombre}
+            </option>
+          ))}
+        </select>
+        {ligas.length === 0 ? (
+          <p className="mt-1 text-xs text-ajag-gris-500">
+            No hay ningún Ranking ni Pool dado de alta todavía. Ve a Admin → Ligas y Pool,
+            crea uno y márcalo como &quot;Ranking oficial&quot; o &quot;Pool oficial&quot;.
+          </p>
+        ) : null}
       </div>
 
       <div>

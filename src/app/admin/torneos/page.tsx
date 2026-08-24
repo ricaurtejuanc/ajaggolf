@@ -9,7 +9,7 @@ export const metadata: Metadata = { title: "Torneos · Admin" };
 const etiquetaEstado: Record<string, string> = {
   borrador: "Borrador",
   publicado: "Publicado",
-  cerrado: "Cerrado",
+  cerrado: "Completo",
   finalizado: "Finalizado",
 };
 
