@@ -182,9 +182,9 @@ export default async function TorneoDetallePage({
                       return (
                         <li
                           key={premio}
-                          className="flex items-center gap-1.5 text-sm text-ajag-verde-900"
+                          className="flex items-start gap-1.5 text-sm text-ajag-verde-900"
                         >
-                          <Trophy size={13} className="shrink-0 text-ajag-oro-600" />
+                          <Trophy size={13} className="mt-0.5 shrink-0 text-ajag-oro-600" />
                           {premio}
                           {ganador ? (
                             <span className="text-ajag-gris-500"> — {ganador}</span>
@@ -218,9 +218,9 @@ export default async function TorneoDetallePage({
                     {seleccionados.map((o) => (
                       <li
                         key={o.value}
-                        className="flex items-center gap-1.5 text-sm text-ajag-verde-900"
+                        className="flex items-start gap-1.5 text-sm text-ajag-verde-900"
                       >
-                        <Check size={14} className="shrink-0 text-ajag-verde-700" />
+                        <Check size={14} className="mt-0.5 shrink-0 text-ajag-verde-700" />
                         {o.label}
                       </li>
                     ))}

@@ -325,13 +325,14 @@ export function TorneoForm({
                 {cat.opciones.map((opcion) => (
                   <label
                     key={opcion.value}
-                    className="flex items-center gap-2 text-sm text-ajag-gris-500"
+                    className="flex items-start gap-2 text-sm text-ajag-gris-500"
                   >
                     <input
                       type="checkbox"
                       name="extras"
                       value={opcion.value}
                       defaultChecked={torneo?.extras.includes(opcion.value)}
+                      className="mt-0.5 shrink-0"
                     />
                     {opcion.label}
                   </label>
