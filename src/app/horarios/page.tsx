@@ -62,12 +62,12 @@ function ListaHorarios({
   return (
     <div className="flex flex-col gap-3">
       {torneos.map((torneo) => {
-        const tieneSalida = idsConSalida.has(torneo.id);
+        // El PDF oficial del club manda si existe; si no, se muestran los
+        // horarios generados por la app.
         const tienePdf = Boolean(torneo.horarios_pdf_url);
-        const disponible = tieneSalida || tienePdf;
-        const href = tieneSalida
-          ? `/torneos/${torneo.slug}/salidas`
-          : (torneo.horarios_pdf_url ?? "");
+        const tieneSalida = idsConSalida.has(torneo.id);
+        const disponible = tienePdf || tieneSalida;
+        const href = tienePdf ? (torneo.horarios_pdf_url ?? "") : `/torneos/${torneo.slug}/salidas`;
 
         const contenido = (
           <>
@@ -91,8 +91,8 @@ function ListaHorarios({
           <a
             key={torneo.id}
             href={href}
-            target={tienePdf && !tieneSalida ? "_blank" : undefined}
-            rel={tienePdf && !tieneSalida ? "noreferrer" : undefined}
+            target={tienePdf ? "_blank" : undefined}
+            rel={tienePdf ? "noreferrer" : undefined}
             className="card-ajag flex items-center justify-between gap-3 p-4 transition hover:shadow-md"
           >
             {contenido}

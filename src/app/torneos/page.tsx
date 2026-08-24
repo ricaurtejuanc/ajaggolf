@@ -104,16 +104,17 @@ export default async function TorneosPage() {
                     </h3>
                     <div className="flex flex-col gap-4">
                       {grupo.torneos.map((torneo) => {
+                        // El PDF oficial del club manda si existe; si no,
+                        // se muestran los horarios generados por la app.
                         const tieneSalida = idsConSalida.has(torneo.id);
                         return (
                           <TorneoDisputadoBanner
                             key={torneo.id}
                             torneo={torneo}
-                            horariosDisponible={tieneSalida || Boolean(torneo.horarios_pdf_url)}
+                            horariosDisponible={Boolean(torneo.horarios_pdf_url) || tieneSalida}
                             horariosHref={
-                              tieneSalida
-                                ? `/torneos/${torneo.slug}/salidas`
-                                : torneo.horarios_pdf_url
+                              torneo.horarios_pdf_url ??
+                              (tieneSalida ? `/torneos/${torneo.slug}/salidas` : null)
                             }
                             clasificacionDisponible={
                               estadoClasificacion[torneo.id]?.disponible ?? false
