@@ -12,7 +12,7 @@ const etiquetaFormato: Record<Torneo["formato_puntuacion"], string> = {
 const etiquetaEstado: Record<Torneo["estado"], string> = {
   borrador: "Borrador",
   publicado: "Inscripciones abiertas",
-  cerrado: "Inscripciones cerradas",
+  cerrado: "Completo",
   finalizado: "Finalizado",
 };
 
@@ -51,9 +51,11 @@ export function TorneoCard({
         )}
         <span
           className={`absolute right-3 top-3 rounded-full px-3 py-1 text-xs font-medium ${
-            torneo.estado === "publicado" && !lleno
-              ? "bg-ajag-verde-700 text-white"
-              : "bg-white/90 text-ajag-gris-500"
+            torneo.estado === "cerrado"
+              ? "bg-ajag-rojo-600 text-white"
+              : torneo.estado === "publicado" && !lleno
+                ? "bg-ajag-verde-700 text-white"
+                : "bg-white/90 text-ajag-gris-500"
           }`}
         >
           {torneo.estado === "publicado" && lleno

@@ -34,11 +34,13 @@ function agruparPorMes(torneos: Torneo[]) {
 
 export default async function TorneosPage() {
   const torneos = await listarTorneosPublicos();
-  const proximos = torneos.filter((t) => t.estado === "publicado");
+  // "Completo" sigue en el calendario como si estuviera publicado (con su
+  // lazo rojo); solo "Finalizado" baja a Torneos disputados.
+  const proximos = torneos.filter((t) => t.estado === "publicado" || t.estado === "cerrado");
   // Los disputados van de más reciente a más antiguo (orden inverso al de
   // "próximos"), agrupados por mes igual que los próximos.
   const pasados = torneos
-    .filter((t) => t.estado !== "publicado")
+    .filter((t) => t.estado === "finalizado")
     .slice()
     .reverse();
   const proximosPorMes = agruparPorMes(proximos);
