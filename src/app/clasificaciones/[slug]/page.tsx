@@ -84,8 +84,8 @@ export default async function LigaDetallePage({
               <tr>
                 <th className="px-4 py-3">Pos.</th>
                 <th className="px-4 py-3">Jugador</th>
-                <th className="px-4 py-3">Eventos</th>
                 <th className="px-4 py-3">Puntos</th>
+                <th className="px-4 py-3">Pruebas disputadas</th>
               </tr>
             </thead>
             <tbody>
@@ -95,10 +95,10 @@ export default async function LigaDetallePage({
                   <td className="px-4 py-3 text-ajag-verde-900">
                     {c.nombre} {c.apellidos}
                   </td>
-                  <td className="px-4 py-3 text-ajag-gris-500">{c.eventos_jugados}</td>
                   <td className="px-4 py-3 font-medium text-ajag-verde-900">
                     {c.puntos_totales}
                   </td>
+                  <td className="px-4 py-3 text-ajag-gris-500">{c.eventos_jugados}</td>
                 </tr>
               ))}
             </tbody>
