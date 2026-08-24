@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { OrganizadorForm } from "@/components/god/organizador-form";
@@ -26,6 +27,11 @@ export default async function EditarOrganizadorPage({
 
   return (
     <div className="max-w-lg">
+      <div className="mb-6">
+        <Link href="/god/organizadores" className="text-sm text-ajag-gris-500 hover:underline">
+          ← Organizadores
+        </Link>
+      </div>
       <h1 className="mb-6 font-display text-2xl font-semibold text-ajag-verde-900">
         Editar organizador
       </h1>

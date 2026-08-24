@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { PatrocinadorForm } from "@/components/admin/patrocinador-form";
@@ -26,6 +27,11 @@ export default async function EditarPatrocinadorPage({
 
   return (
     <div className="max-w-lg">
+      <div className="mb-6">
+        <Link href="/admin/patrocinadores" className="text-sm text-ajag-gris-500 hover:underline">
+          ← Patrocinadores
+        </Link>
+      </div>
       <h1 className="mb-6 font-display text-2xl font-semibold text-ajag-verde-900">
         Editar patrocinador
       </h1>

@@ -22,6 +22,11 @@ export default async function EditarLigaPage({
 
   return (
     <div className="max-w-2xl">
+      <div className="mb-6">
+        <Link href="/admin/ligas" className="text-sm text-ajag-gris-500 hover:underline">
+          ← Ligas y Pool
+        </Link>
+      </div>
       <div className="mb-6 flex items-center justify-between">
         <h1 className="font-display text-2xl font-semibold text-ajag-verde-900">
           Editar liga

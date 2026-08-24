@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { TorneoForm } from "@/components/admin/torneo-form";
 import { listarCamposGolf } from "@/lib/data/campos-golf";
@@ -22,6 +23,11 @@ export default async function NuevoTorneoPage() {
 
   return (
     <div className="max-w-2xl">
+      <div className="mb-6">
+        <Link href="/admin/torneos" className="text-sm text-ajag-gris-500 hover:underline">
+          ← Torneos
+        </Link>
+      </div>
       <h1 className="mb-6 font-display text-2xl font-semibold text-ajag-verde-900">
         Nuevo torneo
       </h1>

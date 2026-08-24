@@ -98,6 +98,10 @@ export default async function TorneoDetallePage({
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-10">
+      <Link href="/torneos" className="mb-4 inline-block text-sm text-ajag-gris-500 hover:underline">
+        ← Calendario
+      </Link>
+
       {torneo.estado === "borrador" ? (
         <div className="mb-4 flex items-center gap-2 rounded-xl bg-ajag-oro-500/15 px-4 py-3 text-sm font-medium text-ajag-oro-600">
           <Eye size={16} className="shrink-0" />

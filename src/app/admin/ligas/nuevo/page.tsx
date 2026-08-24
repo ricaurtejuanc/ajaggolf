@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { LigaForm } from "@/components/admin/liga-form";
 import { crearLiga } from "../actions";
 
@@ -7,6 +8,11 @@ export const metadata: Metadata = { title: "Nueva liga · Admin" };
 export default function NuevaLigaPage() {
   return (
     <div className="max-w-2xl">
+      <div className="mb-6">
+        <Link href="/admin/ligas" className="text-sm text-ajag-gris-500 hover:underline">
+          ← Ligas y Pool
+        </Link>
+      </div>
       <h1 className="mb-6 font-display text-2xl font-semibold text-ajag-verde-900">
         Nueva liga / pool
       </h1>

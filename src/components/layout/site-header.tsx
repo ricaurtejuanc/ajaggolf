@@ -41,7 +41,7 @@ export async function SiteHeader() {
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4">
         <Link href="/" className="flex items-center gap-2 shrink-0">
           <Image src="/Logo_AJAG.svg" alt="AJAG Golf" width={40} height={40} priority />
-          <span className="text-lg font-semibold text-ajag-verde-900">
+          <span className="font-display text-lg font-semibold text-ajag-verde-900">
             AJAG Golf
           </span>
         </Link>
