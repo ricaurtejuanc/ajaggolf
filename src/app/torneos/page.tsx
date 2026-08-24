@@ -3,6 +3,7 @@ import {
   listarTorneosPublicos,
   obtenerInscritosPorTorneo,
   obtenerEstadoClasificacionPorTorneos,
+  obtenerIdsConSalidaPublicada,
 } from "@/lib/data/torneos";
 import { createClient } from "@/lib/supabase/server";
 import { TorneoCard } from "@/components/torneos/torneo-card";
@@ -44,12 +45,13 @@ export default async function TorneosPage() {
   const pasadosPorMes = agruparPorMes(pasados);
 
   const supabase = await createClient();
-  const [inscritosPorTorneo, estadoClasificacion] = await Promise.all([
+  const [inscritosPorTorneo, estadoClasificacion, idsConSalida] = await Promise.all([
     obtenerInscritosPorTorneo(
       supabase,
       proximos.map((t) => t.id),
     ),
     obtenerEstadoClasificacionPorTorneos(pasados),
+    obtenerIdsConSalidaPublicada(pasados.map((t) => t.id)),
   ]);
 
   return (
@@ -101,15 +103,24 @@ export default async function TorneosPage() {
                       {grupo.etiqueta}
                     </h3>
                     <div className="flex flex-col gap-4">
-                      {grupo.torneos.map((torneo) => (
-                        <TorneoDisputadoBanner
-                          key={torneo.id}
-                          torneo={torneo}
-                          clasificacionDisponible={
-                            estadoClasificacion[torneo.id]?.disponible ?? false
-                          }
-                        />
-                      ))}
+                      {grupo.torneos.map((torneo) => {
+                        const tieneSalida = idsConSalida.has(torneo.id);
+                        return (
+                          <TorneoDisputadoBanner
+                            key={torneo.id}
+                            torneo={torneo}
+                            horariosDisponible={tieneSalida || Boolean(torneo.horarios_pdf_url)}
+                            horariosHref={
+                              tieneSalida
+                                ? `/torneos/${torneo.slug}/salidas`
+                                : torneo.horarios_pdf_url
+                            }
+                            clasificacionDisponible={
+                              estadoClasificacion[torneo.id]?.disponible ?? false
+                            }
+                          />
+                        );
+                      })}
                     </div>
                   </div>
                 ))}

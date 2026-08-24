@@ -3,11 +3,20 @@ import { Trophy } from "lucide-react";
 import { formatearFecha } from "@/lib/format";
 import type { Torneo } from "@/types/database";
 
+const claseActiva =
+  "rounded-full bg-ajag-verde-700 px-4 py-2 text-sm font-medium text-white transition hover:bg-ajag-verde-600";
+const claseInactiva =
+  "rounded-full bg-ajag-gris-100 px-4 py-2 text-sm font-medium text-ajag-gris-500";
+
 export function TorneoDisputadoBanner({
   torneo,
+  horariosDisponible,
+  horariosHref,
   clasificacionDisponible,
 }: {
   torneo: Torneo;
+  horariosDisponible: boolean;
+  horariosHref: string | null;
   clasificacionDisponible: boolean;
 }) {
   const ganadores = torneo.premios.flatMap((cat, indiceCategoria) =>
@@ -46,17 +55,39 @@ export function TorneoDisputadoBanner({
       </div>
 
       <div className="flex shrink-0 flex-wrap items-center gap-2">
-        {clasificacionDisponible ? (
-          <Link
-            href={`/torneos/${torneo.slug}/clasificacion`}
-            className="rounded-full bg-ajag-verde-700 px-4 py-2 text-sm font-medium text-white transition hover:bg-ajag-verde-600"
+        {torneo.poster_url ? (
+          <a
+            href={torneo.poster_url}
+            target="_blank"
+            rel="noreferrer"
+            className={claseActiva}
           >
-            Ver clasificación
+            Ver cartel
+          </a>
+        ) : (
+          <span className={claseInactiva}>Ver cartel</span>
+        )}
+
+        {horariosDisponible && horariosHref ? (
+          horariosHref.startsWith("/") ? (
+            <Link href={horariosHref} className={claseActiva}>
+              Horarios
+            </Link>
+          ) : (
+            <a href={horariosHref} target="_blank" rel="noreferrer" className={claseActiva}>
+              Horarios
+            </a>
+          )
+        ) : (
+          <span className={claseInactiva}>Horarios</span>
+        )}
+
+        {clasificacionDisponible ? (
+          <Link href={`/torneos/${torneo.slug}/clasificacion`} className={claseActiva}>
+            Clasificaciones
           </Link>
         ) : (
-          <span className="rounded-full bg-ajag-gris-100 px-4 py-2 text-sm font-medium text-ajag-gris-500">
-            Clasificación aún no disponible
-          </span>
+          <span className={claseInactiva}>Clasificaciones</span>
         )}
       </div>
     </div>
