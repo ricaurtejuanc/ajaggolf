@@ -55,18 +55,9 @@ export function TorneoDisputadoBanner({
       </div>
 
       <div className="flex shrink-0 flex-wrap items-center gap-2">
-        {torneo.poster_url ? (
-          <a
-            href={torneo.poster_url}
-            target="_blank"
-            rel="noreferrer"
-            className={claseActiva}
-          >
-            Ver cartel
-          </a>
-        ) : (
-          <span className={claseInactiva}>Ver cartel</span>
-        )}
+        <Link href={`/torneos/${torneo.slug}`} className={claseActiva}>
+          Ver cartel
+        </Link>
 
         {horariosDisponible && horariosHref ? (
           horariosHref.startsWith("/") ? (
