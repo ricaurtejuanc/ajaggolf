@@ -10,15 +10,17 @@ const claseBotonInactivo =
 
 export function ClasificacionGeneralToggle({
   hayDocumento,
+  documentoUploader,
   tablaManual,
 }: {
   hayDocumento: boolean;
+  documentoUploader: ReactNode;
   tablaManual: ReactNode;
 }) {
   const [modo, setModo] = useState<"pdf" | "manual" | null>(hayDocumento ? "pdf" : null);
 
   return (
-    <div className="mt-6">
+    <div className="mb-6">
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
         <h2 className="font-display text-base font-semibold text-ajag-verde-900">
           Clasificación general
@@ -42,15 +44,12 @@ export function ClasificacionGeneralToggle({
       </div>
 
       {modo === null ? (
-        <p className="text-sm text-ajag-gris-500">
+        <div className="card-ajag p-5 text-sm text-ajag-gris-500">
           Elige cómo vas a publicar la clasificación general con todos los jugadores: subiendo un
-          PDF o foto (arriba del todo), o rellenando la tabla a mano por categorías.
-        </p>
+          PDF o foto, o rellenando la tabla a mano por categorías.
+        </div>
       ) : modo === "pdf" ? (
-        <p className="text-sm text-ajag-gris-500">
-          Sube el PDF o la foto de la clasificación arriba y publícalo desde ahí: no hace falta
-          rellenar ninguna tabla aquí abajo.
-        </p>
+        documentoUploader
       ) : (
         tablaManual
       )}

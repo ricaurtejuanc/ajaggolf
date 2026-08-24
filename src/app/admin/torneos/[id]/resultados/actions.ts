@@ -94,6 +94,10 @@ export async function guardarResultados(
       puntos: puntos[i] ? Number(puntos[i].replace(",", ".")) : null,
       golpes: golpes[i] ? Number(golpes[i].replace(",", ".")) : null,
       estado: publicar ? "publicado" : "preview",
+      // Esta tabla la rellena el admin fila a fila a mano: sí cuenta como
+      // la clasificación general publicada del torneo (a diferencia de los
+      // puestos generados solo para puntuar la liga).
+      es_clasificacion_general: true,
     }))
     .filter((f) => f.nombre_mostrado);
 
@@ -334,6 +338,10 @@ export async function guardarPosicionesLiga(
         puntos,
         golpes: null,
         estado: "publicado",
+        // Esta fila solo existe para puntuar en la liga: no cuenta como
+        // clasificación general del torneo publicada (esa es la tabla
+        // completa a mano o el PDF/foto).
+        es_clasificacion_general: false,
       });
       if (error) return { ok: false, error: error.message };
     }

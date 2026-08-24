@@ -30,67 +30,6 @@ export default async function ClasificacionPage({
   const supabase = await createClient();
   const cuadroHonor = hayCuadroDeHonor(torneo) ? <CuadroDeHonor torneo={torneo} /> : null;
 
-  if (torneo.liga_pool_id) {
-    const { data: resultados } = await supabase
-      .from("resultados")
-      .select("*")
-      .eq("torneo_id", torneo.id)
-      .eq("estado", "publicado")
-      .order("posicion", { ascending: true, nullsFirst: false });
-
-    if ((!resultados || resultados.length === 0) && !cuadroHonor) notFound();
-
-    const columnaPrincipal = torneo.formato_puntuacion === "stableford" ? "puntos" : "golpes";
-    const tablaGeneral =
-      resultados && resultados.length > 0 ? (
-        <div className="overflow-x-auto rounded-2xl border border-ajag-gris-100 bg-white">
-          <table className="w-full min-w-[480px] text-left text-sm">
-            <thead className="border-b border-ajag-gris-100 text-xs uppercase text-ajag-gris-500">
-              <tr>
-                <th className="px-4 py-3">Pos.</th>
-                <th className="px-4 py-3">Jugador</th>
-                <th className="px-4 py-3">Hcp</th>
-                <th className="px-4 py-3">
-                  {columnaPrincipal === "puntos" ? "Puntos" : "Golpes"}
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {resultados.map((r) => (
-                <tr key={r.id} className="border-b border-ajag-gris-100 last:border-0">
-                  <td className="px-4 py-3 font-medium text-ajag-verde-900">
-                    {r.posicion ?? "—"}
-                  </td>
-                  <td className="px-4 py-3 text-ajag-verde-900">{r.nombre_mostrado}</td>
-                  <td className="px-4 py-3 text-ajag-gris-500">{r.handicap ?? "—"}</td>
-                  <td className="px-4 py-3 text-ajag-gris-500">
-                    {(columnaPrincipal === "puntos" ? r.puntos : r.golpes) ?? "—"}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      ) : (
-        <div className="card-ajag p-6 text-sm text-ajag-gris-500">
-          Todavía no hay clasificación general publicada.
-        </div>
-      );
-
-    return (
-      <div className="mx-auto max-w-3xl px-4 py-10">
-        <Link href={`/torneos/${slug}`} className="text-sm text-ajag-gris-500 hover:underline">
-          ← {torneo.nombre}
-        </Link>
-        <h1 className="mt-2 flex items-center gap-2 font-display text-2xl font-semibold text-ajag-verde-900">
-          <Trophy size={22} className="text-ajag-oro-600" /> Clasificación
-        </h1>
-
-        <ClasificacionTabs general={tablaGeneral} cuadroHonor={cuadroHonor} />
-      </div>
-    );
-  }
-
   const { data: documento } = await supabase
     .from("resultados_pdf_uploads")
     .select("storage_path, nombre_archivo")
@@ -100,7 +39,23 @@ export default async function ClasificacionPage({
     .limit(1)
     .maybeSingle();
 
-  if (!documento && !cuadroHonor) notFound();
+  // La clasificación general con todos los jugadores solo sale del PDF/foto
+  // publicado, o de la tabla rellenada a mano en el admin (marcada como
+  // es_clasificacion_general). Los puestos guardados solo para puntuar en
+  // una liga/pool no cuentan aquí: esos se ven en la clasificación de la
+  // liga, no en la ficha de este torneo.
+  const { data: resultados } =
+    !documento && torneo.liga_pool_id
+      ? await supabase
+          .from("resultados")
+          .select("*")
+          .eq("torneo_id", torneo.id)
+          .eq("estado", "publicado")
+          .eq("es_clasificacion_general", true)
+          .order("posicion", { ascending: true, nullsFirst: false })
+      : { data: null };
+
+  if (!documento && (!resultados || resultados.length === 0) && !cuadroHonor) notFound();
 
   let general: ReactNode = (
     <div className="card-ajag p-6 text-sm text-ajag-gris-500">
@@ -133,6 +88,34 @@ export default async function ClasificacionPage({
         >
           Abrir en una pestaña nueva ↗
         </a>
+      </div>
+    );
+  } else if (resultados && resultados.length > 0) {
+    const columnaPrincipal = torneo.formato_puntuacion === "stableford" ? "puntos" : "golpes";
+    general = (
+      <div className="overflow-x-auto rounded-2xl border border-ajag-gris-100 bg-white">
+        <table className="w-full min-w-[480px] text-left text-sm">
+          <thead className="border-b border-ajag-gris-100 text-xs uppercase text-ajag-gris-500">
+            <tr>
+              <th className="px-4 py-3">Pos.</th>
+              <th className="px-4 py-3">Jugador</th>
+              <th className="px-4 py-3">Hcp</th>
+              <th className="px-4 py-3">{columnaPrincipal === "puntos" ? "Puntos" : "Golpes"}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {resultados.map((r) => (
+              <tr key={r.id} className="border-b border-ajag-gris-100 last:border-0">
+                <td className="px-4 py-3 font-medium text-ajag-verde-900">{r.posicion ?? "—"}</td>
+                <td className="px-4 py-3 text-ajag-verde-900">{r.nombre_mostrado}</td>
+                <td className="px-4 py-3 text-ajag-gris-500">{r.handicap ?? "—"}</td>
+                <td className="px-4 py-3 text-ajag-gris-500">
+                  {(columnaPrincipal === "puntos" ? r.puntos : r.golpes) ?? "—"}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
     );
   }

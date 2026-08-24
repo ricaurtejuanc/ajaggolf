@@ -49,26 +49,39 @@ export default async function TorneoDetallePage({
     .eq("torneo_id", torneo.id)
     .eq("estado", "publicado")
     .maybeSingle();
-  const clasificacionPromise = torneo.liga_pool_id
+  // La clasificación general puede venir de un PDF/foto publicado (para
+  // cualquier torneo) o, en los de liga/pool, de la tabla rellenada a mano
+  // (marcada como es_clasificacion_general; los puestos guardados solo
+  // para puntuar en la liga no cuentan aquí).
+  const pdfPromise = supabase
+    .from("resultados_pdf_uploads")
+    .select("id", { count: "exact", head: true })
+    .eq("torneo_id", torneo.id)
+    .eq("estado", "publicado");
+  const resultadosPromise = torneo.liga_pool_id
     ? supabase
         .from("resultados")
         .select("id", { count: "exact", head: true })
         .eq("torneo_id", torneo.id)
         .eq("estado", "publicado")
-    : supabase
-        .from("resultados_pdf_uploads")
-        .select("id", { count: "exact", head: true })
-        .eq("torneo_id", torneo.id)
-        .eq("estado", "publicado");
+        .eq("es_clasificacion_general", true)
+    : Promise.resolve({ count: 0 });
 
-  const [{ data: liga }, { data: cupo }, { data: salidaPublicada }, { count: nResultados }, categoriasExtras] =
-    await Promise.all([
-      ligaPromise,
-      cupoPromise,
-      salidaPromise,
-      clasificacionPromise,
-      obtenerCategoriasExtras(),
-    ]);
+  const [
+    { data: liga },
+    { data: cupo },
+    { data: salidaPublicada },
+    { count: nPdf },
+    { count: nResultados },
+    categoriasExtras,
+  ] = await Promise.all([
+    ligaPromise,
+    cupoPromise,
+    salidaPromise,
+    pdfPromise,
+    resultadosPromise,
+    obtenerCategoriasExtras(),
+  ]);
 
   const inscritos = cupo?.inscritos ?? 0;
   const cerrado = torneo.estado !== "publicado";
@@ -79,7 +92,7 @@ export default async function TorneoDetallePage({
   ].filter((p): p is string => p != null);
   const textoTees = partesTees.length ? partesTees.join(" · ") : "Por confirmar";
   const hayHorarios = Boolean(salidaPublicada) || Boolean(torneo.horarios_pdf_url);
-  const hayClasificacion = (nResultados ?? 0) > 0 || hayCuadroDeHonor(torneo);
+  const hayClasificacion = (nPdf ?? 0) > 0 || (nResultados ?? 0) > 0 || hayCuadroDeHonor(torneo);
   const textoPrecio =
     (torneo.precio_socio_cents != null
       ? `${formatearPrecio(torneo.precio_socio_cents)} socios · ${formatearPrecio(torneo.precio_cents)} no socios`

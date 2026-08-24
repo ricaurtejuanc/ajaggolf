@@ -251,6 +251,7 @@ export type Resultado = {
   puntos: number | null;
   golpes: number | null;
   estado: EstadoResultado;
+  es_clasificacion_general: boolean;
   pdf_origen_id: string | null;
   created_at: string;
   updated_at: string;

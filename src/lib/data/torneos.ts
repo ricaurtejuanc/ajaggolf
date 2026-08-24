@@ -62,23 +62,28 @@ export async function obtenerEstadoClasificacionPorTorneos(
 
   const supabase = await createClient();
   const idsConLiga = torneos.filter((t) => t.liga_pool_id).map((t) => t.id);
-  const idsSinLiga = torneos.filter((t) => !t.liga_pool_id).map((t) => t.id);
 
+  // El PDF/foto vale como clasificación general para cualquier torneo; la
+  // tabla de "resultados" solo cuenta en los de liga/pool, y solo si está
+  // marcada como clasificación general (no los puestos guardados solo para
+  // puntuar en la liga).
   const [{ data: conResultados }, { data: conPdf }] = await Promise.all([
     idsConLiga.length > 0
       ? supabase
           .from("resultados")
           .select("torneo_id")
           .eq("estado", "publicado")
+          .eq("es_clasificacion_general", true)
           .in("torneo_id", idsConLiga)
       : Promise.resolve({ data: [] }),
-    idsSinLiga.length > 0
-      ? supabase
-          .from("resultados_pdf_uploads")
-          .select("torneo_id")
-          .eq("estado", "publicado")
-          .in("torneo_id", idsSinLiga)
-      : Promise.resolve({ data: [] }),
+    supabase
+      .from("resultados_pdf_uploads")
+      .select("torneo_id")
+      .eq("estado", "publicado")
+      .in(
+        "torneo_id",
+        torneos.map((t) => t.id),
+      ),
   ]);
 
   const idsConClasificacion = new Set([
