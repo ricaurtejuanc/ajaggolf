@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { AlertTriangle, Search, Wand2 } from "lucide-react";
+import { AlertTriangle, Search, Wand2, X } from "lucide-react";
 import { moverJugador, autocompletarPorHandicap } from "./actions";
 
 export interface JugadorEnGrupoVista {
@@ -56,7 +56,7 @@ export function GruposGrid({
   return (
     <div className="flex flex-col gap-5">
       {conflictos.length > 0 ? (
-        <div className="card-ajag border-ajag-oro-500 bg-ajag-oro-500/10 p-4">
+        <div className="card-ajag border-ajag-oro-500 bg-ajag-oro-500/10 p-4 print:hidden">
           <p className="mb-2 flex items-center gap-2 text-sm font-semibold text-ajag-oro-600">
             <AlertTriangle size={16} /> {conflictos.length} conflicto
             {conflictos.length > 1 ? "s" : ""} de &quot;jugar con&quot; sin resolver
@@ -69,9 +69,9 @@ export function GruposGrid({
         </div>
       ) : null}
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 print:grid-cols-3 print:gap-2">
         {grupos.map((grupo) => (
-          <div key={grupo.id} className="card-ajag p-4">
+          <div key={grupo.id} className="card-ajag p-4 print:break-inside-avoid print:border print:border-ajag-gris-200 print:shadow-none">
             <div className="mb-3 flex items-center justify-between">
               <span className="font-display text-sm font-semibold text-ajag-verde-900">
                 Grupo {grupo.numeroGrupo}
@@ -107,7 +107,7 @@ export function GruposGrid({
                       disabled={pending}
                       value={grupo.id}
                       onChange={(e) => mover(j.inscripcionId, e.target.value)}
-                      className="rounded-lg border border-ajag-gris-200 bg-white px-2 py-1 text-xs outline-none"
+                      className="rounded-lg border border-ajag-gris-200 bg-white px-2 py-1 text-xs outline-none print:hidden"
                     >
                       {grupos.map((g) => (
                         <option key={g.id} value={g.id}>
@@ -130,7 +130,7 @@ export function GruposGrid({
       </div>
 
       {sinAsignar.length > 0 ? (
-        <div className="card-ajag p-4">
+        <div className="card-ajag p-4 print:hidden">
           <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
             <p className="font-display text-sm font-semibold text-ajag-verde-900">
               Sin asignar ({sinAsignar.length})
@@ -160,8 +160,18 @@ export function GruposGrid({
               value={busqueda}
               onChange={(e) => setBusqueda(e.target.value)}
               placeholder="Buscar jugador..."
-              className="w-full rounded-lg border border-ajag-gris-200 bg-white py-2 pl-9 pr-3 text-sm outline-none focus:border-ajag-verde-600"
+              className="w-full rounded-lg border border-ajag-gris-200 bg-white py-2 pl-9 pr-8 text-sm outline-none focus:border-ajag-verde-600"
             />
+            {busqueda ? (
+              <button
+                type="button"
+                aria-label="Borrar filtro"
+                onClick={() => setBusqueda("")}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-ajag-gris-500 hover:text-ajag-rojo-600"
+              >
+                <X size={15} />
+              </button>
+            ) : null}
           </div>
           {sinAsignarFiltrados.length === 0 ? (
             <p className="py-2 text-center text-xs text-ajag-gris-500">

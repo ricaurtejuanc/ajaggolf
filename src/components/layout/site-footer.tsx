@@ -3,7 +3,7 @@ import Image from "next/image";
 
 export function SiteFooter() {
   return (
-    <footer className="mt-16 border-t border-ajag-gris-100 bg-ajag-verde-50">
+    <footer className="mt-16 border-t border-ajag-gris-100 bg-ajag-verde-50 print:hidden">
       <div className="mx-auto grid max-w-6xl gap-8 px-4 py-10 sm:grid-cols-3">
         <div className="flex items-center gap-2">
           <Image src="/Logo_AJAG.svg" alt="AJAG Golf" width={36} height={36} />

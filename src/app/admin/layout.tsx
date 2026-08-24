@@ -28,7 +28,7 @@ export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
 
   return (
     <div className="mx-auto flex max-w-6xl gap-6 px-4 py-8">
-      <aside className="hidden w-56 shrink-0 md:block">
+      <aside className="hidden w-56 shrink-0 md:block print:hidden">
         <div className="sticky top-24 flex flex-col gap-1">
           <div className="mb-3 flex items-center gap-2 px-2">
             <Image src="/Logo_AJAG.svg" alt="AJAG" width={28} height={28} />
@@ -53,7 +53,7 @@ export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
       </aside>
 
       <div className="min-w-0 flex-1">
-        <nav className="mb-4 grid grid-cols-2 gap-2 sm:grid-cols-3 md:hidden">
+        <nav className="mb-4 grid grid-cols-2 gap-2 sm:grid-cols-3 md:hidden print:hidden">
           {adminLinks.map((link) => (
             <Link
               key={link.href}

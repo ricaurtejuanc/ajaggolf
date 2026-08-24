@@ -7,6 +7,7 @@ import { GenerarSalidasForm } from "./generar-form";
 import { GruposGrid, type GrupoVista, type JugadorEnGrupoVista } from "./grupos-grid";
 import { PublicarButton } from "./publicar-button";
 import { HorariosPdfUploader } from "./horarios-pdf-uploader";
+import { ExportarSalidasButtons } from "./exportar-salidas-buttons";
 import type { Salida } from "@/types/database";
 
 export const metadata: Metadata = { title: "Salidas · Admin" };
@@ -110,7 +111,7 @@ export default async function AdminSalidasPage({
 
   return (
     <div>
-      <div className="mb-6 flex items-center justify-between">
+      <div className="mb-6 flex items-center justify-between print:hidden">
         <div>
           <Link href="/admin/torneos" className="text-sm text-ajag-gris-500 hover:underline">
             ← Torneos
@@ -124,17 +125,28 @@ export default async function AdminSalidasPage({
         ) : null}
       </div>
 
-      <GenerarSalidasForm
-        torneoId={id}
-        modoSalidaDefecto={torneo.modo_salida}
-        modoAsignacionDefecto={torneo.modo_asignacion_salida}
-        teesConsecutivoDefecto={torneo.tees_consecutivo}
-        salidaExistente={salida}
-        nJugadoresConfirmados={jugadoresConfirmados.length}
-      />
+      <h1 className="mb-4 hidden font-display text-2xl font-semibold text-ajag-verde-900 print:block">
+        Salidas — {torneo.nombre}
+      </h1>
+
+      <div className="print:hidden">
+        <GenerarSalidasForm
+          torneoId={id}
+          modoSalidaDefecto={torneo.modo_salida}
+          modoAsignacionDefecto={torneo.modo_asignacion_salida}
+          teesConsecutivoDefecto={torneo.tees_consecutivo}
+          salidaExistente={salida}
+          nJugadoresConfirmados={jugadoresConfirmados.length}
+        />
+      </div>
 
       {salida && grupos.length > 0 ? (
         <div className="mt-6">
+          <ExportarSalidasButtons
+            torneoSlug={torneo.slug}
+            grupos={grupos}
+            jugadoresPorGrupo={jugadoresPorGrupo}
+          />
           <GruposGrid
             torneoId={id}
             grupos={grupos}
@@ -144,7 +156,7 @@ export default async function AdminSalidasPage({
         </div>
       ) : null}
 
-      <div className="mt-6">
+      <div className="mt-6 print:hidden">
         <HorariosPdfUploader torneoId={id} pdfUrlInicial={torneo.horarios_pdf_url} />
       </div>
     </div>

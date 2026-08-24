@@ -38,7 +38,7 @@ export async function SiteHeader() {
   }
 
   return (
-    <header className="sticky top-0 z-40 border-b border-ajag-gris-100 bg-white/90 backdrop-blur">
+    <header className="sticky top-0 z-40 border-b border-ajag-gris-100 bg-white/90 backdrop-blur print:hidden">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4">
         <Link href="/" className="flex items-center gap-2 shrink-0">
           <Image src="/Logo_AJAG.svg" alt="AJAG Golf" width={40} height={40} priority />
