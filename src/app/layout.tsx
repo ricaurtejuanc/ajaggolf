@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { headers } from "next/headers";
 import { Inter, Fraunces } from "next/font/google";
 import "./globals.css";
 import { SiteHeader } from "@/components/layout/site-header";
@@ -25,7 +26,11 @@ export const metadata: Metadata = {
     "Calendario de torneos, inscripciones, salidas y clasificaciones de AJAG, la Asociación de Jugadores Amateur de Golf.",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default async function RootLayout({ children }: LayoutProps<"/">) {
+  // La landing de producto (torneos.aftergolf.es en su raíz) no es el
+  // sitio de ningún organizador: no lleva la cabecera/pie de AJAG.
+  const esLandingProducto = (await headers()).get("x-show-landing") === "1";
+
   return (
     <html
       lang="es"
@@ -33,9 +38,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     >
       <body className="flex min-h-full flex-col bg-background text-foreground">
         <VisitTracker />
-        <SiteHeader />
+        {esLandingProducto ? null : <SiteHeader />}
         <main className="flex-1">{children}</main>
-        <SiteFooter />
+        {esLandingProducto ? null : <SiteFooter />}
       </body>
     </html>
   );
