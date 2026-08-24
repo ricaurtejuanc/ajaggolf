@@ -33,11 +33,11 @@ export function CuadroDeHonor({ torneo }: { torneo: Torneo }) {
         {categorias.map((cat) => (
           <div key={cat.nombre}>
             <p className="text-sm font-medium text-ajag-verde-900">{cat.nombre}</p>
-            <ul className="mt-1.5 flex flex-col gap-1.5">
+            <ul className="mt-1.5 flex flex-col gap-2.5">
               {cat.premios.map((p) => (
-                <li key={p.premio} className="text-sm text-ajag-verde-900">
-                  <span className="text-ajag-gris-500">{p.premio}: </span>
-                  <span className="font-medium">{p.ganadores.join(", ")}</span>
+                <li key={p.premio} className="text-sm">
+                  <p className="text-ajag-gris-500">{p.premio}</p>
+                  <p className="font-medium text-ajag-verde-900">{p.ganadores.join(", ")}</p>
                 </li>
               ))}
             </ul>
