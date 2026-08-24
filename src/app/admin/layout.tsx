@@ -53,15 +53,15 @@ export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
       </aside>
 
       <div className="min-w-0 flex-1">
-        <nav className="mb-4 flex gap-3 overflow-x-auto md:hidden">
+        <nav className="mb-4 grid grid-cols-2 gap-2 sm:grid-cols-3 md:hidden">
           {adminLinks.map((link) => (
             <Link
               key={link.href}
               href={link.href}
-              className="flex shrink-0 items-center gap-1.5 rounded-full border border-ajag-gris-200 px-3 py-1.5 text-xs font-medium text-ajag-verde-900"
+              className="flex items-center gap-1.5 rounded-xl border border-ajag-gris-200 px-3 py-2 text-xs font-medium text-ajag-verde-900"
             >
-              <link.icon size={14} />
-              {link.label}
+              <link.icon size={14} className="shrink-0" />
+              <span className="truncate">{link.label}</span>
             </Link>
           ))}
         </nav>
