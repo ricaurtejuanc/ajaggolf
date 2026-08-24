@@ -1,40 +1,89 @@
 "use client";
 
 import { useState } from "react";
-import { Download, Printer } from "lucide-react";
+import { Download, FileDown, Printer } from "lucide-react";
 import type { GrupoVista, JugadorEnGrupoVista } from "./grupos-grid";
 
 export function ExportarSalidasButtons({
+  torneoNombre,
   torneoSlug,
   grupos,
   jugadoresPorGrupo,
 }: {
+  torneoNombre: string;
   torneoSlug: string;
   grupos: GrupoVista[];
   jugadoresPorGrupo: Record<string, JugadorEnGrupoVista[]>;
 }) {
   const [exportando, setExportando] = useState(false);
+  const [generandoPdf, setGenerandoPdf] = useState(false);
+
+  function filasSalida() {
+    return grupos.flatMap((g) =>
+      (jugadoresPorGrupo[g.id] ?? []).map((j) => ({
+        grupo: g.numeroGrupo,
+        hora: g.horaSalida ? g.horaSalida.slice(0, 5) : "",
+        hoyo: g.hoyoSalida,
+        jugador: j.nombre,
+        licencia: j.licenciaFederativa ?? "",
+        handicap: j.handicap ?? "",
+      })),
+    );
+  }
 
   async function exportarXls() {
     setExportando(true);
     try {
       const XLSX = await import("xlsx");
-      const filas = grupos.flatMap((g) =>
-        (jugadoresPorGrupo[g.id] ?? []).map((j) => ({
-          Grupo: g.numeroGrupo,
-          Hora: g.horaSalida ? g.horaSalida.slice(0, 5) : "",
-          Hoyo: g.hoyoSalida,
-          Jugador: j.nombre,
-          Licencia: j.licenciaFederativa ?? "",
-          Hándicap: j.handicap ?? "",
-        })),
-      );
+      const filas = filasSalida().map((f) => ({
+        Grupo: f.grupo,
+        Hora: f.hora,
+        Hoyo: f.hoyo,
+        Jugador: f.jugador,
+        Licencia: f.licencia,
+        Hándicap: f.handicap,
+      }));
       const hoja = XLSX.utils.json_to_sheet(filas);
       const libro = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(libro, hoja, "Salidas");
       XLSX.writeFile(libro, `salidas-${torneoSlug}.xlsx`);
     } finally {
       setExportando(false);
+    }
+  }
+
+  async function exportarPdf() {
+    setGenerandoPdf(true);
+    try {
+      const { jsPDF } = await import("jspdf");
+      const autoTable = (await import("jspdf-autotable")).default;
+      const filas = filasSalida();
+
+      const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
+
+      // Con muchos jugadores, letra y márgenes más pequeños para que quepa
+      // todo en una sola página (el club necesita el cuadro completo de
+      // un vistazo, no repartido en varias hojas).
+      const n = filas.length || 1;
+      const fontSize = Math.max(5, Math.min(10, 900 / n));
+      const cellPadding = Math.max(0.5, Math.min(2, 120 / n));
+
+      doc.setFontSize(13);
+      doc.text(`Cuadro de salidas — ${torneoNombre}`, 14, 12);
+
+      autoTable(doc, {
+        startY: 18,
+        margin: { left: 10, right: 10 },
+        head: [["Grupo", "Hora", "Hoyo", "Jugador", "Licencia", "Hándicap"]],
+        body: filas.map((f) => [f.grupo, f.hora, f.hoyo, f.jugador, f.licencia, f.handicap]),
+        styles: { fontSize, cellPadding },
+        headStyles: { fillColor: [31, 77, 51] },
+        theme: "grid",
+      });
+
+      doc.save(`salidas-${torneoSlug}.pdf`);
+    } finally {
+      setGenerandoPdf(false);
     }
   }
 
@@ -53,12 +102,21 @@ export function ExportarSalidasButtons({
       </button>
       <button
         type="button"
+        onClick={exportarPdf}
+        disabled={generandoPdf || !hayJugadores}
+        className="flex items-center gap-2 rounded-full bg-ajag-verde-700 px-4 py-2 text-sm font-medium text-white transition hover:bg-ajag-verde-600 disabled:cursor-not-allowed disabled:bg-ajag-gris-200 disabled:text-ajag-gris-500"
+      >
+        <FileDown size={15} />
+        {generandoPdf ? "Generando…" : "Descargar PDF"}
+      </button>
+      <button
+        type="button"
         onClick={() => window.print()}
         disabled={!hayJugadores}
         className="flex items-center gap-2 rounded-full border border-ajag-verde-700 px-4 py-2 text-sm font-medium text-ajag-verde-700 transition hover:bg-ajag-verde-50 disabled:cursor-not-allowed disabled:border-ajag-gris-200 disabled:text-ajag-gris-500"
       >
         <Printer size={15} />
-        Imprimir / PDF
+        Imprimir
       </button>
     </div>
   );

@@ -150,6 +150,7 @@ export default async function AdminSalidasPage({
       {salida && grupos.length > 0 ? (
         <div className="mt-6">
           <ExportarSalidasButtons
+            torneoNombre={torneo.nombre}
             torneoSlug={torneo.slug}
             grupos={grupos}
             jugadoresPorGrupo={jugadoresPorGrupo}
