@@ -62,6 +62,15 @@ export default async function AdminResultadosPage({
   for (const [inscripcionId, fila] of sugerenciasPdf) {
     sugerenciasPosicion[inscripcionId] = fila.posicion;
   }
+  // Las posiciones ya guardadas en la tabla manual (a mano o generadas con
+  // "Generar clasificación") son más fiables que una sugerencia del PDF, así
+  // que mandan si existen: así el cuadro de honor también se autocompleta a
+  // partir de la clasificación general, no solo de un PDF/foto subido.
+  for (const r of resultados ?? []) {
+    if (r.inscripcion_id && r.posicion != null) {
+      sugerenciasPosicion[r.inscripcion_id] = r.posicion;
+    }
+  }
 
   return (
     <div>

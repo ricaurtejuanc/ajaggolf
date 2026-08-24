@@ -6,6 +6,32 @@ import { actualizarGanadoresPremios, type EstadoGanadores } from "./actions";
 import type { InscritoParaResultado } from "@/lib/data/resultados";
 import type { PremioCategoria } from "@/types/database";
 
+// Detecta a qué puesto se refiere el nombre de un premio ("Premio primer
+// clasificado", "3er Clasificado", "4º Clasificado"...) para poder sugerir
+// automáticamente al mejor candidato de esa categoría en ese puesto. Los
+// premios sin puesto claro (Scratch, Mejor Dama, Drive más largo...) no
+// generan ninguna coincidencia y se quedan sin sugerir, como hasta ahora.
+const ORDINALES: [RegExp, number][] = [
+  [/\bprimer|\b1\s*er\b|1º/i, 1],
+  [/\bsegundo|\b2\s*d?o\b|2º/i, 2],
+  [/\btercer|\b3\s*er\b|3º/i, 3],
+  [/\bcuart|\b4\s*to\b|4º/i, 4],
+  [/\bquint|\b5\s*to\b|5º/i, 5],
+  [/\bsext|\b6\s*to\b|6º/i, 6],
+  [/\bs[eé]ptim|\b7\s*mo\b|7º/i, 7],
+  [/\boctav|\b8\s*vo\b|8º/i, 8],
+  [/\bnoven|\b9\s*no\b|9º/i, 9],
+  [/\bd[eé]cim|\b10\s*mo\b|10º/i, 10],
+];
+
+function detectarPosicion(nombre: string): number | null {
+  for (const [regex, posicion] of ORDINALES) {
+    if (regex.test(nombre)) return posicion;
+  }
+  const numero = nombre.match(/\b(\d{1,2})\b/);
+  return numero ? parseInt(numero[1], 10) : null;
+}
+
 export function GanadoresPremiosForm({
   torneoId,
   premios,
@@ -25,14 +51,17 @@ export function GanadoresPremiosForm({
     error: null,
   });
   const [premiosState, setPremiosState] = useState<PremioCategoria[]>(premios);
-  const haySugerenciasPdf = Object.keys(sugerenciasPosicion).length > 0;
+  const [porHoyo, setPorHoyo] = useState<Record<number, { nombre: string; hoyo: string }>>({});
+  const haySugerenciasPosicion = Object.keys(sugerenciasPosicion).length > 0;
   const [ganadores, setGanadores] = useState<Record<string, string[]>>(() => {
     const inicial: Record<string, string[]> = {};
     premios.forEach((cat, indiceCategoria) => {
-      // Mejor candidato de la categoría según la clasificación del PDF/foto
-      // subido: solo se usa para sugerir el primer premio (normalmente "1er
-      // clasificado"); el resto de premios (2º, drive más largo...) no se
-      // pueden inferir de forma fiable de una clasificación general.
+      // Candidatos de la categoría ordenados por su puesto en la
+      // clasificación general (de la tabla manual, de "Generar
+      // clasificación" o del PDF/foto subido): candidatos[0] es el mejor de
+      // la categoría, candidatos[1] el segundo, etc. Así se puede sugerir
+      // cualquier premio con puesto (no solo el primero) sin mezclar
+      // puestos de categorías distintas.
       const candidatos = confirmados
         .filter((c) => {
           if (cat.categoria_unica) return true;
@@ -44,16 +73,20 @@ export function GanadoresPremiosForm({
         .filter((c) => sugerenciasPosicion[c.inscripcionId] != null)
         .sort((a, b) => sugerenciasPosicion[a.inscripcionId] - sugerenciasPosicion[b.inscripcionId]);
 
-      cat.premios.forEach((_, indicePremio) => {
+      cat.premios.forEach((nombrePremio, indicePremio) => {
         const clave = `${indiceCategoria}-${indicePremio}`;
         const valores = ganadoresIniciales[clave];
         if (valores && valores.length > 0) {
           inicial[clave] = valores;
-        } else if (indicePremio === 0 && candidatos[0]) {
-          inicial[clave] = [candidatos[0].nombreCompleto];
-        } else {
-          inicial[clave] = [""];
+          return;
         }
+        // Premios sin puesto detectable en el nombre (Scratch, Drive más
+        // largo, Bola más cercana...) no se sugieren, salvo el primer
+        // premio de la categoría si no tiene nombre reconocible: se asume
+        // que es el "1er clasificado" por convención.
+        const puesto = detectarPosicion(nombrePremio) ?? (indicePremio === 0 ? 1 : null);
+        const candidato = puesto != null ? candidatos[puesto - 1] : undefined;
+        inicial[clave] = candidato ? [candidato.nombreCompleto] : [""];
       });
     });
     return inicial;
@@ -92,12 +125,25 @@ export function GanadoresPremiosForm({
   // Los premios nuevos siempre se añaden al final de la categoría: las claves
   // de ganadores usan el índice del premio, así que insertar o reordenar en
   // medio rompería la asignación de ganadores ya guardados.
-  function anadirPremio(indiceCategoria: number) {
+  function anadirPremio(indiceCategoria: number, nombre = "") {
     setPremiosState((prev) =>
       prev.map((cat, i) =>
-        i === indiceCategoria ? { ...cat, premios: [...cat.premios, ""] } : cat,
+        i === indiceCategoria ? { ...cat, premios: [...cat.premios, nombre] } : cat,
       ),
     );
+  }
+
+  // Para premios que se repiten por hoyo (drive más largo, bola más cercana
+  // en cada par 3...) basta con escribir el nombre base una vez: cada
+  // "Añadir" solo pide el número de hoyo y lo va anexando al nombre, así
+  // que se pueden meter varios seguidos sin reescribir el nombre entero.
+  function anadirPorHoyo(indiceCategoria: number) {
+    const datos = porHoyo[indiceCategoria];
+    const nombreBase = (datos?.nombre ?? "").trim();
+    const hoyo = (datos?.hoyo ?? "").trim();
+    if (!nombreBase) return;
+    anadirPremio(indiceCategoria, hoyo ? `${nombreBase} — Hoyo ${hoyo}` : nombreBase);
+    setPorHoyo((prev) => ({ ...prev, [indiceCategoria]: { nombre: nombreBase, hoyo: "" } }));
   }
 
   return (
@@ -112,10 +158,10 @@ export function GanadoresPremiosForm({
         Se mostrará públicamente en la ficha del torneo y en la clasificación.
       </p>
 
-      {haySugerenciasPdf ? (
+      {haySugerenciasPosicion ? (
         <p className="mb-4 text-xs text-ajag-verde-700">
-          Hemos propuesto el primer clasificado de cada categoría a partir del PDF/foto
-          subido. Revisa que sea correcto antes de guardar.
+          Hemos propuesto ganadores según la clasificación general (PDF/foto o tabla manual).
+          Revisa que sea correcto antes de guardar.
         </p>
       ) : null}
 
@@ -196,6 +242,48 @@ export function GanadoresPremiosForm({
               >
                 <Plus size={13} /> Añadir premio en {cat.nombre}
               </button>
+
+              <div className="flex flex-wrap items-center gap-2 rounded-lg bg-ajag-gris-50 p-2">
+                <span className="text-xs text-ajag-gris-500">Premio por hoyo (drive más largo, bola más cercana...):</span>
+                <input
+                  value={porHoyo[indiceCategoria]?.nombre ?? ""}
+                  onChange={(e) =>
+                    setPorHoyo((prev) => ({
+                      ...prev,
+                      [indiceCategoria]: { nombre: e.target.value, hoyo: prev[indiceCategoria]?.hoyo ?? "" },
+                    }))
+                  }
+                  placeholder="Ej. Bola más cercana"
+                  className="w-44 rounded-lg border border-ajag-gris-200 bg-white px-2 py-1 text-xs outline-none focus:border-ajag-verde-600"
+                />
+                <input
+                  value={porHoyo[indiceCategoria]?.hoyo ?? ""}
+                  onChange={(e) =>
+                    setPorHoyo((prev) => ({
+                      ...prev,
+                      [indiceCategoria]: { nombre: prev[indiceCategoria]?.nombre ?? "", hoyo: e.target.value },
+                    }))
+                  }
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      anadirPorHoyo(indiceCategoria);
+                    }
+                  }}
+                  type="number"
+                  min={1}
+                  max={18}
+                  placeholder="Hoyo"
+                  className="w-16 rounded-lg border border-ajag-gris-200 bg-white px-2 py-1 text-xs outline-none focus:border-ajag-verde-600"
+                />
+                <button
+                  type="button"
+                  onClick={() => anadirPorHoyo(indiceCategoria)}
+                  className="flex items-center gap-1 rounded-lg bg-ajag-oro-500/20 px-2 py-1 text-xs font-medium text-ajag-oro-600 hover:bg-ajag-oro-500/30"
+                >
+                  <Plus size={12} /> Añadir
+                </button>
+              </div>
             </div>
           </div>
         ))}

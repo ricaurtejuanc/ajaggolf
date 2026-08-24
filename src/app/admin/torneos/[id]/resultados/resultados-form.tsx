@@ -45,6 +45,38 @@ export function ResultadosForm({
 
   const columnaPrincipal = formatoPuntuacion === "stableford" ? "puntos" : "golpes";
 
+  // Calcula la posición de cada jugador a partir de su puntuación (más
+  // puntos stableford primero, menos golpes primero en el resto de
+  // formatos) en vez de que el admin la escriba a mano fila a fila.
+  // Empates comparten posición (ranking 1-2-2-4); retirados, no
+  // presentados o sin puntuación todavía se quedan sin posición.
+  function generarClasificacion() {
+    const ascendente = columnaPrincipal === "golpes";
+    const clasificables = filas
+      .map((f) => ({ fila: f, valor: parseFloat(f[columnaPrincipal].replace(",", ".")) }))
+      .filter((f) => f.fila.estadoJuego === "" && !Number.isNaN(f.valor));
+
+    clasificables.sort((a, b) => (ascendente ? a.valor - b.valor : b.valor - a.valor));
+
+    const posicionPorKey = new Map<number, number>();
+    let posicionActual = 0;
+    let valorAnterior: number | null = null;
+    clasificables.forEach((c, indice) => {
+      if (valorAnterior === null || c.valor !== valorAnterior) {
+        posicionActual = indice + 1;
+        valorAnterior = c.valor;
+      }
+      posicionPorKey.set(c.fila.key, posicionActual);
+    });
+
+    setFilas((prev) =>
+      prev.map((f) => ({
+        ...f,
+        posicion: posicionPorKey.has(f.key) ? String(posicionPorKey.get(f.key)) : "",
+      })),
+    );
+  }
+
   function categoriaDeFila(fila: FilaResultado): string {
     const hcp = parseFloat(fila.handicap.replace(",", "."));
     const cat = categorias.find((c) => {
@@ -200,13 +232,27 @@ export function ResultadosForm({
         </div>
       ))}
 
-      <button
-        type="button"
-        onClick={() => setFilas((prev) => [...prev, filaVacia()])}
-        className="flex w-fit items-center gap-1 text-sm font-medium text-ajag-verde-700 hover:underline"
-      >
-        <Plus size={16} /> Añadir fila
-      </button>
+      <div className="flex flex-wrap items-center gap-4">
+        <button
+          type="button"
+          onClick={() => setFilas((prev) => [...prev, filaVacia()])}
+          className="flex w-fit items-center gap-1 text-sm font-medium text-ajag-verde-700 hover:underline"
+        >
+          <Plus size={16} /> Añadir fila
+        </button>
+        <button
+          type="button"
+          onClick={generarClasificacion}
+          className="flex w-fit items-center gap-1.5 rounded-full bg-ajag-oro-500/20 px-3 py-1.5 text-sm font-medium text-ajag-oro-600 hover:bg-ajag-oro-500/30"
+        >
+          Generar clasificación
+        </button>
+      </div>
+      <p className="-mt-3 text-xs text-ajag-gris-500">
+        Calcula la posición de todos a partir de {columnaPrincipal === "puntos" ? "los puntos" : "los golpes"}
+        {" "}(los retirados, no presentados o sin puntuación quedan sin posición). Revisa antes
+        de guardar.
+      </p>
 
       {estadoBorrador.error ? (
         <p className="text-sm text-ajag-rojo-600">{estadoBorrador.error}</p>
