@@ -38,15 +38,9 @@ export function TorneoDisputadoBanner({
         </Link>
 
         {horariosDisponible && horariosHref ? (
-          horariosHref.startsWith("/") ? (
-            <Link href={horariosHref} className={claseActiva}>
-              Horarios
-            </Link>
-          ) : (
-            <a href={horariosHref} target="_blank" rel="noreferrer" className={claseActiva}>
-              Horarios
-            </a>
-          )
+          <Link href={horariosHref} className={claseActiva}>
+            Horarios
+          </Link>
         ) : (
           <span className={claseInactiva}>Horarios</span>
         )}
