@@ -345,10 +345,6 @@ export function TorneoForm({
 
       <PremiosEditor premiosIniciales={torneo?.premios ?? []} />
 
-      <p className="text-xs text-ajag-gris-500">
-        Los horarios en PDF se suben desde la sección de Salidas del torneo, una vez creado.
-      </p>
-
       {state.error ? <p className="text-sm text-ajag-rojo-600">{state.error}</p> : null}
 
       <button
