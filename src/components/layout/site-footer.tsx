@@ -37,7 +37,7 @@ export function SiteFooter() {
         <br />
         Powered by{" "}
         <a
-          href="https://www.aftergolf.es"
+          href="https://www.torneos.aftergolf.es"
           target="_blank"
           rel="noreferrer"
           className="font-medium hover:text-ajag-verde-700 hover:underline"
