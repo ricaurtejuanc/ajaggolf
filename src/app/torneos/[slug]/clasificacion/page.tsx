@@ -78,7 +78,7 @@ export default async function ClasificacionPage({
         {esPdf ? (
           <div className="overflow-hidden rounded-2xl border border-ajag-gris-100">
             <iframe
-              src={`${data.publicUrl}#toolbar=0&navpanes=0&scrollbar=0&view=FitH`}
+              src={`${data.publicUrl}#toolbar=0&navpanes=0&scrollbar=0&view=Fit`}
               className="h-[75vh] w-full pointer-events-none"
               title="Clasificación"
             />
