@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { CalendarDays, MapPin, Flag, Coins, Users, Trophy, Check } from "lucide-react";
+import { CalendarDays, MapPin, Flag, Coins, Users, Trophy, Check, Eye } from "lucide-react";
 import { obtenerTorneoPorSlug } from "@/lib/data/torneos";
 import { createClient } from "@/lib/supabase/server";
 import { formatearFecha, formatearHora, formatearPrecio } from "@/lib/format";
@@ -84,6 +84,14 @@ export default async function TorneoDetallePage({
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-10">
+      {torneo.estado === "borrador" ? (
+        <div className="mb-4 flex items-center gap-2 rounded-xl bg-ajag-oro-500/15 px-4 py-3 text-sm font-medium text-ajag-oro-600">
+          <Eye size={16} className="shrink-0" />
+          Vista previa: este torneo está en borrador y todavía no es público. Solo tú, como
+          admin, puedes verlo aquí.
+        </div>
+      ) : null}
+
       {torneo.poster_url ? (
         <PosterLightbox
           posterUrl={torneo.poster_url}

@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { getUsuarioAdmin } from "@/lib/auth";
 import type { Torneo } from "@/types/database";
 
 export async function listarTorneosPublicos(): Promise<Torneo[]> {
@@ -26,15 +27,21 @@ export async function listarProximosTorneos(limite = 3): Promise<Torneo[]> {
   return data ?? [];
 }
 
+/**
+ * Un admin puede ver la ficha de un torneo en cualquier estado (incluido
+ * "borrador"), para revisar cómo queda antes de publicarlo. Para el resto
+ * de visitantes, solo torneos ya publicados/cerrados/finalizados.
+ */
 export async function obtenerTorneoPorSlug(slug: string): Promise<Torneo | null> {
   const supabase = await createClient();
-  const { data } = await supabase
-    .from("torneos")
-    .select("*")
-    .eq("slug", slug)
-    .in("estado", ["publicado", "cerrado", "finalizado"])
-    .maybeSingle();
+  const admin = await getUsuarioAdmin();
 
+  let query = supabase.from("torneos").select("*").eq("slug", slug);
+  if (!admin) {
+    query = query.in("estado", ["publicado", "cerrado", "finalizado"]);
+  }
+
+  const { data } = await query.maybeSingle();
   return data;
 }
 
