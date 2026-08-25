@@ -15,7 +15,7 @@ export async function marcarConsultaLeida(consultaId: string) {
   revalidatePath("/admin/consultas");
 }
 
-export type EstadoRespuestaConsulta = { ok: boolean; error: string | null };
+export type EstadoRespuestaConsulta = { ok: boolean; error: string | null; aviso: string | null };
 
 export async function responderConsulta(
   consultaId: string,
@@ -23,10 +23,10 @@ export async function responderConsulta(
   formData: FormData,
 ): Promise<EstadoRespuestaConsulta> {
   const admin = await getUsuarioAdmin();
-  if (!admin) return { ok: false, error: "No autorizado." };
+  if (!admin) return { ok: false, error: "No autorizado.", aviso: null };
 
   const respuesta = String(formData.get("respuesta") ?? "").trim();
-  if (!respuesta) return { ok: false, error: "Escribe una respuesta." };
+  if (!respuesta) return { ok: false, error: "Escribe una respuesta.", aviso: null };
 
   const supabase = await createClient();
   const { data: consulta } = await supabase
@@ -34,15 +34,15 @@ export async function responderConsulta(
     .select("nombre, email, mensaje")
     .eq("id", consultaId)
     .maybeSingle();
-  if (!consulta) return { ok: false, error: "Consulta no encontrada." };
+  if (!consulta) return { ok: false, error: "Consulta no encontrada.", aviso: null };
 
   const { error } = await supabase
     .from("consultas_contacto")
     .update({ respuesta, respondido_at: new Date().toISOString(), leido: true })
     .eq("id", consultaId);
-  if (error) return { ok: false, error: error.message };
+  if (error) return { ok: false, error: error.message, aviso: null };
 
-  await enviarEmailRespuestaConsulta({
+  const enviado = await enviarEmailRespuestaConsulta({
     destinatario: consulta.email,
     nombre: consulta.nombre,
     mensajeOriginal: consulta.mensaje,
@@ -50,5 +50,14 @@ export async function responderConsulta(
   });
 
   revalidatePath("/admin/consultas");
-  return { ok: true, error: null };
+  return {
+    ok: true,
+    error: null,
+    // La respuesta ya está guardada aunque el email falle: se avisa para
+    // que el admin sepa que tiene que contactar por otra vía, en vez de
+    // pensar que ya se ha enviado.
+    aviso: enviado
+      ? null
+      : "Guardada, pero no se pudo enviar el email (revisa la configuración SMTP). Contacta con la persona por otra vía.",
+  };
 }

@@ -31,13 +31,18 @@ function obtenerTransporte() {
   });
 }
 
-async function enviar(destinatario: string, asunto: string, html: string) {
+/** Devuelve true si el email se ha enviado, false si no (SMTP sin
+ * configurar o fallo al enviar) para que quien llame pueda avisar de que
+ * el envío no ha ocurrido en vez de darlo por hecho en silencio. */
+async function enviar(destinatario: string, asunto: string, html: string): Promise<boolean> {
   const transporte = obtenerTransporte();
-  if (!transporte) return;
+  if (!transporte) return false;
   try {
     await transporte.sendMail({ from: FROM, to: destinatario, subject: asunto, html });
+    return true;
   } catch (err) {
     console.error("Error enviando email:", err);
+    return false;
   }
 }
 
@@ -116,7 +121,7 @@ export async function enviarEmailInscripcionRecibida(args: {
     `,
   );
 
-  await enviar(args.destinatario, asunto, html);
+  return await enviar(args.destinatario, asunto, html);
 }
 
 export async function enviarEmailNuevaConsulta(args: {
@@ -136,7 +141,7 @@ export async function enviarEmailNuevaConsulta(args: {
     `,
   );
 
-  await enviar("info@aftergolf.es", `Nueva consulta de ${args.nombre}`, html);
+  return await enviar("info@aftergolf.es", `Nueva consulta de ${args.nombre}`, html);
 }
 
 export async function enviarEmailRespuestaConsulta(args: {
@@ -156,7 +161,7 @@ export async function enviarEmailRespuestaConsulta(args: {
     `,
   );
 
-  await enviar(args.destinatario, "Respuesta a tu consulta — AJAG Golf", html);
+  return await enviar(args.destinatario, "Respuesta a tu consulta — AJAG Golf", html);
 }
 
 export async function enviarEmailInscripcionConfirmada(args: {
@@ -181,5 +186,5 @@ export async function enviarEmailInscripcionConfirmada(args: {
     `,
   );
 
-  await enviar(args.destinatario, asunto, html);
+  return await enviar(args.destinatario, asunto, html);
 }

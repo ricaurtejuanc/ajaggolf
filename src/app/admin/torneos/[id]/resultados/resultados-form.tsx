@@ -45,29 +45,62 @@ export function ResultadosForm({
 
   const columnaPrincipal = formatoPuntuacion === "stableford" ? "puntos" : "golpes";
 
-  // Calcula la posición de cada jugador a partir de su puntuación (más
-  // puntos stableford primero, menos golpes primero en el resto de
-  // formatos) en vez de que el admin la escriba a mano fila a fila.
-  // Empates comparten posición (ranking 1-2-2-4); retirados, no
-  // presentados o sin puntuación todavía se quedan sin posición.
+  // Calcula la posición de cada jugador dentro de su categoría (si hay
+  // categorías configuradas; si no, de todos juntos) a partir de su
+  // puntuación: más puntos stableford primero, menos golpes primero en el
+  // resto de formatos. En caso de empate en puntuación decide el hándicap:
+  // el más bajo gana en stableford, el más alto gana en el resto de
+  // formatos. Solo un empate exacto (misma puntuación y mismo hándicap)
+  // comparte posición. Retirados, no presentados o sin puntuación todavía
+  // se quedan sin posición.
   function generarClasificacion() {
-    const ascendente = columnaPrincipal === "golpes";
-    const clasificables = filas
-      .map((f) => ({ fila: f, valor: parseFloat(f[columnaPrincipal].replace(",", ".")) }))
-      .filter((f) => f.fila.estadoJuego === "" && !Number.isNaN(f.valor));
+    const stableford = columnaPrincipal === "puntos";
 
-    clasificables.sort((a, b) => (ascendente ? a.valor - b.valor : b.valor - a.valor));
+    const grupos = new Map<string, FilaResultado[]>();
+    for (const f of filas) {
+      const nombreGrupo = categorias.length > 0 ? categoriaDeFila(f) : "";
+      const grupo = grupos.get(nombreGrupo);
+      if (grupo) grupo.push(f);
+      else grupos.set(nombreGrupo, [f]);
+    }
 
     const posicionPorKey = new Map<number, number>();
-    let posicionActual = 0;
-    let valorAnterior: number | null = null;
-    clasificables.forEach((c, indice) => {
-      if (valorAnterior === null || c.valor !== valorAnterior) {
-        posicionActual = indice + 1;
-        valorAnterior = c.valor;
-      }
-      posicionPorKey.set(c.fila.key, posicionActual);
-    });
+
+    for (const grupo of grupos.values()) {
+      const clasificables = grupo
+        .map((f) => {
+          const hcpRaw = parseFloat(f.handicap.replace(",", "."));
+          return {
+            fila: f,
+            valor: parseFloat(f[columnaPrincipal].replace(",", ".")),
+            handicap: Number.isNaN(hcpRaw) ? null : hcpRaw,
+          };
+        })
+        .filter((f) => f.fila.estadoJuego === "" && !Number.isNaN(f.valor));
+
+      clasificables.sort((a, b) => {
+        const diferencia = stableford ? b.valor - a.valor : a.valor - b.valor;
+        if (diferencia !== 0) return diferencia;
+        // Sin hándicap conocido, pierde el desempate frente a quien sí lo
+        // tiene (no se puede aplicar la regla sin ese dato).
+        const hcpA = a.handicap ?? (stableford ? Infinity : -Infinity);
+        const hcpB = b.handicap ?? (stableford ? Infinity : -Infinity);
+        return stableford ? hcpA - hcpB : hcpB - hcpA;
+      });
+
+      let posicionActual = 0;
+      let valorAnterior: number | null = null;
+      let handicapAnterior: number | null = null;
+      clasificables.forEach((c, indice) => {
+        const empatado = valorAnterior === c.valor && handicapAnterior === c.handicap;
+        if (!empatado) {
+          posicionActual = indice + 1;
+          valorAnterior = c.valor;
+          handicapAnterior = c.handicap;
+        }
+        posicionPorKey.set(c.fila.key, posicionActual);
+      });
+    }
 
     setFilas((prev) =>
       prev.map((f) => ({
@@ -79,14 +112,34 @@ export function ResultadosForm({
 
   function categoriaDeFila(fila: FilaResultado): string {
     const hcp = parseFloat(fila.handicap.replace(",", "."));
-    const cat = categorias.find((c) => {
-      if (Number.isNaN(hcp)) return false;
-      return (
+    if (Number.isNaN(hcp)) return "Sin categoría asignada";
+
+    const conRango = categorias.filter((c) => c.handicapDesde != null || c.handicapHasta != null);
+    if (conRango.length === 0) return "Sin categoría asignada";
+
+    const exacta = conRango.find(
+      (c) =>
         (c.handicapDesde == null || hcp >= c.handicapDesde) &&
-        (c.handicapHasta == null || hcp <= c.handicapHasta)
-      );
-    });
-    return cat?.nombre ?? "Sin categoría asignada";
+        (c.handicapHasta == null || hcp <= c.handicapHasta),
+    );
+    if (exacta) return exacta.nombre;
+
+    // Ningún tramo cubre este hándicap (hueco entre categorías, o por
+    // encima/debajo de todas): en vez de dejar al jugador sin categoría, se
+    // asigna a la más cercana. Un mal ajuste de rangos en el torneo no debe
+    // dejar a nadie fuera de la tabla.
+    let masCercana = conRango[0];
+    let distanciaMinima = Infinity;
+    for (const c of conRango) {
+      const distDesde = c.handicapDesde != null ? Math.abs(hcp - c.handicapDesde) : Infinity;
+      const distHasta = c.handicapHasta != null ? Math.abs(hcp - c.handicapHasta) : Infinity;
+      const distancia = Math.min(distDesde, distHasta);
+      if (distancia < distanciaMinima) {
+        distanciaMinima = distancia;
+        masCercana = c;
+      }
+    }
+    return masCercana.nombre;
   }
 
   // Si el torneo tiene categorías reales por hándicap, se reparten las
@@ -249,9 +302,10 @@ export function ResultadosForm({
         </button>
       </div>
       <p className="-mt-3 text-xs text-ajag-gris-500">
-        Calcula la posición de todos a partir de {columnaPrincipal === "puntos" ? "los puntos" : "los golpes"}
-        {" "}(los retirados, no presentados o sin puntuación quedan sin posición). Revisa antes
-        de guardar.
+        Calcula la posición dentro de cada categoría a partir de{" "}
+        {columnaPrincipal === "puntos" ? "los puntos" : "los golpes"}; en empates gana el
+        hándicap {columnaPrincipal === "puntos" ? "más bajo" : "más alto"}. Los retirados, no
+        presentados o sin puntuación quedan sin posición. Revisa antes de guardar.
       </p>
 
       {estadoBorrador.error ? (

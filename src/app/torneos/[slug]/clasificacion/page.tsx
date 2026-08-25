@@ -30,14 +30,11 @@ export default async function ClasificacionPage({
   const supabase = await createClient();
   const cuadroHonor = hayCuadroDeHonor(torneo) ? <CuadroDeHonor torneo={torneo} /> : null;
 
-  // Si el torneo pertenece a una liga/pool, "atrás" lleva al listado
-  // general de clasificaciones (de donde suele venir el usuario), no a la
-  // ficha del torneo.
-  const { data: liga } = torneo.liga_pool_id
-    ? await supabase.from("ligas_pool").select("slug").eq("id", torneo.liga_pool_id).maybeSingle()
-    : { data: null };
-  const hrefVolver = liga ? "/clasificaciones" : `/torneos/${slug}`;
-  const textoVolver = liga ? "Clasificaciones" : torneo.nombre;
+  // "Atrás" siempre lleva al listado general de clasificaciones, de donde
+  // suele venir el usuario (calendario, liga o directamente el listado),
+  // nunca a la ficha del torneo.
+  const hrefVolver = "/clasificaciones";
+  const textoVolver = "Clasificaciones";
 
   const { data: documento } = await supabase
     .from("resultados_pdf_uploads")

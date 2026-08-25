@@ -13,6 +13,7 @@ export function ConsultaCard({ consulta }: { consulta: ConsultaContacto }) {
   const [estado, dispatch, pendingRespuesta] = useActionState(accion, {
     ok: false,
     error: null,
+    aviso: null,
   });
 
   return (
@@ -53,6 +54,12 @@ export function ConsultaCard({ consulta }: { consulta: ConsultaContacto }) {
           </button>
         ) : null}
       </div>
+
+      {estado.aviso ? (
+        <p className="mt-3 rounded-lg bg-ajag-oro-500/15 px-3 py-2 text-sm font-medium text-ajag-oro-600">
+          {estado.aviso}
+        </p>
+      ) : null}
 
       {consulta.respuesta ? (
         <div className="mt-3 rounded-xl bg-ajag-verde-50 p-3">
