@@ -19,7 +19,7 @@ export type FormatoPuntuacion =
 export type ModoJuego = "individual" | "parejas";
 export type ModoSalida = "consecutivo" | "shotgun" | "shotgun_silencioso";
 export type ModoAsignacionSalida = "handicap" | "manual" | "mixto";
-export type EstadoTorneo = "borrador" | "publicado" | "cerrado" | "finalizado";
+export type EstadoTorneo = "borrador" | "publicado" | "cerrado" | "finalizado" | "cancelado";
 export type EstadoInscripcion = "carrito" | "pendiente_pago" | "confirmada" | "cancelada";
 export type MetodoPago = "bizum" | "stripe" | "club";
 export type ModoPagoTorneo = "organizador" | "club";
@@ -111,7 +111,8 @@ export type LigaPool = {
   reglas: string | null;
   temporada: string | null;
   tabla_puntos: Record<string, number>;
-  modo_puntuacion: "tabla_puntos" | "suma_stableford";
+  modo_puntuacion: "tabla_puntos" | "suma_stableford" | "suma_medal_handicap";
+  mejores_n_torneos: number | null;
   activa: boolean;
   tipo_oficial: TipoLigaOficial | null;
   organizador_id: string | null;

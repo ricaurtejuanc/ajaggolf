@@ -5,6 +5,11 @@ import { Plus, X } from "lucide-react";
 import { actualizarCategoriasExtras, type EstadoConfiguracion } from "./actions";
 import type { CategoriaExtra } from "@/types/database";
 
+// Estas tres secciones siempre existen para cualquier torneo (ceremonia,
+// inscripción, avituallamiento son partes fijas del día de torneo): su
+// título no se puede cambiar ni borrar, pero sus casillas sí son libres.
+const SECCIONES_FIJAS = ["Ceremonia", "Inscripción", "Avituallamiento"];
+
 function slugificar(texto: string): string {
   return texto
     .toLowerCase()
@@ -90,31 +95,43 @@ export function CategoriasExtrasForm({ categoriasIniciales }: { categoriasInicia
           Torneos — Información adicional
         </h2>
         <p className="mt-1 text-xs text-ajag-gris-500">
-          Define las categorías y casillas que los admins podrán marcar en
+          Define las secciones y casillas que los admins podrán marcar en
           &quot;Qué incluye&quot; al crear un torneo. Aparecerán en el mismo
-          orden en la tarjeta del torneo.
+          orden en la tarjeta del torneo. Ceremonia, Inscripción y
+          Avituallamiento son secciones fijas (no se pueden renombrar ni
+          borrar), pero puedes añadir y quitar sus casillas libremente.
         </p>
       </div>
 
       <input type="hidden" name="categorias" value={JSON.stringify(categorias)} />
 
       <div className="flex flex-col gap-4">
-        {categorias.map((cat, indiceCategoria) => (
+        {categorias.map((cat, indiceCategoria) => {
+          const fija = SECCIONES_FIJAS.includes(cat.categoria);
+          return (
           <div key={indiceCategoria} className="rounded-xl border border-ajag-gris-200 p-4">
             <div className="flex items-center gap-2">
-              <input
-                value={cat.categoria}
-                onChange={(e) => renombrarCategoria(indiceCategoria, e.target.value)}
-                className="flex-1 rounded-lg border border-ajag-gris-200 px-3 py-1.5 text-sm font-medium text-ajag-verde-900 outline-none focus:border-ajag-verde-600"
-              />
-              <button
-                type="button"
-                onClick={() => eliminarCategoria(indiceCategoria)}
-                aria-label="Eliminar categoría"
-                className="flex size-8 shrink-0 items-center justify-center rounded-lg text-ajag-rojo-600 hover:bg-ajag-rojo-50"
-              >
-                <X size={16} />
-              </button>
+              {fija ? (
+                <p className="flex-1 px-3 py-1.5 text-sm font-medium text-ajag-verde-900">
+                  {cat.categoria}
+                </p>
+              ) : (
+                <input
+                  value={cat.categoria}
+                  onChange={(e) => renombrarCategoria(indiceCategoria, e.target.value)}
+                  className="flex-1 rounded-lg border border-ajag-gris-200 px-3 py-1.5 text-sm font-medium text-ajag-verde-900 outline-none focus:border-ajag-verde-600"
+                />
+              )}
+              {fija ? null : (
+                <button
+                  type="button"
+                  onClick={() => eliminarCategoria(indiceCategoria)}
+                  aria-label="Eliminar sección"
+                  className="flex size-8 shrink-0 items-center justify-center rounded-lg text-ajag-rojo-600 hover:bg-ajag-rojo-50"
+                >
+                  <X size={16} />
+                </button>
+              )}
             </div>
 
             <div className="mt-3 flex flex-col gap-2">
@@ -164,7 +181,8 @@ export function CategoriasExtrasForm({ categoriasIniciales }: { categoriasInicia
               </div>
             </div>
           </div>
-        ))}
+          );
+        })}
       </div>
 
       <div className="flex items-center gap-2">
@@ -177,7 +195,7 @@ export function CategoriasExtrasForm({ categoriasIniciales }: { categoriasInicia
               agregarCategoria();
             }
           }}
-          placeholder="Nueva categoría..."
+          placeholder="Nueva sección..."
           className="flex-1 rounded-xl border border-dashed border-ajag-gris-200 px-4 py-2.5 text-sm outline-none focus:border-ajag-verde-600"
         />
         <button
@@ -185,7 +203,7 @@ export function CategoriasExtrasForm({ categoriasIniciales }: { categoriasInicia
           onClick={agregarCategoria}
           className="flex shrink-0 items-center gap-1.5 rounded-xl border border-ajag-gris-200 px-4 py-2.5 text-sm font-medium text-ajag-verde-900 hover:bg-ajag-verde-50"
         >
-          <Plus size={16} /> Categoría
+          <Plus size={16} /> Nueva sección
         </button>
       </div>
 

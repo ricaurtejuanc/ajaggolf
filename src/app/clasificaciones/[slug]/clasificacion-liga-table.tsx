@@ -10,6 +10,8 @@ export interface DetalleTorneoJugador {
   torneoNombre: string;
   fecha: string;
   puntos: number;
+  /** false si la liga limita a los X mejores y este resultado se queda fuera. */
+  cuenta: boolean;
 }
 
 export interface FilaClasificacionLiga {
@@ -20,7 +22,13 @@ export interface FilaClasificacionLiga {
   detalle: DetalleTorneoJugador[];
 }
 
-export function ClasificacionLigaTable({ filas }: { filas: FilaClasificacionLiga[] }) {
+export function ClasificacionLigaTable({
+  filas,
+  etiquetaPuntos = "Puntos",
+}: {
+  filas: FilaClasificacionLiga[];
+  etiquetaPuntos?: string;
+}) {
   const [abierto, setAbierto] = useState<string | null>(null);
 
   return (
@@ -28,7 +36,7 @@ export function ClasificacionLigaTable({ filas }: { filas: FilaClasificacionLiga
       <div className="grid grid-cols-[3rem_1fr_5rem_6rem] items-center gap-2 border-b border-ajag-gris-100 px-4 py-3 text-xs uppercase text-ajag-gris-500">
         <span>Pos.</span>
         <span>Jugador</span>
-        <span className="text-right">Puntos</span>
+        <span className="text-right">{etiquetaPuntos}</span>
         <span className="text-right">Pruebas</span>
       </div>
       {filas.map((fila, i) => {
@@ -70,7 +78,10 @@ export function ClasificacionLigaTable({ filas }: { filas: FilaClasificacionLiga
                     </thead>
                     <tbody>
                       {fila.detalle.map((d) => (
-                        <tr key={d.torneoSlug} className="border-t border-ajag-gris-100/70">
+                        <tr
+                          key={d.torneoSlug}
+                          className={`border-t border-ajag-gris-100/70 ${d.cuenta ? "" : "opacity-50"}`}
+                        >
                           <td className="py-2 pr-2">
                             <Link
                               href={`/torneos/${d.torneoSlug}`}
@@ -81,6 +92,11 @@ export function ClasificacionLigaTable({ filas }: { filas: FilaClasificacionLiga
                             <span className="ml-1.5 text-xs text-ajag-gris-500">
                               {formatearFechaCorta(d.fecha)}
                             </span>
+                            {d.cuenta ? null : (
+                              <span className="ml-1.5 text-xs text-ajag-gris-500">
+                                (no cuenta)
+                              </span>
+                            )}
                           </td>
                           <td className="py-2 pl-2 text-right font-medium text-ajag-verde-900">
                             {d.puntos}

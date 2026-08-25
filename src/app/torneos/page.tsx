@@ -34,7 +34,7 @@ export default async function TorneosPage() {
   // Los disputados van de más reciente a más antiguo (orden inverso al de
   // "próximos"), agrupados por mes igual que los próximos.
   const pasados = torneos
-    .filter((t) => t.estado === "finalizado")
+    .filter((t) => t.estado === "finalizado" || t.estado === "cancelado")
     .slice()
     .reverse();
   const proximosPorMes = agruparPorMes(proximos);

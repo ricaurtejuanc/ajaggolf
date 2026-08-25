@@ -71,62 +71,60 @@ export function GenerarSalidasForm({
         </p>
       ) : null}
 
-      <div className="grid gap-4 sm:grid-cols-2">
-        <div>
-          <span className="text-sm font-medium text-ajag-verde-900">Modo de salida</span>
-          <div className="mt-1 flex gap-4">
-            <label className="flex items-center gap-2 text-sm text-ajag-gris-500">
-              <input
-                type="radio"
-                name="modo"
-                value="consecutivo"
-                checked={modo === "consecutivo"}
-                onChange={() => setModo("consecutivo")}
-              />
-              Consecutivo
-            </label>
-            <label className="flex items-center gap-2 text-sm text-ajag-gris-500">
-              <input
-                type="radio"
-                name="modo"
-                value="shotgun"
-                checked={modo === "shotgun"}
-                onChange={() => setModo("shotgun")}
-              />
-              A tiro (shotgun)
-            </label>
-            <label className="flex items-center gap-2 text-sm text-ajag-gris-500">
-              <input
-                type="radio"
-                name="modo"
-                value="shotgun_silencioso"
-                checked={modo === "shotgun_silencioso"}
-                onChange={() => setModo("shotgun_silencioso")}
-              />
-              A tiro silencioso
-            </label>
-          </div>
-        </div>
-
-        <div>
-          <label htmlFor="modo_asignacion" className="block text-sm font-medium text-ajag-verde-900">
-            Criterio de agrupación
+      <div>
+        <span className="text-sm font-medium text-ajag-verde-900">Modo de salida</span>
+        <div className="mt-1 flex flex-nowrap gap-4 overflow-x-auto">
+          <label className="flex shrink-0 items-center gap-2 text-sm text-ajag-gris-500">
+            <input
+              type="radio"
+              name="modo"
+              value="consecutivo"
+              checked={modo === "consecutivo"}
+              onChange={() => setModo("consecutivo")}
+            />
+            Consecutivo
           </label>
-          <select
-            id="modo_asignacion"
-            name="modo_asignacion"
-            defaultValue={salidaExistente?.modo_asignacion ?? modoAsignacionDefecto}
-            className="mt-1 w-full rounded-xl border border-ajag-gris-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-ajag-verde-600"
-          >
-            <option value="manual">Personalizado (coloco primero los grupos organizados)</option>
-            <option value="handicap">Automático por hándicap</option>
-            <option value="mixto">Mezcla de niveles</option>
-          </select>
-          <p className="mt-1 text-xs text-ajag-gris-500">
-            Recomendado: elige Personalizado, coloca a mano los grupos ya organizados y luego
-            pulsa &quot;Autocompletar por hándicap&quot; más abajo para rellenar el resto.
-          </p>
+          <label className="flex shrink-0 items-center gap-2 text-sm text-ajag-gris-500">
+            <input
+              type="radio"
+              name="modo"
+              value="shotgun"
+              checked={modo === "shotgun"}
+              onChange={() => setModo("shotgun")}
+            />
+            A tiro (shotgun)
+          </label>
+          <label className="flex shrink-0 items-center gap-2 text-sm text-ajag-gris-500">
+            <input
+              type="radio"
+              name="modo"
+              value="shotgun_silencioso"
+              checked={modo === "shotgun_silencioso"}
+              onChange={() => setModo("shotgun_silencioso")}
+            />
+            A tiro silencioso
+          </label>
         </div>
+      </div>
+
+      <div>
+        <label htmlFor="modo_asignacion" className="block text-sm font-medium text-ajag-verde-900">
+          Criterio de agrupación
+        </label>
+        <select
+          id="modo_asignacion"
+          name="modo_asignacion"
+          defaultValue={salidaExistente?.modo_asignacion ?? modoAsignacionDefecto}
+          className="mt-1 w-full max-w-sm rounded-xl border border-ajag-gris-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-ajag-verde-600"
+        >
+          <option value="manual">Personalizado (coloco primero los grupos organizados)</option>
+          <option value="handicap">Automático por hándicap</option>
+          <option value="mixto">Mezcla de niveles</option>
+        </select>
+        <p className="mt-1 text-xs text-ajag-gris-500">
+          Recomendado: elige Personalizado, coloca a mano los grupos ya organizados y luego
+          pulsa &quot;Autocompletar por hándicap&quot; más abajo para rellenar el resto.
+        </p>
       </div>
 
       {modo === "consecutivo" ? (
@@ -197,6 +195,12 @@ export function GenerarSalidasForm({
 
           <div>
             <span className="text-sm font-medium text-ajag-verde-900">Hoyos de salida</span>
+            {nJugadoresConfirmados > 0 ? (
+              <p className="mt-0.5 text-xs text-ajag-gris-500">
+                {nJugadoresConfirmados} inscritos, necesitas{" "}
+                {Math.ceil(nJugadoresConfirmados / 4)} tees.
+              </p>
+            ) : null}
             <div className="mt-1.5 grid grid-cols-6 gap-1.5 sm:grid-cols-9">
               {TODOS_LOS_HOYOS.map((hoyo) => (
                 <label

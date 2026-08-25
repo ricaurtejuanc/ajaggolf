@@ -262,6 +262,41 @@ export function ResultadosForm({
 
   return (
     <form className="card-ajag flex flex-col gap-5 p-5">
+      <div className="flex flex-wrap items-center gap-3">
+        <button
+          type="button"
+          onClick={descargarXls}
+          className="flex w-fit items-center gap-1.5 rounded-full border border-ajag-verde-700 px-3 py-1.5 text-sm font-medium text-ajag-verde-700 hover:bg-ajag-verde-50"
+        >
+          <Download size={15} /> Descargar XLS
+        </button>
+        <button
+          type="button"
+          onClick={() => inputXlsRef.current?.click()}
+          className="flex w-fit items-center gap-1.5 rounded-full border border-ajag-verde-700 px-3 py-1.5 text-sm font-medium text-ajag-verde-700 hover:bg-ajag-verde-50"
+        >
+          <Upload size={15} /> Subir XLS
+        </button>
+        <input
+          ref={inputXlsRef}
+          type="file"
+          accept=".xlsx,.xls,.csv"
+          className="hidden"
+          onChange={(e) => {
+            const archivo = e.target.files?.[0];
+            if (archivo) subirXls(archivo);
+            e.target.value = "";
+          }}
+        />
+      </div>
+      <p className="-mt-3 text-xs text-ajag-gris-500">
+        &quot;Descargar XLS&quot; exporta la tabla actual (id_torneo, categoría, nombre,
+        licencia, handicap, {nombreColumnaXls}) para rellenarla fuera de la app; &quot;Subir
+        XLS&quot; vuelve a leerla y actualiza cada fila por licencia (añade las que no
+        existan todavía).
+      </p>
+      {mensajeXls ? <p className="-mt-3 text-xs text-ajag-verde-700">{mensajeXls}</p> : null}
+
       {grupos.map((grupo) => (
         <div key={grupo.nombre || "todos"}>
           {grupo.nombre ? (
@@ -398,31 +433,6 @@ export function ResultadosForm({
         >
           Generar clasificación
         </button>
-        <button
-          type="button"
-          onClick={descargarXls}
-          className="flex w-fit items-center gap-1.5 rounded-full border border-ajag-verde-700 px-3 py-1.5 text-sm font-medium text-ajag-verde-700 hover:bg-ajag-verde-50"
-        >
-          <Download size={15} /> Descargar XLS
-        </button>
-        <button
-          type="button"
-          onClick={() => inputXlsRef.current?.click()}
-          className="flex w-fit items-center gap-1.5 rounded-full border border-ajag-verde-700 px-3 py-1.5 text-sm font-medium text-ajag-verde-700 hover:bg-ajag-verde-50"
-        >
-          <Upload size={15} /> Subir XLS
-        </button>
-        <input
-          ref={inputXlsRef}
-          type="file"
-          accept=".xlsx,.xls,.csv"
-          className="hidden"
-          onChange={(e) => {
-            const archivo = e.target.files?.[0];
-            if (archivo) subirXls(archivo);
-            e.target.value = "";
-          }}
-        />
       </div>
       <p className="-mt-3 text-xs text-ajag-gris-500">
         Calcula la posición dentro de cada categoría a partir de{" "}
@@ -430,14 +440,6 @@ export function ResultadosForm({
         hándicap {columnaPrincipal === "puntos" ? "más bajo" : "más alto"}. Los retirados, no
         presentados o sin puntuación quedan sin posición. Revisa antes de guardar.
       </p>
-      <p className="-mt-3 text-xs text-ajag-gris-500">
-        &quot;Descargar XLS&quot; exporta la tabla actual (id_torneo, categoría, nombre,
-        licencia, handicap, {nombreColumnaXls}) para rellenarla fuera de la app; &quot;Subir
-        XLS&quot; vuelve a leerla y actualiza cada fila por licencia (añade las que no
-        existan todavía).
-      </p>
-
-      {mensajeXls ? <p className="-mt-3 text-xs text-ajag-verde-700">{mensajeXls}</p> : null}
 
       {estadoBorrador.error ? (
         <p className="text-sm text-ajag-rojo-600">{estadoBorrador.error}</p>

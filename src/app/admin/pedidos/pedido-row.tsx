@@ -1,7 +1,7 @@
 "use client";
 
 import { useTransition } from "react";
-import { confirmarPago, rechazarPago } from "./actions";
+import { confirmarPago, eliminarPedido, rechazarPago } from "./actions";
 import { formatearPrecio, formatearFechaCorta } from "@/lib/format";
 import type { EstadoPedidoPago } from "@/types/database";
 
@@ -75,26 +75,40 @@ export function PedidoRow({ pedido }: { pedido: Pedido }) {
           {formatearPrecio(pedido.total_cents)}
         </span>
 
-        {accionable ? (
-          <div className="flex gap-2">
-            <button
-              type="button"
-              disabled={pending}
-              onClick={() => startTransition(() => rechazarPago(pedido.id))}
-              className="rounded-full border border-ajag-rojo-600 px-4 py-2 text-sm font-medium text-ajag-rojo-600 transition hover:bg-ajag-rojo-600/10 disabled:opacity-50"
-            >
-              Rechazar
-            </button>
-            <button
-              type="button"
-              disabled={pending}
-              onClick={() => startTransition(() => confirmarPago(pedido.id))}
-              className="rounded-full bg-ajag-verde-700 px-4 py-2 text-sm font-medium text-white transition hover:bg-ajag-verde-600 disabled:opacity-50"
-            >
-              Confirmar pago
-            </button>
-          </div>
-        ) : null}
+        <div className="flex gap-2">
+          {accionable ? (
+            <>
+              <button
+                type="button"
+                disabled={pending}
+                onClick={() => startTransition(() => rechazarPago(pedido.id))}
+                className="rounded-full border border-ajag-rojo-600 px-4 py-2 text-sm font-medium text-ajag-rojo-600 transition hover:bg-ajag-rojo-600/10 disabled:opacity-50"
+              >
+                Rechazar
+              </button>
+              <button
+                type="button"
+                disabled={pending}
+                onClick={() => startTransition(() => confirmarPago(pedido.id))}
+                className="rounded-full bg-ajag-verde-700 px-4 py-2 text-sm font-medium text-white transition hover:bg-ajag-verde-600 disabled:opacity-50"
+              >
+                Confirmar pago
+              </button>
+            </>
+          ) : null}
+          <button
+            type="button"
+            disabled={pending}
+            onClick={() => {
+              if (confirm("¿Eliminar este pedido y sus inscripciones? No se puede deshacer.")) {
+                startTransition(() => eliminarPedido(pedido.id));
+              }
+            }}
+            className="rounded-full px-4 py-2 text-sm font-medium text-ajag-gris-500 transition hover:bg-ajag-rojo-600/10 hover:text-ajag-rojo-600 disabled:opacity-50"
+          >
+            Eliminar
+          </button>
+        </div>
       </div>
     </div>
   );

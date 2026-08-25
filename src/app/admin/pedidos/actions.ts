@@ -80,3 +80,17 @@ export async function rechazarPago(pedidoId: string) {
 
   revalidatePath("/admin/pedidos");
 }
+
+// Borra el pedido y las inscripciones que llevaba (un pedido sin
+// inscripciones no tiene sentido guardarlo, y dejarlas huérfanas ocuparía
+// cupo sin un pago detrás) — para limpiar pedidos duplicados o de prueba.
+export async function eliminarPedido(pedidoId: string) {
+  const admin = await getUsuarioAdmin();
+  if (!admin) return;
+
+  const supabase = await createClient();
+  await supabase.from("inscripciones").delete().eq("pedido_pago_id", pedidoId);
+  await supabase.from("pedidos_pago").delete().eq("id", pedidoId);
+
+  revalidatePath("/admin/pedidos");
+}

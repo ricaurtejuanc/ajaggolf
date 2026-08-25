@@ -75,6 +75,7 @@ export function TorneoForm({
           { value: "publicado", label: "Publicado" },
           { value: "cerrado", label: "Completo" },
           { value: "finalizado", label: "Finalizado" },
+          { value: "cancelado", label: "Cancelado" },
         ]}
       />
 
@@ -322,7 +323,7 @@ export function TorneoForm({
               value="organizador"
               defaultChecked={(torneo?.modo_pago ?? "organizador") === "organizador"}
             />
-            Al organizador (Bizum, un admin confirma el pago a mano)
+            Al organizador
           </label>
           <label className="flex items-center gap-2 text-sm text-ajag-gris-500">
             <input
@@ -331,7 +332,7 @@ export function TorneoForm({
               value="club"
               defaultChecked={torneo?.modo_pago === "club"}
             />
-            En el club (la inscripción queda confirmada al momento)
+            En el club
           </label>
         </div>
       </div>

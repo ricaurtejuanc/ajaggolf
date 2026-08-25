@@ -18,6 +18,7 @@ export function LigaForm({
 }) {
   const [state, formAction, pending] = useActionState(action, { ok: false, error: null });
   const [modoPuntuacion, setModoPuntuacion] = useState(liga?.modo_puntuacion ?? "tabla_puntos");
+  const [limitarMejores, setLimitarMejores] = useState(liga?.mejores_n_torneos != null);
 
   return (
     <form action={formAction} className="card-ajag flex flex-col gap-5 p-6">
@@ -80,7 +81,7 @@ export function LigaForm({
       <div>
         <span className="text-sm font-medium text-ajag-verde-900">Cómo se puntúa</span>
         <input type="hidden" name="modo_puntuacion" value={modoPuntuacion} />
-        <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
+        <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-3">
           <button
             type="button"
             onClick={() => setModoPuntuacion("tabla_puntos")}
@@ -107,12 +108,49 @@ export function LigaForm({
             <span className="block font-medium">Suma de puntos Stableford</span>
             <span className="text-xs">Se suman los puntos de cada torneo, sin tabla</span>
           </button>
+          <button
+            type="button"
+            onClick={() => setModoPuntuacion("suma_medal_handicap")}
+            aria-pressed={modoPuntuacion === "suma_medal_handicap"}
+            className={`rounded-xl border px-4 py-2.5 text-left text-sm transition ${
+              modoPuntuacion === "suma_medal_handicap"
+                ? "border-ajag-verde-600 bg-ajag-verde-50 text-ajag-verde-900"
+                : "border-ajag-gris-200 text-ajag-gris-500 hover:border-ajag-verde-300"
+            }`}
+          >
+            <span className="block font-medium">Suma medal play neto</span>
+            <span className="text-xs">Golpes menos hándicap de cada torneo; gana el total más bajo</span>
+          </button>
         </div>
       </div>
 
       {modoPuntuacion === "tabla_puntos" ? (
         <TablaPuntosEditor tablaInicial={liga?.tabla_puntos ?? {}} />
       ) : null}
+
+      <div>
+        <label className="flex items-center gap-2 text-sm font-medium text-ajag-verde-900">
+          <input
+            type="checkbox"
+            checked={limitarMejores}
+            onChange={(e) => setLimitarMejores(e.target.checked)}
+          />
+          Puntuación final en base al mejor resultado de los X torneos
+        </label>
+        <p className="mt-1 text-xs text-ajag-gris-500">
+          Si lo activas, cada jugador puntúa solo con la suma de sus X mejores resultados (no
+          todos los torneos que juegue). Déjalo desactivado para sumar todos.
+        </p>
+        {limitarMejores ? (
+          <input
+            type="number"
+            name="mejores_n_torneos"
+            min={1}
+            defaultValue={liga?.mejores_n_torneos ?? 5}
+            className="mt-2 w-24 rounded-xl border border-ajag-gris-200 px-4 py-2.5 text-sm outline-none focus:border-ajag-verde-600"
+          />
+        ) : null}
+      </div>
 
       <div>
         <span className="text-sm font-medium text-ajag-verde-900">Tipo</span>

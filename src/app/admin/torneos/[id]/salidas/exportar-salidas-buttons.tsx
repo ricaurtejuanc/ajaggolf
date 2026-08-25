@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Download, FileDown, Printer } from "lucide-react";
+import { Download, FileDown } from "lucide-react";
 import type { GrupoVista, JugadorEnGrupoVista } from "./grupos-grid";
 
 export function ExportarSalidasButtons({
@@ -108,15 +108,6 @@ export function ExportarSalidasButtons({
       >
         <FileDown size={15} />
         {generandoPdf ? "Generando…" : "Descargar PDF"}
-      </button>
-      <button
-        type="button"
-        onClick={() => window.print()}
-        disabled={!hayJugadores}
-        className="flex items-center gap-2 rounded-full border border-ajag-verde-700 px-4 py-2 text-sm font-medium text-ajag-verde-700 transition hover:bg-ajag-verde-50 disabled:cursor-not-allowed disabled:border-ajag-gris-200 disabled:text-ajag-gris-500"
-      >
-        <Printer size={15} />
-        Imprimir
       </button>
     </div>
   );

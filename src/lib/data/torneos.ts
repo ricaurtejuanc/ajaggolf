@@ -8,7 +8,7 @@ export async function listarTorneosPublicos(): Promise<Torneo[]> {
   const { data } = await supabase
     .from("torneos")
     .select("*")
-    .in("estado", ["publicado", "cerrado", "finalizado"])
+    .in("estado", ["publicado", "cerrado", "finalizado", "cancelado"])
     .order("fecha", { ascending: true });
 
   return data ?? [];
@@ -41,7 +41,7 @@ export async function obtenerTorneoPorSlug(slug: string): Promise<Torneo | null>
 
   let query = supabase.from("torneos").select("*").eq("slug", slug);
   if (!admin) {
-    query = query.in("estado", ["publicado", "cerrado", "finalizado"]);
+    query = query.in("estado", ["publicado", "cerrado", "finalizado", "cancelado"]);
   }
 
   const { data } = await query.maybeSingle();

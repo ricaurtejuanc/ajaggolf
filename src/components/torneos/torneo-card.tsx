@@ -18,6 +18,7 @@ const etiquetaEstado: Record<Torneo["estado"], string> = {
   publicado: "Inscripciones abiertas",
   cerrado: "Completo",
   finalizado: "Disputado",
+  cancelado: "Cancelado",
 };
 
 export function TorneoCard({
@@ -53,21 +54,29 @@ export function TorneoCard({
             <CalendarDays size={40} />
           </div>
         )}
-        <span
-          className={`absolute right-3 top-3 rounded-full px-3 py-1 text-xs font-medium ${
-            torneo.estado === "cerrado"
-              ? "bg-ajag-rojo-600 text-white"
-              : torneo.estado === "finalizado"
-                ? "bg-ajag-gris-500 text-white"
-                : torneo.estado === "publicado" && !lleno
-                  ? "bg-ajag-verde-700 text-white"
-                  : "bg-white/90 text-ajag-gris-500"
-          }`}
-        >
-          {torneo.estado === "publicado" && lleno
-            ? "Cupo completo"
-            : etiquetaEstado[torneo.estado]}
-        </span>
+        {torneo.estado === "cancelado" ? (
+          <div className="absolute inset-0 flex items-center justify-center overflow-hidden">
+            <span className="-rotate-12 bg-ajag-rojo-600 px-10 py-1.5 text-center text-base font-bold uppercase tracking-widest text-white shadow-lg">
+              Cancelado
+            </span>
+          </div>
+        ) : (
+          <span
+            className={`absolute right-3 top-3 rounded-full px-3 py-1 text-xs font-medium ${
+              torneo.estado === "cerrado"
+                ? "bg-ajag-rojo-600 text-white"
+                : torneo.estado === "finalizado"
+                  ? "bg-ajag-gris-500 text-white"
+                  : torneo.estado === "publicado" && !lleno
+                    ? "bg-ajag-verde-700 text-white"
+                    : "bg-white/90 text-ajag-gris-500"
+            }`}
+          >
+            {torneo.estado === "publicado" && lleno
+              ? "Cupo completo"
+              : etiquetaEstado[torneo.estado]}
+          </span>
+        )}
       </div>
 
       <div className="flex flex-1 flex-col gap-2 p-4">

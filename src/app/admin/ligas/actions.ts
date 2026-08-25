@@ -40,8 +40,13 @@ function leerCamposLiga(formData: FormData) {
   const tipoOficial: TipoLigaOficial | null =
     tipoOficialRaw === "ranking" || tipoOficialRaw === "pool" ? tipoOficialRaw : null;
   const modoPuntuacionRaw = String(formData.get("modo_puntuacion") ?? "").trim();
-  const modoPuntuacion: "tabla_puntos" | "suma_stableford" =
-    modoPuntuacionRaw === "suma_stableford" ? "suma_stableford" : "tabla_puntos";
+  const modoPuntuacion: "tabla_puntos" | "suma_stableford" | "suma_medal_handicap" =
+    modoPuntuacionRaw === "suma_stableford" || modoPuntuacionRaw === "suma_medal_handicap"
+      ? modoPuntuacionRaw
+      : "tabla_puntos";
+
+  const mejoresNRaw = String(formData.get("mejores_n_torneos") ?? "").trim();
+  const mejoresN = mejoresNRaw ? parseInt(mejoresNRaw, 10) : NaN;
 
   return {
     nombre,
@@ -51,6 +56,7 @@ function leerCamposLiga(formData: FormData) {
     temporada: String(formData.get("temporada") ?? "").trim() || null,
     tabla_puntos: modoPuntuacion === "tabla_puntos" ? leerTablaPuntos(formData) : {},
     modo_puntuacion: modoPuntuacion,
+    mejores_n_torneos: !Number.isNaN(mejoresN) && mejoresN > 0 ? mejoresN : null,
     tipo_oficial: tipoOficial,
     activa: formData.get("activa") === "on",
   };

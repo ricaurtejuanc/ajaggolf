@@ -8,6 +8,7 @@ import { GruposGrid, type GrupoVista, type JugadorEnGrupoVista } from "./grupos-
 import { PublicarButton } from "./publicar-button";
 import { HorariosPdfUploader } from "./horarios-pdf-uploader";
 import { ExportarSalidasButtons } from "./exportar-salidas-buttons";
+import { SalidasTabs } from "./salidas-tabs";
 import type { Salida } from "@/types/database";
 
 export const metadata: Metadata = { title: "Salidas · Admin" };
@@ -136,16 +137,20 @@ export default async function AdminSalidasPage({
         Salidas — {torneo.nombre}
       </h1>
 
-      <div className="print:hidden">
-        <GenerarSalidasForm
-          torneoId={id}
-          modoSalidaDefecto={torneo.modo_salida}
-          modoAsignacionDefecto={torneo.modo_asignacion_salida}
-          teesConsecutivoDefecto={torneo.tees_consecutivo}
-          salidaExistente={salida}
-          nJugadoresConfirmados={jugadoresConfirmados.length}
-        />
-      </div>
+      <SalidasTabs
+        defaultTab={torneo.horarios_pdf_url && !salida ? "pdf" : "generar"}
+        pdfSection={<HorariosPdfUploader torneoId={id} pdfUrlInicial={torneo.horarios_pdf_url} />}
+        generarSection={
+          <GenerarSalidasForm
+            torneoId={id}
+            modoSalidaDefecto={torneo.modo_salida}
+            modoAsignacionDefecto={torneo.modo_asignacion_salida}
+            teesConsecutivoDefecto={torneo.tees_consecutivo}
+            salidaExistente={salida}
+            nJugadoresConfirmados={jugadoresConfirmados.length}
+          />
+        }
+      />
 
       {salida && grupos.length > 0 ? (
         <div className="mt-6">
@@ -164,10 +169,6 @@ export default async function AdminSalidasPage({
           />
         </div>
       ) : null}
-
-      <div className="mt-6 print:hidden">
-        <HorariosPdfUploader torneoId={id} pdfUrlInicial={torneo.horarios_pdf_url} />
-      </div>
     </div>
   );
 }

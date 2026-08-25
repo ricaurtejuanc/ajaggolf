@@ -119,7 +119,7 @@ function PestanaTorneos({
   const activos = torneos.filter((t) => t.estado === "publicado" || t.estado === "cerrado");
   // Los disputados van de fecha más reciente a más antigua (más cerca de hoy primero).
   const disputados = torneos
-    .filter((t) => t.estado === "finalizado")
+    .filter((t) => t.estado === "finalizado" || t.estado === "cancelado")
     .slice()
     .reverse();
 

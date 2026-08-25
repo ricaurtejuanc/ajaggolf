@@ -6,6 +6,7 @@ import { Trophy, CalendarDays } from "lucide-react";
 import { obtenerLigaPorSlug } from "@/lib/data/ligas";
 import { createClient } from "@/lib/supabase/server";
 import { formatearFecha } from "@/lib/format";
+import { calcularPuntosPorTorneo, esMenorMejor } from "@/lib/clasificacion/puntuacion";
 import { ClasificacionLigaTable, type FilaClasificacionLiga } from "./clasificacion-liga-table";
 
 export async function generateMetadata({
@@ -28,46 +29,71 @@ export default async function LigaDetallePage({
   if (!resultado) notFound();
   const { liga, torneos } = resultado;
 
+  const menorMejor = esMenorMejor(liga.modo_puntuacion);
+
   const supabase = await createClient();
   const [{ data: clasificacion }, { data: resultados }] = await Promise.all([
     supabase
       .from("clasificacion_publica")
       .select("*")
       .eq("liga_pool_id", liga.id)
-      .order("puntos_totales", { ascending: false }),
+      .order("puntos_totales", { ascending: menorMejor }),
     torneos.length > 0
       ? supabase
           .from("resultados")
-          .select("jugador_id, posicion, torneo_id")
+          .select("jugador_id, posicion, puntos, golpes, handicap, torneo_id")
           .in(
             "torneo_id",
             torneos.map((t) => t.id),
           )
           .eq("estado", "publicado")
           .not("jugador_id", "is", null)
-      : Promise.resolve({ data: [] as { jugador_id: string | null; posicion: number | null; torneo_id: string }[] }),
+      : Promise.resolve({
+          data: [] as {
+            jugador_id: string | null;
+            posicion: number | null;
+            puntos: number | null;
+            golpes: number | null;
+            handicap: number | null;
+            torneo_id: string;
+          }[],
+        }),
   ]);
 
   const tablaPuntos = liga.tabla_puntos as Record<string, number>;
   const torneosPorId = new Map(torneos.map((t) => [t.id, t]));
   const detallePorJugador = new Map<string, FilaClasificacionLiga["detalle"]>();
   for (const r of resultados ?? []) {
-    if (!r.jugador_id || r.posicion == null) continue;
+    if (!r.jugador_id) continue;
     const torneo = torneosPorId.get(r.torneo_id);
     if (!torneo) continue;
-    const puntos = tablaPuntos[String(r.posicion)] ?? tablaPuntos.resto ?? 0;
+    const puntos = calcularPuntosPorTorneo(liga.modo_puntuacion, tablaPuntos, r);
+    if (puntos == null) continue;
     const lista = detallePorJugador.get(r.jugador_id) ?? [];
     lista.push({
       torneoSlug: torneo.slug,
       torneoNombre: torneo.nombre,
       fecha: torneo.fecha,
       puntos,
+      cuenta: true,
     });
     detallePorJugador.set(r.jugador_id, lista);
   }
   for (const lista of detallePorJugador.values()) {
+    // Si la liga limita a los X mejores, se marcan como "no cuenta" los
+    // peores resultados que sobren por encima de ese límite (el resto sí
+    // se ve en el desglose, solo que no suma al total).
+    if (liga.mejores_n_torneos != null && lista.length > liga.mejores_n_torneos) {
+      const ordenados = [...lista].sort((a, b) => (menorMejor ? a.puntos - b.puntos : b.puntos - a.puntos));
+      const noCuentan = new Set(ordenados.slice(liga.mejores_n_torneos).map((d) => d.torneoSlug));
+      for (const d of lista) {
+        if (noCuentan.has(d.torneoSlug)) d.cuenta = false;
+      }
+    }
     lista.sort((a, b) => a.fecha.localeCompare(b.fecha));
   }
+
+  const etiquetaPuntos = liga.mejores_n_torneos != null ? `Mejores ${liga.mejores_n_torneos}` : "Puntos";
 
   const filasClasificacion: FilaClasificacionLiga[] = (clasificacion ?? []).map((c) => ({
     jugadorId: c.jugador_id,
@@ -81,7 +107,7 @@ export default async function LigaDetallePage({
   // reciente a más antiguo (también más cerca de hoy primero).
   const torneosProximos = torneos.filter((t) => t.estado === "publicado" || t.estado === "cerrado");
   const torneosDisputados = torneos
-    .filter((t) => t.estado === "finalizado")
+    .filter((t) => t.estado === "finalizado" || t.estado === "cancelado")
     .slice()
     .reverse();
   const torneosOrdenados = [...torneosProximos, ...torneosDisputados];
@@ -135,7 +161,7 @@ export default async function LigaDetallePage({
           torneo de esta liga.
         </div>
       ) : (
-        <ClasificacionLigaTable filas={filasClasificacion} />
+        <ClasificacionLigaTable filas={filasClasificacion} etiquetaPuntos={etiquetaPuntos} />
       )}
 
       <h2 className="mt-10 mb-4 font-display text-xl font-semibold text-ajag-verde-900">

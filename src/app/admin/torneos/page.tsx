@@ -11,6 +11,7 @@ const etiquetaEstado: Record<string, string> = {
   publicado: "Publicado",
   cerrado: "Completo",
   finalizado: "Finalizado",
+  cancelado: "Cancelado",
 };
 
 const claseBoton =

@@ -102,8 +102,11 @@ export default async function TorneoDetallePage({
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-10">
-      <Link href="/torneos" className="mb-4 inline-block text-sm text-ajag-gris-500 hover:underline">
-        ← Calendario
+      <Link
+        href={torneo.estado === "borrador" ? "/admin/torneos" : "/torneos"}
+        className="mb-4 inline-block text-sm text-ajag-gris-500 hover:underline"
+      >
+        {torneo.estado === "borrador" ? "← Volver" : "← Calendario"}
       </Link>
 
       {torneo.estado === "borrador" ? (
@@ -111,6 +114,12 @@ export default async function TorneoDetallePage({
           <Eye size={16} className="shrink-0" />
           Vista previa: este torneo está en borrador y todavía no es público. Solo tú, como
           admin, puedes verlo aquí.
+        </div>
+      ) : null}
+
+      {torneo.estado === "cancelado" ? (
+        <div className="mb-4 rounded-xl bg-ajag-rojo-600/10 px-4 py-3 text-sm font-medium text-ajag-rojo-600">
+          Este torneo ha sido cancelado.
         </div>
       ) : null}
 
@@ -282,22 +291,28 @@ export default async function TorneoDetallePage({
         </div>
       ) : null}
 
-      <div className="mt-8 flex items-center justify-between rounded-2xl border border-ajag-gris-100 bg-white p-5">
-        <p className="flex items-center gap-1 text-sm text-ajag-gris-500">
-          <Users size={15} />
-          {inscritos}
-          {torneo.cupo_maximo ? ` / ${torneo.cupo_maximo}` : ""} inscritos
-          {torneo.cupo_maximo != null ? ` · ${lleno ? "Completo" : `${Math.max(torneo.cupo_maximo - inscritos, 0)} plazas disponibles`}` : ""}
-        </p>
+      <div className="mt-8 flex flex-col gap-3 rounded-2xl border border-ajag-gris-100 bg-white p-5">
+        <div className="flex flex-col gap-0.5 text-sm text-ajag-gris-500">
+          <span className="flex items-center gap-1">
+            <Users size={15} />
+            {inscritos}
+            {torneo.cupo_maximo ? ` / ${torneo.cupo_maximo}` : ""} inscritos
+          </span>
+          {torneo.cupo_maximo != null ? (
+            <span>
+              {lleno ? "Completo" : `${Math.max(torneo.cupo_maximo - inscritos, 0)} plazas disponibles`}
+            </span>
+          ) : null}
+        </div>
 
         {cerrado || lleno ? (
-          <span className="rounded-full bg-ajag-gris-100 px-5 py-2.5 text-sm font-medium text-ajag-gris-500">
+          <span className="w-full rounded-full bg-ajag-gris-100 px-5 py-2.5 text-center text-sm font-medium text-ajag-gris-500">
             {lleno ? "Cupo completo" : "Inscripciones cerradas"}
           </span>
         ) : (
           <Link
             href={`/torneos/${torneo.slug}/inscripcion`}
-            className="rounded-full bg-ajag-verde-700 px-6 py-2.5 text-sm font-medium text-white transition hover:bg-ajag-verde-600"
+            className="w-full rounded-full bg-ajag-verde-700 px-6 py-2.5 text-center text-sm font-medium text-white transition hover:bg-ajag-verde-600"
           >
             Inscribirme
           </Link>
