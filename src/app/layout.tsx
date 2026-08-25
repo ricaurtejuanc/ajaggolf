@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { headers } from "next/headers";
+import { Analytics } from "@vercel/analytics/next";
 import { Inter, Fraunces } from "next/font/google";
 import "./globals.css";
 import { SiteHeader } from "@/components/layout/site-header";
@@ -41,6 +42,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
         {esLandingProducto ? null : <SiteHeader />}
         <main className="flex-1">{children}</main>
         {esLandingProducto ? null : <SiteFooter />}
+        <Analytics />
       </body>
     </html>
   );
