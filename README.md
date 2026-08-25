@@ -1,32 +1,44 @@
-# AJAG Golf
+# AfterGolf
 
-Web mobile-first para la Asociación de Jugadores Amateur de Golf (AJAG):
+Plataforma SaaS mobile-first para clubes y asociaciones de golf amateur:
 calendario de torneos, inscripciones, pagos por Bizum, generación de
-salidas, clasificaciones y panel de administración.
+cuadros de salidas, entrada de resultados (manual, PDF/foto o XLS),
+clasificaciones de liga/ranking, cuadro de honor y panel de administración.
+Multi-tenant: cada club/asociación es un "organizador" con su propio
+dominio, marca y contenido, aislados por Row Level Security en Supabase.
 
-**Stack**: Next.js (App Router) · Supabase (Postgres + Auth + Storage) · Tailwind CSS v4 · Vercel.
+**Stack**: Next.js 16 (App Router, Turbopack) · Supabase (Postgres + Auth +
+Storage + RLS) · Tailwind CSS v4 · Vercel.
 
-## Estado del proyecto — Fase 1 (completada)
+## Funcionalidad
 
-- Esquema de base de datos completo (`supabase/migrations/`), incluyendo
-  tablas de fases futuras (salidas, resultados por PDF, ligas) para no tener
-  que migrar más adelante.
+- Resolución de tenant por dominio (`src/proxy.ts`): cada organizador tiene
+  su propio dominio/subdominio; el dominio "paraguas" muestra una landing
+  de producto en vez del sitio de un organizador concreto.
 - Auth con Google y enlace mágico por email (Supabase Auth).
-- Calendario público de torneos + ficha de torneo.
-- Formulario de inscripción (con la pregunta "¿juegas con alguien?") y
-  carrito de compra.
-- Checkout con instrucciones de Bizum (número editable desde el panel
-  admin), marcado "ya he pagado" por el usuario y confirmación manual por
-  el admin. El método de pago está abstraído (`src/lib/pagos`) para poder
-  añadir Stripe más adelante sin tocar el resto del flujo.
-- Formulario de contacto.
-- Panel admin básico: CRUD de torneos (con subida de póster), confirmación
-  de pagos, consultas de contacto, número de Bizum configurable, resumen
-  con contadores.
-
-**Pendiente** (fases 2-4, según el plan acordado): motor de generación de
-salidas, parsing de PDF de clasificaciones, clasificación de ligas/pool
-calculada a partir de resultados, analítica más completa.
+- Calendario público de torneos + ficha de torneo, con inscripción (cuenta
+  o invitado) y carrito de compra multi-torneo.
+- Checkout con instrucciones de Bizum (número configurable por el admin),
+  marcado "ya he pagado" por el usuario y confirmación manual por el
+  admin. El método de pago está abstraído (`src/lib/pagos`) para poder
+  añadir otros proveedores sin tocar el resto del flujo.
+- Motor de generación de cuadros de salida: agrupa por hándicap o
+  manualmente, respeta las peticiones de "quiero jugar con" entre
+  jugadores, y exporta a PDF/XLS.
+- Entrada de resultados por tres vías que confluyen en la misma tabla:
+  manual, extracción automática desde un PDF/foto de clasificación
+  subido, o descarga/edición/re-subida en XLS.
+- Clasificación de liga/ranking, con dos modos de puntuación (tabla de
+  puntos por posición, o suma directa de puntos Stableford) y cálculo de
+  posiciones por categoría de hándicap con desempate.
+- Cuadro de honor: premios por categoría de hándicap y premios por hoyo
+  (drive más largo, bola más cercana...) de forma independiente.
+- Formulario de contacto y panel de gestión de consultas (responder,
+  marcar leída, eliminar), con email personalizado por organizador.
+- Panel admin por organizador (`/admin`): torneos, ligas, patrocinadores,
+  pedidos, consultas, configuración. Panel "god" (`/god`, solo
+  super-admins) para dar de alta y gestionar organizadores.
+- Analítica de visitas propia + Vercel Analytics y Speed Insights.
 
 ## Puesta en marcha
 
@@ -36,8 +48,7 @@ Crea un proyecto en [supabase.com](https://supabase.com) y aplica las
 migraciones de `supabase/migrations/` en orden (por ejemplo desde el SQL
 Editor del panel de Supabase, o con la CLI: `supabase db push`).
 
-Esto crea todas las tablas, las políticas de RLS y los buckets de Storage
-(`posters` público, `resultados-pdf` privado).
+Esto crea todas las tablas, las políticas de RLS y los buckets de Storage.
 
 ### 2. Variables de entorno
 
@@ -49,10 +60,15 @@ cp .env.example .env.local
 
 - `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY`: Project
   Settings → API en Supabase.
+- `SUPABASE_SERVICE_ROLE_KEY`: secreta, solo para operaciones de servidor
+  que deban saltarse RLS (ej. inscripción de invitados sin cuenta).
 - `NEXT_PUBLIC_SITE_URL`: URL pública del sitio (usada en los redirects de
   login).
 - `VISIT_IP_SALT`: cualquier cadena aleatoria, para anonimizar IPs en el
   contador de visitas.
+- `SMTP_HOST` / `SMTP_PORT` / `SMTP_USER` / `SMTP_PASSWORD` / `SMTP_FROM`:
+  cuenta de correo real para el envío de emails (inscripciones, contacto,
+  respuestas). Sin esto no se envía ningún email.
 
 ### 3. Configurar Google OAuth (opcional pero recomendado)
 
@@ -60,16 +76,20 @@ En Supabase: Authentication → Providers → Google, con las credenciales de
 un proyecto de Google Cloud. La URL de redirect a autorizar en Google es
 `https://<tu-proyecto>.supabase.co/auth/v1/callback`.
 
-### 4. Dar de alta a los administradores
+### 4. Dar de alta el primer organizador y su equipo admin
 
-Los 3-4 organizadores necesitan una fila en `usuarios_admin` para acceder
-al panel `/admin`. Primero deben iniciar sesión una vez en la web (Google o
+Un super-admin da de alta el organizador desde el panel `/god`. El equipo
+de ese club/asociación necesita una fila en `usuarios_admin` para acceder
+a `/admin`. Primero deben iniciar sesión una vez en la web (Google o
 email) y luego, desde el SQL Editor de Supabase:
 
 ```sql
-insert into usuarios_admin (user_id, nombre, email)
-values ('<auth.users.id del usuario>', 'Nombre Apellido', 'email@ejemplo.com');
+insert into usuarios_admin (user_id, nombre, email, organizador_id)
+values ('<auth.users.id del usuario>', 'Nombre Apellido', 'email@ejemplo.com', '<organizadores.id>');
 ```
+
+El primer super-admin (acceso a `/god`) se da de alta igual, en
+`super_admins`.
 
 ### 5. Instalar dependencias y arrancar
 
@@ -82,15 +102,19 @@ npm run dev
 
 Pensado para desplegar en [Vercel](https://vercel.com): importa el
 repositorio, añade las mismas variables de entorno del paso 2 y despliega.
-El middleware/proxy de Supabase Auth funciona igual en Edge Runtime.
 
 ## Estructura relevante
 
 ```
-supabase/migrations/   Esquema SQL (tablas, RLS, storage)
-src/types/database.ts  Tipos TypeScript del esquema (Database)
-src/lib/supabase/      Clientes de Supabase (browser/server/middleware)
-src/lib/pagos/         Abstracción de método de pago (Bizum hoy, Stripe después)
+supabase/migrations/   Esquema SQL (tablas, RLS, storage), aplicado en orden numérico
+src/types/database.ts  Tipos TypeScript del esquema (Database) — mantenidos a mano
+src/proxy.ts            Resolución de tenant por dominio + sesión de Supabase Auth
+src/lib/supabase/      Clientes de Supabase (browser/server/proxy/admin con service role)
+src/lib/pagos/         Abstracción de método de pago (Bizum hoy, ampliable)
+src/lib/salidas/       Motor de generación de cuadros de salida
+src/lib/resultados/    Extracción de resultados desde PDF/foto
+src/lib/clasificacion/ Recálculo de la clasificación global de liga/ranking
+src/lib/email/         Envío de emails, personalizado por organizador
 src/lib/data/          Consultas de lectura reutilizadas por varias páginas
-src/app/               Rutas públicas + /admin (panel de administración)
+src/app/               Rutas públicas + /admin (panel por organizador) + /god (super-admin)
 ```
