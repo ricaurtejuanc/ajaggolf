@@ -1,13 +1,7 @@
 import type { Metadata } from "next";
-import {
-  listarTorneosPublicos,
-  obtenerInscritosPorTorneo,
-  obtenerEstadoClasificacionPorTorneos,
-  obtenerIdsConSalidaPublicada,
-} from "@/lib/data/torneos";
+import { listarTorneosPublicos, obtenerInscritosPorTorneo } from "@/lib/data/torneos";
 import { createClient } from "@/lib/supabase/server";
 import { TorneoCard } from "@/components/torneos/torneo-card";
-import { TorneoDisputadoBanner } from "@/components/torneos/torneo-disputado-banner";
 import type { Torneo } from "@/types/database";
 
 export const metadata: Metadata = { title: "Calendario de torneos" };
@@ -47,14 +41,10 @@ export default async function TorneosPage() {
   const pasadosPorMes = agruparPorMes(pasados);
 
   const supabase = await createClient();
-  const [inscritosPorTorneo, estadoClasificacion, idsConSalida] = await Promise.all([
-    obtenerInscritosPorTorneo(
-      supabase,
-      proximos.map((t) => t.id),
-    ),
-    obtenerEstadoClasificacionPorTorneos(pasados),
-    obtenerIdsConSalidaPublicada(pasados.map((t) => t.id)),
-  ]);
+  const inscritosPorTorneo = await obtenerInscritosPorTorneo(
+    supabase,
+    torneos.map((t) => t.id),
+  );
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-10">
@@ -98,28 +88,20 @@ export default async function TorneosPage() {
               <h2 className="mb-4 font-display text-xl font-semibold text-ajag-verde-900">
                 Torneos disputados
               </h2>
-              <div className="flex flex-col gap-8">
+              <div className="flex flex-col gap-10">
                 {pasadosPorMes.map((grupo) => (
                   <div key={grupo.etiqueta}>
                     <h3 className="mb-3 text-xs font-medium uppercase tracking-wide text-ajag-gris-500">
                       {grupo.etiqueta}
                     </h3>
-                    <div className="flex flex-col gap-4">
-                      {grupo.torneos.map((torneo) => {
-                        const tieneSalida = idsConSalida.has(torneo.id);
-                        const hayHorarios = Boolean(torneo.horarios_pdf_url) || tieneSalida;
-                        return (
-                          <TorneoDisputadoBanner
-                            key={torneo.id}
-                            torneo={torneo}
-                            horariosDisponible={hayHorarios}
-                            horariosHref={hayHorarios ? `/torneos/${torneo.slug}/salidas` : null}
-                            clasificacionDisponible={
-                              estadoClasificacion[torneo.id]?.disponible ?? false
-                            }
-                          />
-                        );
-                      })}
+                    <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                      {grupo.torneos.map((torneo) => (
+                        <TorneoCard
+                          key={torneo.id}
+                          torneo={torneo}
+                          inscritos={inscritosPorTorneo[torneo.id] ?? 0}
+                        />
+                      ))}
                     </div>
                   </div>
                 ))}

@@ -17,7 +17,7 @@ const etiquetaEstado: Record<Torneo["estado"], string> = {
   borrador: "Borrador",
   publicado: "Inscripciones abiertas",
   cerrado: "Completo",
-  finalizado: "Finalizado",
+  finalizado: "Disputado",
 };
 
 export function TorneoCard({
@@ -57,9 +57,11 @@ export function TorneoCard({
           className={`absolute right-3 top-3 rounded-full px-3 py-1 text-xs font-medium ${
             torneo.estado === "cerrado"
               ? "bg-ajag-rojo-600 text-white"
-              : torneo.estado === "publicado" && !lleno
-                ? "bg-ajag-verde-700 text-white"
-                : "bg-white/90 text-ajag-gris-500"
+              : torneo.estado === "finalizado"
+                ? "bg-ajag-gris-500 text-white"
+                : torneo.estado === "publicado" && !lleno
+                  ? "bg-ajag-verde-700 text-white"
+                  : "bg-white/90 text-ajag-gris-500"
           }`}
         >
           {torneo.estado === "publicado" && lleno

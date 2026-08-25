@@ -93,10 +93,7 @@ export default async function TorneoDetallePage({
     torneo.tees_femenino.length ? `Damas: ${torneo.tees_femenino.join(", ")}` : null,
   ].filter((p): p is string => p != null);
   const textoTees = partesTees.length ? partesTees.join(" · ") : "Por confirmar";
-  // Un torneo ya disputado no necesita mostrar su horario (a nadie le
-  // interesa ya), pero la clasificación siempre es relevante.
-  const disputado = torneo.estado === "finalizado";
-  const hayHorarios = !disputado && (Boolean(salidaPublicada) || Boolean(torneo.horarios_pdf_url));
+  const hayHorarios = Boolean(salidaPublicada) || Boolean(torneo.horarios_pdf_url);
   const hayClasificacion = (nPdf ?? 0) > 0 || (nResultados ?? 0) > 0 || hayCuadroDeHonor(torneo);
   const textoPrecio =
     (torneo.precio_socio_cents != null
