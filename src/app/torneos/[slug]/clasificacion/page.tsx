@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/server";
 import { obtenerTorneoPorSlug } from "@/lib/data/torneos";
 import { formatearFecha } from "@/lib/format";
 import { CuadroDeHonor, hayCuadroDeHonor } from "@/components/torneos/cuadro-de-honor";
+import { PdfPreview } from "@/components/torneos/pdf-preview";
 import { ClasificacionTabs } from "./clasificacion-tabs";
 
 export async function generateMetadata({
@@ -75,13 +76,7 @@ export default async function ClasificacionPage({
     general = (
       <div>
         {esPdf ? (
-          <div className="overflow-hidden rounded-2xl border border-ajag-gris-100">
-            <iframe
-              src={`${data.publicUrl}#toolbar=0&navpanes=0&scrollbar=0&view=Fit`}
-              className="h-[75vh] w-full pointer-events-none"
-              title="Clasificación"
-            />
-          </div>
+          <PdfPreview url={data.publicUrl} alt={`Clasificación de ${torneo.nombre}`} />
         ) : (
           // eslint-disable-next-line @next/next/no-img-element
           <img

@@ -5,6 +5,7 @@ import { Flag, Clock } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { obtenerTorneoPorSlug } from "@/lib/data/torneos";
 import { formatearFecha } from "@/lib/format";
+import { PdfPreview } from "@/components/torneos/pdf-preview";
 
 export async function generateMetadata({
   params,
@@ -39,12 +40,8 @@ export default async function SalidasPublicasPage({
         <h1 className="font-display text-2xl font-semibold text-ajag-verde-900">
           {torneo.nombre}
         </h1>
-        <div className="mt-6 overflow-hidden rounded-2xl border border-ajag-gris-100">
-          <iframe
-            src={`${torneo.horarios_pdf_url}#toolbar=0&navpanes=0&scrollbar=0&view=Fit`}
-            className="h-[75vh] w-full pointer-events-none"
-            title="Horarios"
-          />
+        <div className="mt-6">
+          <PdfPreview url={torneo.horarios_pdf_url} alt={`Horarios de ${torneo.nombre}`} />
         </div>
         <a
           href={torneo.horarios_pdf_url}
