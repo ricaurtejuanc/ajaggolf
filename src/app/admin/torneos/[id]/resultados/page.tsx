@@ -28,7 +28,9 @@ export default async function AdminResultadosPage({
 
   const { data: torneo } = await supabase
     .from("torneos")
-    .select("id, nombre, slug, liga_pool_id, formato_puntuacion, premios, premios_ganadores")
+    .select(
+      "id, nombre, slug, liga_pool_id, formato_puntuacion, premios, premios_hoyo, premios_ganadores",
+    )
     .eq("id", id)
     .maybeSingle();
   if (!torneo) notFound();
@@ -112,6 +114,7 @@ export default async function AdminResultadosPage({
       <GanadoresPremiosForm
         torneoId={id}
         premios={torneo.premios}
+        premiosHoyo={torneo.premios_hoyo}
         ganadoresIniciales={torneo.premios_ganadores}
         confirmados={confirmados}
         sugerenciasPosicion={sugerenciasPosicion}

@@ -4,7 +4,7 @@ import { useActionState, useState } from "react";
 import { Plus, Trophy, X } from "lucide-react";
 import { actualizarGanadoresPremios, type EstadoGanadores } from "./actions";
 import type { InscritoParaResultado } from "@/lib/data/resultados";
-import type { PremioCategoria } from "@/types/database";
+import type { PremioCategoria, PremioHoyo } from "@/types/database";
 
 // Detecta a qué puesto se refiere el nombre de un premio ("Premio primer
 // clasificado", "3er Clasificado", "4º Clasificado"...) para poder sugerir
@@ -35,12 +35,14 @@ function detectarPosicion(nombre: string): number | null {
 export function GanadoresPremiosForm({
   torneoId,
   premios,
+  premiosHoyo,
   ganadoresIniciales,
   confirmados,
   sugerenciasPosicion,
 }: {
   torneoId: string;
   premios: PremioCategoria[];
+  premiosHoyo: PremioHoyo[];
   ganadoresIniciales: Record<string, string[]>;
   confirmados: InscritoParaResultado[];
   sugerenciasPosicion: Record<string, number>;
@@ -51,10 +53,17 @@ export function GanadoresPremiosForm({
     error: null,
   });
   const [premiosState, setPremiosState] = useState<PremioCategoria[]>(premios);
-  const [porHoyo, setPorHoyo] = useState<Record<number, { nombre: string; hoyo: string }>>({});
+  const [premiosHoyoState, setPremiosHoyoState] = useState<PremioHoyo[]>(premiosHoyo);
+  const [nuevoHoyoNombre, setNuevoHoyoNombre] = useState("");
+  const [nuevoHoyoNumero, setNuevoHoyoNumero] = useState("");
   const haySugerenciasPosicion = Object.keys(sugerenciasPosicion).length > 0;
   const [ganadores, setGanadores] = useState<Record<string, string[]>>(() => {
     const inicial: Record<string, string[]> = {};
+    premiosHoyo.forEach((_premio, indice) => {
+      const clave = `hoyo-${indice}`;
+      const valores = ganadoresIniciales[clave];
+      inicial[clave] = valores && valores.length > 0 ? valores : [""];
+    });
     premios.forEach((cat, indiceCategoria) => {
       // Candidatos de la categoría ordenados por su puesto en la
       // clasificación general (de la tabla manual, de "Generar
@@ -92,7 +101,7 @@ export function GanadoresPremiosForm({
     return inicial;
   });
 
-  if (premiosState.length === 0) return null;
+  if (premiosState.length === 0 && premiosHoyoState.length === 0) return null;
 
   function actualizarNombre(clave: string, indice: number, valor: string) {
     setGanadores((prev) => ({
@@ -133,17 +142,32 @@ export function GanadoresPremiosForm({
     );
   }
 
-  // Para premios que se repiten por hoyo (drive más largo, bola más cercana
-  // en cada par 3...) basta con escribir el nombre base una vez: cada
-  // "Añadir" solo pide el número de hoyo y lo va anexando al nombre, así
-  // que se pueden meter varios seguidos sin reescribir el nombre entero.
-  function anadirPorHoyo(indiceCategoria: number) {
-    const datos = porHoyo[indiceCategoria];
-    const nombreBase = (datos?.nombre ?? "").trim();
-    const hoyo = (datos?.hoyo ?? "").trim();
-    if (!nombreBase) return;
-    anadirPremio(indiceCategoria, hoyo ? `${nombreBase} — Hoyo ${hoyo}` : nombreBase);
-    setPorHoyo((prev) => ({ ...prev, [indiceCategoria]: { nombre: nombreBase, hoyo: "" } }));
+  function actualizarPremioHoyo(indice: number, cambios: Partial<PremioHoyo>) {
+    setPremiosHoyoState((prev) => prev.map((p, i) => (i === indice ? { ...p, ...cambios } : p)));
+  }
+
+  function anadirPremioHoyo() {
+    const nombre = nuevoHoyoNombre.trim();
+    if (!nombre) return;
+    setPremiosHoyoState((prev) => [
+      ...prev,
+      { nombre, hoyo: nuevoHoyoNumero ? Number(nuevoHoyoNumero) : null },
+    ]);
+    // El nombre se mantiene para poder añadir rápido el mismo premio en
+    // varios hoyos seguidos (ej. "Bola más cercana" en cada par 3).
+    setNuevoHoyoNumero("");
+  }
+
+  // Las claves de ganadores de premios por hoyo usan el índice dentro de
+  // premiosHoyoState (prefijo "hoyo-"), así que quitar uno de en medio
+  // desplazaría los ganadores ya guardados de los siguientes. Solo se
+  // permite quitar el último para evitar ese desajuste.
+  function quitarPremioHoyo(indice: number) {
+    setPremiosHoyoState((prev) => prev.filter((_, i) => i !== indice));
+    const claveAEliminar = `hoyo-${indice}`;
+    setGanadores((prev) =>
+      Object.fromEntries(Object.entries(prev).filter(([clave]) => clave !== claveAEliminar)),
+    );
   }
 
   return (
@@ -173,6 +197,7 @@ export function GanadoresPremiosForm({
 
       <input type="hidden" name="ganadores" value={JSON.stringify(ganadores)} />
       <input type="hidden" name="premios" value={JSON.stringify(premiosState)} />
+      <input type="hidden" name="premios_hoyo" value={JSON.stringify(premiosHoyoState)} />
 
       <div className="flex flex-col gap-5">
         {premiosState.map((cat, indiceCategoria) => (
@@ -242,51 +267,128 @@ export function GanadoresPremiosForm({
               >
                 <Plus size={13} /> Añadir premio en {cat.nombre}
               </button>
-
-              <div className="flex flex-wrap items-center gap-2 rounded-lg bg-ajag-gris-50 p-2">
-                <span className="text-xs text-ajag-gris-500">Premio por hoyo (drive más largo, bola más cercana...):</span>
-                <input
-                  value={porHoyo[indiceCategoria]?.nombre ?? ""}
-                  onChange={(e) =>
-                    setPorHoyo((prev) => ({
-                      ...prev,
-                      [indiceCategoria]: { nombre: e.target.value, hoyo: prev[indiceCategoria]?.hoyo ?? "" },
-                    }))
-                  }
-                  placeholder="Ej. Bola más cercana"
-                  className="w-44 rounded-lg border border-ajag-gris-200 bg-white px-2 py-1 text-xs outline-none focus:border-ajag-verde-600"
-                />
-                <input
-                  value={porHoyo[indiceCategoria]?.hoyo ?? ""}
-                  onChange={(e) =>
-                    setPorHoyo((prev) => ({
-                      ...prev,
-                      [indiceCategoria]: { nombre: prev[indiceCategoria]?.nombre ?? "", hoyo: e.target.value },
-                    }))
-                  }
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      e.preventDefault();
-                      anadirPorHoyo(indiceCategoria);
-                    }
-                  }}
-                  type="number"
-                  min={1}
-                  max={18}
-                  placeholder="Hoyo"
-                  className="w-16 rounded-lg border border-ajag-gris-200 bg-white px-2 py-1 text-xs outline-none focus:border-ajag-verde-600"
-                />
-                <button
-                  type="button"
-                  onClick={() => anadirPorHoyo(indiceCategoria)}
-                  className="flex items-center gap-1 rounded-lg bg-ajag-oro-500/20 px-2 py-1 text-xs font-medium text-ajag-oro-600 hover:bg-ajag-oro-500/30"
-                >
-                  <Plus size={12} /> Añadir
-                </button>
-              </div>
             </div>
           </div>
         ))}
+      </div>
+
+      <div className="mt-6 border-t border-ajag-gris-100 pt-5">
+        <p className="text-sm font-medium text-ajag-verde-900">Premios por hoyo</p>
+        <p className="mt-1 text-xs text-ajag-gris-500">
+          Drive más largo, bola más cercana... premios de un hoyo concreto, sin categoría de
+          hándicap. Puedes repetir el mismo premio en varios hoyos.
+        </p>
+
+        <div className="mt-3 flex flex-col gap-3">
+          {premiosHoyoState.map((premio, indice) => {
+            const clave = `hoyo-${indice}`;
+            const nombres = ganadores[clave] ?? [""];
+            return (
+              <div key={indice} className="flex flex-col gap-1 sm:flex-row sm:gap-3">
+                <div className="flex h-fit w-56 shrink-0 items-center gap-1.5">
+                  <input
+                    value={premio.nombre}
+                    onChange={(e) => actualizarPremioHoyo(indice, { nombre: e.target.value })}
+                    placeholder="Nombre del premio"
+                    className="min-w-0 flex-1 rounded-lg border border-ajag-gris-200 bg-white px-2 py-1.5 text-sm outline-none focus:border-ajag-verde-600"
+                  />
+                  <input
+                    type="number"
+                    min={1}
+                    max={18}
+                    value={premio.hoyo ?? ""}
+                    onChange={(e) =>
+                      actualizarPremioHoyo(indice, {
+                        hoyo: e.target.value ? Number(e.target.value) : null,
+                      })
+                    }
+                    placeholder="Hoyo"
+                    className="w-16 shrink-0 rounded-lg border border-ajag-gris-200 bg-white px-2 py-1.5 text-sm outline-none focus:border-ajag-verde-600"
+                  />
+                  {indice === premiosHoyoState.length - 1 ? (
+                    <button
+                      type="button"
+                      aria-label="Quitar premio"
+                      onClick={() => quitarPremioHoyo(indice)}
+                      className="shrink-0 text-ajag-gris-500 hover:text-ajag-rojo-600"
+                    >
+                      <X size={16} />
+                    </button>
+                  ) : null}
+                </div>
+                <div className="flex flex-1 flex-col gap-1.5">
+                  {nombres.map((nombre, indiceGanador) => (
+                    <div key={indiceGanador} className="flex items-center gap-2">
+                      <select
+                        value={nombre}
+                        onChange={(e) => actualizarNombre(clave, indiceGanador, e.target.value)}
+                        className="w-full rounded-lg border border-ajag-gris-200 bg-white px-3 py-1.5 text-sm outline-none focus:border-ajag-verde-600"
+                      >
+                        <option value="">Selecciona un inscrito</option>
+                        {confirmados.map((c) => (
+                          <option key={c.inscripcionId} value={c.nombreCompleto}>
+                            {c.nombreCompleto}
+                          </option>
+                        ))}
+                        {nombre && !confirmados.some((c) => c.nombreCompleto === nombre) ? (
+                          <option value={nombre}>{nombre} (no está en la lista)</option>
+                        ) : null}
+                      </select>
+                      {nombres.length > 1 ? (
+                        <button
+                          type="button"
+                          aria-label="Quitar ganador"
+                          onClick={() => quitarGanador(clave, indiceGanador)}
+                          className="shrink-0 text-ajag-gris-500 hover:text-ajag-rojo-600"
+                        >
+                          <X size={16} />
+                        </button>
+                      ) : null}
+                    </div>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={() => anadirGanador(clave)}
+                    className="flex w-fit items-center gap-1 text-xs font-medium text-ajag-verde-700 hover:underline"
+                  >
+                    <Plus size={13} /> Añadir otro ganador
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        <div className="mt-3 flex flex-wrap items-center gap-2 rounded-lg bg-ajag-gris-50 p-2">
+          <input
+            value={nuevoHoyoNombre}
+            onChange={(e) => setNuevoHoyoNombre(e.target.value)}
+            placeholder="Ej. Bola más cercana"
+            className="w-44 rounded-lg border border-dashed border-ajag-gris-200 bg-white px-2 py-1 text-xs outline-none focus:border-ajag-verde-600"
+          />
+          <input
+            value={nuevoHoyoNumero}
+            onChange={(e) => setNuevoHoyoNumero(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                anadirPremioHoyo();
+              }
+            }}
+            type="number"
+            min={1}
+            max={18}
+            placeholder="Hoyo"
+            className="w-16 rounded-lg border border-dashed border-ajag-gris-200 bg-white px-2 py-1 text-xs outline-none focus:border-ajag-verde-600"
+          />
+          <button
+            type="button"
+            onClick={anadirPremioHoyo}
+            className="flex items-center gap-1 rounded-lg bg-ajag-oro-500/20 px-2 py-1 text-xs font-medium text-ajag-oro-600 hover:bg-ajag-oro-500/30"
+          >
+            <Plus size={12} /> Añadir premio por hoyo
+          </button>
+        </div>
       </div>
 
       {state.error ? <p className="mt-3 text-sm text-ajag-rojo-600">{state.error}</p> : null}

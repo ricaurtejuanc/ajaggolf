@@ -221,6 +221,34 @@ export default async function TorneoDetallePage({
         </div>
       ) : null}
 
+      {torneo.premios_hoyo.length > 0 ? (
+        <div className="mt-6 card-ajag p-5">
+          <h2 className="mb-3 font-display text-base font-semibold text-ajag-verde-900">
+            Premios por hoyo
+          </h2>
+          <ul className="grid gap-1.5 sm:grid-cols-2 lg:grid-cols-3">
+            {torneo.premios_hoyo.map((premio, indice) => {
+              const ganadores = torneo.premios_ganadores[`hoyo-${indice}`] ?? [];
+              return (
+                <li
+                  key={indice}
+                  className="flex items-start gap-1.5 text-sm text-ajag-verde-900"
+                >
+                  <Trophy size={13} className="mt-0.5 shrink-0 text-ajag-oro-600" />
+                  {premio.nombre}
+                  {premio.hoyo ? (
+                    <span className="text-ajag-gris-500"> (hoyo {premio.hoyo})</span>
+                  ) : null}
+                  {ganadores.length > 0 ? (
+                    <span className="text-ajag-gris-500"> — {ganadores.join(", ")}</span>
+                  ) : null}
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      ) : null}
+
       {torneo.extras.length > 0 ? (
         <div className="mt-6 card-ajag p-5">
           <h2 className="mb-3 font-display text-base font-semibold text-ajag-verde-900">

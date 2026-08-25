@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getUsuarioAdmin } from "@/lib/auth";
 import { extraerFilasPdf } from "@/lib/resultados/extraer-pdf";
 import { recalcularClasificacionGlobal } from "@/lib/clasificacion/recalcular";
-import { leerPremiosDesdeFormData } from "@/lib/premios";
+import { leerPremiosDesdeFormData, leerPremiosHoyoDesdeFormData } from "@/lib/premios";
 import { obtenerInscritosConfirmadosParaResultados } from "@/lib/data/resultados";
 
 export type EstadoDocumento = { ok: boolean; error: string | null };
@@ -211,11 +211,12 @@ export async function actualizarGanadoresPremios(
 
   const ganadores = leerGanadores(formData);
   const premios = leerPremiosDesdeFormData(formData);
+  const premiosHoyo = leerPremiosHoyoDesdeFormData(formData);
 
   const supabase = await createClient();
   const { data: torneo, error } = await supabase
     .from("torneos")
-    .update({ premios_ganadores: ganadores, premios })
+    .update({ premios_ganadores: ganadores, premios, premios_hoyo: premiosHoyo })
     .eq("id", torneoId)
     .select("slug")
     .single();

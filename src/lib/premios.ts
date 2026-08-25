@@ -1,5 +1,5 @@
 import "server-only";
-import type { PremioCategoria } from "@/types/database";
+import type { PremioCategoria, PremioHoyo } from "@/types/database";
 
 /**
  * Lee y sanea la estructura de premios (categorías + lista de premios de
@@ -39,4 +39,29 @@ export function leerPremiosDesdeFormData(formData: FormData): PremioCategoria[] 
       };
     })
     .filter((c): c is PremioCategoria => c != null);
+}
+
+/**
+ * Igual que leerPremiosDesdeFormData pero para "premios_hoyo" (drive más
+ * largo, bola más cercana...): sin categoría de hándicap, con un número de
+ * hoyo opcional propio.
+ */
+export function leerPremiosHoyoDesdeFormData(formData: FormData): PremioHoyo[] {
+  let crudo: unknown;
+  try {
+    crudo = JSON.parse(String(formData.get("premios_hoyo") ?? "[]"));
+  } catch {
+    return [];
+  }
+  if (!Array.isArray(crudo)) return [];
+
+  return crudo
+    .map((p) => {
+      if (typeof p !== "object" || p === null) return null;
+      const nombre = String((p as { nombre?: unknown }).nombre ?? "").trim();
+      if (!nombre) return null;
+      const hoyo = Number((p as { hoyo?: unknown }).hoyo);
+      return { nombre, hoyo: Number.isFinite(hoyo) && hoyo >= 1 && hoyo <= 18 ? hoyo : null };
+    })
+    .filter((p): p is PremioHoyo => p != null);
 }

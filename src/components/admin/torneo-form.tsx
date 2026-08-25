@@ -5,6 +5,7 @@ import { PosterUploader } from "./poster-uploader";
 import { TeesInput } from "./tees-input";
 import { CampoGolfInput } from "./campo-golf-input";
 import { PremiosEditor } from "./premios-editor";
+import { PremiosHoyoEditor } from "./premios-hoyo-editor";
 import type { EstadoTorneoForm } from "@/app/admin/torneos/actions";
 import type { CategoriaExtra, LigaPool, ModoSalida, Torneo } from "@/types/database";
 
@@ -346,6 +347,8 @@ export function TorneoForm({
       </div>
 
       <PremiosEditor premiosIniciales={torneo?.premios ?? []} />
+
+      <PremiosHoyoEditor premiosIniciales={torneo?.premios_hoyo ?? []} />
 
       {state.error ? <p className="text-sm text-ajag-rojo-600">{state.error}</p> : null}
 

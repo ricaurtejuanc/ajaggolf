@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getUsuarioAdmin } from "@/lib/auth";
-import { leerPremiosDesdeFormData } from "@/lib/premios";
+import { leerPremiosDesdeFormData, leerPremiosHoyoDesdeFormData } from "@/lib/premios";
 import type {
   EstadoTorneo,
   FormatoPuntuacion,
@@ -57,6 +57,7 @@ function leerCamposTorneo(formData: FormData) {
     poster_focal_x: Number.isNaN(focalX) ? 50 : clamp(focalX),
     poster_focal_y: Number.isNaN(focalY) ? 50 : clamp(focalY),
     premios: leerPremiosDesdeFormData(formData),
+    premios_hoyo: leerPremiosHoyoDesdeFormData(formData),
     precio_cents: Math.round(parseFloat(precioEuros || "0") * 100),
     precio_socio_cents: precioSocioEuros ? Math.round(parseFloat(precioSocioEuros) * 100) : null,
     cupo_maximo: cupoRaw ? parseInt(cupoRaw, 10) : null,

@@ -131,6 +131,14 @@ export type PremioCategoria = {
   premios: string[];
 };
 
+// Premios "por hoyo" (drive más largo, bola más cercana...): no dependen
+// de una categoría de handicap ni de la clasificación, y puede haber
+// varios del mismo tipo repetidos en distintos hoyos.
+export type PremioHoyo = {
+  nombre: string;
+  hoyo: number | null;
+};
+
 export type Torneo = {
   id: string;
   nombre: string;
@@ -156,6 +164,7 @@ export type Torneo = {
   modo_pago: ModoPagoTorneo;
   extras: string[];
   premios: PremioCategoria[];
+  premios_hoyo: PremioHoyo[];
   premios_ganadores: Record<string, string[]>;
   horarios_pdf_url: string | null;
   liga_pool_id: string | null;
