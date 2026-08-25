@@ -11,12 +11,7 @@ export const metadata: Metadata = { title: "Nuevo torneo · Admin" };
 export default async function NuevoTorneoPage() {
   const supabase = await createClient();
   const [{ data: ligas }, camposGolf, categoriasExtras] = await Promise.all([
-    supabase
-      .from("ligas_pool")
-      .select("*")
-      .eq("activa", true)
-      .not("tipo_oficial", "is", null)
-      .order("nombre"),
+    supabase.from("ligas_pool").select("*").eq("activa", true).order("nombre"),
     listarCamposGolf(),
     obtenerCategoriasExtras(),
   ]);

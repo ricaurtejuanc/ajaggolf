@@ -1,19 +1,11 @@
 "use client";
 
 import { useActionState, useState } from "react";
+import Link from "next/link";
 import { TablaPuntosEditor } from "./tabla-puntos-editor";
 import { LigaImagenUploader } from "./liga-imagen-uploader";
 import type { EstadoLigaForm } from "@/app/admin/ligas/actions";
 import type { LigaPool } from "@/types/database";
-
-function slugify(texto: string): string {
-  return texto
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "")
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/(^-|-$)/g, "");
-}
 
 export function LigaForm({
   liga,
@@ -25,9 +17,7 @@ export function LigaForm({
   textoBoton: string;
 }) {
   const [state, formAction, pending] = useActionState(action, { ok: false, error: null });
-  const [nombre, setNombre] = useState(liga?.nombre ?? "");
   const [modoPuntuacion, setModoPuntuacion] = useState(liga?.modo_puntuacion ?? "tabla_puntos");
-  const slugPrevisualizado = liga ? liga.slug : slugify(nombre);
 
   return (
     <form action={formAction} className="card-ajag flex flex-col gap-5 p-6">
@@ -41,18 +31,9 @@ export function LigaForm({
           id="nombre"
           name="nombre"
           required
-          value={nombre}
-          onChange={(e) => setNombre(e.target.value)}
+          defaultValue={liga?.nombre ?? ""}
           className="mt-1 w-full rounded-xl border border-ajag-gris-200 px-4 py-2.5 text-sm outline-none focus:border-ajag-verde-600"
         />
-      </div>
-
-      <div>
-        <span className="text-sm font-medium text-ajag-verde-900">URL pública</span>
-        <p className="mt-1 truncate text-sm text-ajag-gris-500">
-          /clasificaciones/{slugPrevisualizado || "…"}
-          {liga ? " (no cambia aunque edites el nombre)" : " — se genera a partir del nombre"}
-        </p>
       </div>
 
       <div>
@@ -98,28 +79,34 @@ export function LigaForm({
 
       <div>
         <span className="text-sm font-medium text-ajag-verde-900">Cómo se puntúa</span>
-        <div className="mt-2 flex flex-col gap-2">
-          <label className="flex items-center gap-2 text-sm text-ajag-gris-500">
-            <input
-              type="radio"
-              name="modo_puntuacion"
-              value="tabla_puntos"
-              checked={modoPuntuacion === "tabla_puntos"}
-              onChange={() => setModoPuntuacion("tabla_puntos")}
-            />
-            Puntos por posición (tabla configurable: 1º, 2º, 3º...)
-          </label>
-          <label className="flex items-center gap-2 text-sm text-ajag-gris-500">
-            <input
-              type="radio"
-              name="modo_puntuacion"
-              value="suma_stableford"
-              checked={modoPuntuacion === "suma_stableford"}
-              onChange={() => setModoPuntuacion("suma_stableford")}
-            />
-            Sumatoria de puntos Stableford (se suman directamente los puntos que hace cada
-            jugador en cada torneo, sin tabla de posiciones)
-          </label>
+        <input type="hidden" name="modo_puntuacion" value={modoPuntuacion} />
+        <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
+          <button
+            type="button"
+            onClick={() => setModoPuntuacion("tabla_puntos")}
+            aria-pressed={modoPuntuacion === "tabla_puntos"}
+            className={`rounded-xl border px-4 py-2.5 text-left text-sm transition ${
+              modoPuntuacion === "tabla_puntos"
+                ? "border-ajag-verde-600 bg-ajag-verde-50 text-ajag-verde-900"
+                : "border-ajag-gris-200 text-ajag-gris-500 hover:border-ajag-verde-300"
+            }`}
+          >
+            <span className="block font-medium">Puntos por posición</span>
+            <span className="text-xs">Tabla configurable: 1º, 2º, 3º...</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setModoPuntuacion("suma_stableford")}
+            aria-pressed={modoPuntuacion === "suma_stableford"}
+            className={`rounded-xl border px-4 py-2.5 text-left text-sm transition ${
+              modoPuntuacion === "suma_stableford"
+                ? "border-ajag-verde-600 bg-ajag-verde-50 text-ajag-verde-900"
+                : "border-ajag-gris-200 text-ajag-gris-500 hover:border-ajag-verde-300"
+            }`}
+          >
+            <span className="block font-medium">Suma de puntos Stableford</span>
+            <span className="text-xs">Se suman los puntos de cada torneo, sin tabla</span>
+          </button>
         </div>
       </div>
 
@@ -131,8 +118,9 @@ export function LigaForm({
         <span className="text-sm font-medium text-ajag-verde-900">Tipo</span>
         <p className="mt-1 text-xs text-ajag-gris-500">
           Puedes crear tantas ligas como quieras por temática (ej. Liga de Damas, Liga
-          Senior...). Márcala como Ranking o Pool oficial solo si quieres que sea la que
-          se puede elegir al crear un torneo: solo puede haber una de cada tipo.
+          Senior...) y todas se pueden elegir al crear un torneo. Márcala como Ranking o Pool
+          oficial solo para destacarla como tal en la lista pública: solo puede haber una de
+          cada tipo.
         </p>
         <div className="mt-2 flex flex-col gap-2">
           <label className="flex items-center gap-2 text-sm text-ajag-gris-500">
@@ -142,7 +130,7 @@ export function LigaForm({
               value=""
               defaultChecked={!liga?.tipo_oficial}
             />
-            Liga temática (no oficial, no se puede elegir al crear torneos)
+            Liga temática
           </label>
           <label className="flex items-center gap-2 text-sm text-ajag-gris-500">
             <input
@@ -151,7 +139,7 @@ export function LigaForm({
               value="ranking"
               defaultChecked={liga?.tipo_oficial === "ranking"}
             />
-            Ranking oficial (aparecerá para elegir al crear torneos)
+            Ranking oficial
           </label>
           <label className="flex items-center gap-2 text-sm text-ajag-gris-500">
             <input
@@ -160,7 +148,7 @@ export function LigaForm({
               value="pool"
               defaultChecked={liga?.tipo_oficial === "pool"}
             />
-            Pool oficial (aparecerá para elegir al crear torneos)
+            Pool oficial
           </label>
         </div>
       </div>
@@ -173,13 +161,21 @@ export function LigaForm({
       {state.error ? <p className="text-sm text-ajag-rojo-600">{state.error}</p> : null}
       {state.ok ? <p className="text-sm text-ajag-verde-700">Guardado correctamente.</p> : null}
 
-      <button
-        type="submit"
-        disabled={pending}
-        className="self-start rounded-xl bg-ajag-verde-700 px-6 py-2.5 text-sm font-medium text-white transition hover:bg-ajag-verde-600 disabled:opacity-60"
-      >
-        {pending ? "Guardando..." : textoBoton}
-      </button>
+      <div className="flex items-center gap-3">
+        <button
+          type="submit"
+          disabled={pending}
+          className="rounded-xl bg-ajag-verde-700 px-6 py-2.5 text-sm font-medium text-white transition hover:bg-ajag-verde-600 disabled:opacity-60"
+        >
+          {pending ? "Guardando..." : textoBoton}
+        </button>
+        <Link
+          href="/admin/ligas"
+          className="rounded-xl px-6 py-2.5 text-sm font-medium text-ajag-gris-500 transition hover:bg-ajag-gris-100"
+        >
+          Cancelar
+        </Link>
+      </div>
     </form>
   );
 }

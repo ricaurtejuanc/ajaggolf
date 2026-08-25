@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useState } from "react";
+import Link from "next/link";
 import { PosterUploader } from "./poster-uploader";
 import { TeesInput } from "./tees-input";
 import { CampoGolfInput } from "./campo-golf-input";
@@ -240,7 +241,7 @@ export function TorneoForm({
 
       <div>
         <label htmlFor="liga_pool_id" className="text-sm font-medium text-ajag-verde-900">
-          Puntúa para Ranking/Pool
+          Puntúa para liga/ranking/pool
         </label>
         <select
           id="liga_pool_id"
@@ -258,8 +259,7 @@ export function TorneoForm({
         </select>
         {ligas.length === 0 ? (
           <p className="mt-1 text-xs text-ajag-gris-500">
-            No hay ningún Ranking ni Pool dado de alta todavía. Ve a Admin → Ligas y Pool,
-            crea uno y márcalo como &quot;Ranking oficial&quot; o &quot;Pool oficial&quot;.
+            No hay ninguna liga dada de alta todavía. Ve a Admin → Ligas y Pool para crear una.
           </p>
         ) : null}
       </div>
@@ -352,13 +352,21 @@ export function TorneoForm({
 
       {state.error ? <p className="text-sm text-ajag-rojo-600">{state.error}</p> : null}
 
-      <button
-        type="submit"
-        disabled={pending}
-        className="self-start rounded-xl bg-ajag-verde-700 px-6 py-2.5 text-sm font-medium text-white transition hover:bg-ajag-verde-600 disabled:opacity-60"
-      >
-        {pending ? "Guardando..." : textoBoton}
-      </button>
+      <div className="flex items-center gap-3">
+        <button
+          type="submit"
+          disabled={pending}
+          className="rounded-xl bg-ajag-verde-700 px-6 py-2.5 text-sm font-medium text-white transition hover:bg-ajag-verde-600 disabled:opacity-60"
+        >
+          {pending ? "Guardando..." : textoBoton}
+        </button>
+        <Link
+          href="/admin/torneos"
+          className="rounded-xl px-6 py-2.5 text-sm font-medium text-ajag-gris-500 transition hover:bg-ajag-gris-100"
+        >
+          Cancelar
+        </Link>
+      </div>
     </form>
   );
 }

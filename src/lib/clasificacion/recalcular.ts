@@ -43,14 +43,20 @@ export async function recalcularClasificacionGlobal(ligaId: string): Promise<voi
 
   for (const r of resultados ?? []) {
     if (!r.jugador_id) continue;
-    const entrada = acumulado.get(r.jugador_id) ?? { puntos: 0, torneos: new Set<string>() };
-    entrada.torneos.add(r.torneo_id);
+    // Una fila sin puntuación real (posición o puntos sin rellenar: jugador
+    // inscrito pero sin resultado, retirado, no presentado...) no cuenta
+    // como participación en la liga: no debe sumar puestos con 0 puntos.
+    let puntos: number;
     if (sumaStableford) {
-      entrada.puntos += r.puntos ?? 0;
-    } else if (r.posicion != null) {
-      const puntos = tablaPuntos[String(r.posicion)] ?? tablaPuntos.resto ?? 0;
-      entrada.puntos += puntos;
+      if (r.puntos == null) continue;
+      puntos = r.puntos;
+    } else {
+      if (r.posicion == null) continue;
+      puntos = tablaPuntos[String(r.posicion)] ?? tablaPuntos.resto ?? 0;
     }
+    const entrada = acumulado.get(r.jugador_id) ?? { puntos: 0, torneos: new Set<string>() };
+    entrada.puntos += puntos;
+    entrada.torneos.add(r.torneo_id);
     acumulado.set(r.jugador_id, entrada);
   }
 
