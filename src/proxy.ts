@@ -6,6 +6,14 @@ import { updateSession } from "@/lib/supabase/middleware";
 // mismo host (/torneos, /admin, etc.) sigue sirviendo la app normal.
 const DOMINIOS_LANDING = new Set(["torneos.aftergolf.es", "www.torneos.aftergolf.es"]);
 
+// Alias de producción que asigna Vercel automáticamente: no es un dominio
+// que quiera enseñarse (SEO duplicado, confunde a quien lo comparta), así
+// que se redirige siempre a AJAG en su propio dominio. Solo este alias
+// concreto, no todo *.vercel.app: las URLs de preview de cada rama/commit
+// también acaban en vercel.app y sí interesa poder visitarlas.
+const ALIAS_VERCEL = "ajaggolf-umber.vercel.app";
+const DOMINIO_CANONICO = "ajag.torneos.aftergolf.es";
+
 /**
  * Resuelve a qué organizador pertenece esta visita según el dominio
  * (`organizadores.dominio`), con fallback a AJAG (slug "ajag") si no hay
@@ -40,6 +48,15 @@ async function resolverOrganizadorId(host: string): Promise<string | null> {
 
 export async function proxy(request: NextRequest) {
   const host = request.headers.get("host") ?? "";
+
+  if (host === ALIAS_VERCEL) {
+    const url = request.nextUrl.clone();
+    url.protocol = "https";
+    url.host = DOMINIO_CANONICO;
+    url.port = "";
+    return NextResponse.redirect(url, 308);
+  }
+
   const { pathname } = request.nextUrl;
   const debeReescribir = DOMINIOS_LANDING.has(host) && pathname === "/";
   const esLanding = debeReescribir || pathname === "/producto";

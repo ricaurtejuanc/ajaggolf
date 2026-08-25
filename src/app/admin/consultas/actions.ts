@@ -16,6 +16,16 @@ export async function marcarConsultaLeida(consultaId: string) {
   revalidatePath("/admin/consultas");
 }
 
+export async function eliminarConsulta(consultaId: string) {
+  const admin = await getUsuarioAdmin();
+  if (!admin) return;
+
+  const supabase = await createClient();
+  await supabase.from("consultas_contacto").delete().eq("id", consultaId);
+
+  revalidatePath("/admin/consultas");
+}
+
 export type EstadoRespuestaConsulta = { ok: boolean; error: string | null; aviso: string | null };
 
 export async function responderConsulta(

@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState, useState, useTransition } from "react";
-import { marcarConsultaLeida, responderConsulta } from "./actions";
+import { eliminarConsulta, marcarConsultaLeida, responderConsulta } from "./actions";
 import { formatearFechaCorta } from "@/lib/format";
 import type { ConsultaContacto } from "@/types/database";
 
@@ -53,6 +53,18 @@ export function ConsultaCard({ consulta }: { consulta: ConsultaContacto }) {
             {respondiendo ? "Cancelar" : "Responder"}
           </button>
         ) : null}
+        <button
+          type="button"
+          disabled={pending}
+          onClick={() => {
+            if (confirm("¿Eliminar esta consulta? No se puede deshacer.")) {
+              startTransition(() => eliminarConsulta(consulta.id));
+            }
+          }}
+          className="text-sm font-medium text-ajag-rojo-600 hover:underline disabled:opacity-50"
+        >
+          Eliminar
+        </button>
       </div>
 
       {estado.aviso ? (

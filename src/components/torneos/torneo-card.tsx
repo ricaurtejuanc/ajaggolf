@@ -10,6 +10,7 @@ const etiquetaFormato: Record<Torneo["formato_puntuacion"], string> = {
   parejas: "Por parejas",
   mejor_bola: "Mejor bola",
   scramble: "Scramble",
+  matchplay: "Match Play",
 };
 
 const etiquetaEstado: Record<Torneo["estado"], string> = {

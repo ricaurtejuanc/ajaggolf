@@ -9,6 +9,7 @@ import type {
   EstadoTorneo,
   FormatoPuntuacion,
   ModoAsignacionSalida,
+  ModoJuego,
   ModoPagoTorneo,
   ModoSalida,
 } from "@/types/database";
@@ -62,6 +63,7 @@ function leerCamposTorneo(formData: FormData) {
     precio_socio_cents: precioSocioEuros ? Math.round(parseFloat(precioSocioEuros) * 100) : null,
     cupo_maximo: cupoRaw ? parseInt(cupoRaw, 10) : null,
     formato_puntuacion: String(formData.get("formato_puntuacion") ?? "stableford") as FormatoPuntuacion,
+    modo_juego: String(formData.get("modo_juego") ?? "individual") as ModoJuego,
     modo_salida: String(formData.get("modo_salida") ?? "consecutivo") as ModoSalida,
     tees_consecutivo: teesConsecutivo.length > 0 ? teesConsecutivo : [1],
     modo_asignacion_salida: String(

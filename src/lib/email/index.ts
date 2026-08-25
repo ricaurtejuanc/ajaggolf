@@ -53,6 +53,7 @@ async function enviar(
   asunto: string,
   html: string,
   organizador?: OrganizadorEmailInfo | null,
+  responderA?: string,
 ): Promise<boolean> {
   const transporte = obtenerTransporte();
   if (!transporte) return false;
@@ -60,7 +61,7 @@ async function enviar(
     await transporte.sendMail({
       from: remitente(organizador),
       to: destinatario,
-      replyTo: organizador?.email_contacto ?? undefined,
+      replyTo: responderA ?? organizador?.email_contacto ?? undefined,
       subject: asunto,
       html,
     });
@@ -177,7 +178,10 @@ export async function enviarEmailNuevaConsulta(args: {
   );
 
   const destinatario = args.destinatario ?? args.organizador?.email_contacto ?? "info@aftergolf.es";
-  return await enviar(destinatario, `Nueva consulta de ${args.nombre}`, html, args.organizador);
+  // Responder-a apunta a quien ha escrito la consulta (no al propio
+  // organizador): así el admin puede darle a "Responder" en su cliente de
+  // correo y que vaya directo a la persona, en vez de a sí mismo.
+  return await enviar(destinatario, `Nueva consulta de ${args.nombre}`, html, args.organizador, args.email);
 }
 
 export async function enviarEmailRespuestaConsulta(args: {

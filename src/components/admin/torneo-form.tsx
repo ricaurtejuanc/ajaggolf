@@ -8,7 +8,27 @@ import { CampoGolfInput } from "./campo-golf-input";
 import { PremiosEditor } from "./premios-editor";
 import { PremiosHoyoEditor } from "./premios-hoyo-editor";
 import type { EstadoTorneoForm } from "@/app/admin/torneos/actions";
-import type { CategoriaExtra, LigaPool, ModoSalida, Torneo } from "@/types/database";
+import type {
+  CategoriaExtra,
+  FormatoPuntuacion,
+  LigaPool,
+  ModoJuego,
+  ModoSalida,
+  Torneo,
+} from "@/types/database";
+
+const OPCIONES_FORMATO: Record<ModoJuego, { value: FormatoPuntuacion; label: string }[]> = {
+  individual: [
+    { value: "stableford", label: "Stableford" },
+    { value: "medal_play", label: "Medal Play" },
+    { value: "matchplay", label: "Match Play" },
+  ],
+  parejas: [
+    { value: "mejor_bola", label: "Mejor bola" },
+    { value: "scramble", label: "Scramble" },
+    { value: "matchplay", label: "Match Play" },
+  ],
+};
 
 export function TorneoForm({
   torneo,
@@ -30,6 +50,19 @@ export function TorneoForm({
   const [teesConsecutivo, setTeesConsecutivo] = useState<Set<number>>(
     new Set(torneo?.tees_consecutivo && torneo.tees_consecutivo.length > 0 ? torneo.tees_consecutivo : [1]),
   );
+  const [modoJuego, setModoJuego] = useState<ModoJuego>(torneo?.modo_juego ?? "individual");
+  const [formatoPuntuacion, setFormatoPuntuacion] = useState<FormatoPuntuacion>(
+    torneo?.formato_puntuacion ?? "stableford",
+  );
+
+  function cambiarModoJuego(nuevoModo: ModoJuego) {
+    setModoJuego(nuevoModo);
+    // Si el formato actual no tiene sentido en la nueva modalidad (ej.
+    // "Stableford" al pasar a Por parejas), se cambia al primero válido.
+    if (!OPCIONES_FORMATO[nuevoModo].some((o) => o.value === formatoPuntuacion)) {
+      setFormatoPuntuacion(OPCIONES_FORMATO[nuevoModo][0].value);
+    }
+  }
 
   return (
     <form action={formAction} className="card-ajag flex flex-col gap-5 p-6">
@@ -167,19 +200,43 @@ export function TorneoForm({
         </div>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-3">
-        <Select
-          id="formato_puntuacion"
-          label="Formato"
-          defaultValue={torneo?.formato_puntuacion ?? "stableford"}
-          options={[
-            { value: "stableford", label: "Stableford" },
-            { value: "medal_play", label: "Medal Play" },
-            { value: "parejas", label: "Por parejas" },
-            { value: "mejor_bola", label: "Mejor bola" },
-            { value: "scramble", label: "Scramble" },
-          ]}
-        />
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div>
+          <label htmlFor="modo_juego" className="block text-sm font-medium text-ajag-verde-900">
+            Modalidad
+          </label>
+          <select
+            id="modo_juego"
+            name="modo_juego"
+            value={modoJuego}
+            onChange={(e) => cambiarModoJuego(e.target.value as ModoJuego)}
+            className="mt-1 w-full rounded-xl border border-ajag-gris-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-ajag-verde-600"
+          >
+            <option value="individual">Individual</option>
+            <option value="parejas">Por parejas</option>
+          </select>
+        </div>
+        <div>
+          <label
+            htmlFor="formato_puntuacion"
+            className="block text-sm font-medium text-ajag-verde-900"
+          >
+            Formato
+          </label>
+          <select
+            id="formato_puntuacion"
+            name="formato_puntuacion"
+            value={formatoPuntuacion}
+            onChange={(e) => setFormatoPuntuacion(e.target.value as FormatoPuntuacion)}
+            className="mt-1 w-full rounded-xl border border-ajag-gris-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-ajag-verde-600"
+          >
+            {OPCIONES_FORMATO[modoJuego].map((opcion) => (
+              <option key={opcion.value} value={opcion.value}>
+                {opcion.label}
+              </option>
+            ))}
+          </select>
+        </div>
         <div>
           <label htmlFor="modo_salida" className="block text-sm font-medium text-ajag-verde-900">
             Modo de salida

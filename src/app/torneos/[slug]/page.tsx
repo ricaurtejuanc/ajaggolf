@@ -16,6 +16,7 @@ const etiquetaFormato = {
   parejas: "Por parejas",
   mejor_bola: "Mejor bola",
   scramble: "Scramble",
+  matchplay: "Match Play",
 } as const;
 
 export async function generateMetadata({

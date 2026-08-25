@@ -14,7 +14,9 @@ export type FormatoPuntuacion =
   | "medal_play"
   | "parejas"
   | "mejor_bola"
-  | "scramble";
+  | "scramble"
+  | "matchplay";
+export type ModoJuego = "individual" | "parejas";
 export type ModoSalida = "consecutivo" | "shotgun";
 export type ModoAsignacionSalida = "handicap" | "manual" | "mixto";
 export type EstadoTorneo = "borrador" | "publicado" | "cerrado" | "finalizado";
@@ -158,6 +160,7 @@ export type Torneo = {
   precio_socio_cents: number | null;
   cupo_maximo: number | null;
   formato_puntuacion: FormatoPuntuacion;
+  modo_juego: ModoJuego;
   modo_salida: ModoSalida;
   modo_asignacion_salida: ModoAsignacionSalida;
   tees_consecutivo: number[];
