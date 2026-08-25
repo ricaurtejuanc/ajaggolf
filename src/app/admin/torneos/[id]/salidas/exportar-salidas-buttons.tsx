@@ -61,24 +61,24 @@ export function ExportarSalidasButtons({
 
       const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
 
-      // Con muchos jugadores, letra y márgenes más pequeños para que quepa
-      // todo en una sola página (el club necesita el cuadro completo de
-      // un vistazo, no repartido en varias hojas).
-      const n = filas.length || 1;
-      const fontSize = Math.max(5, Math.min(10, 900 / n));
-      const cellPadding = Math.max(0.5, Math.min(2, 120 / n));
+      const dibujarTitulo = () => {
+        doc.setFontSize(13);
+        doc.text(`Cuadro de salidas — ${torneoNombre}`, 14, 12);
+      };
 
-      doc.setFontSize(13);
-      doc.text(`Cuadro de salidas — ${torneoNombre}`, 14, 12);
-
+      // Letra de tamaño fijo y legible siempre: con muchos jugadores, en vez
+      // de encogerla hasta hacerla ilegible para caber en una sola hoja, la
+      // tabla se reparte en varias páginas (autoTable repite la cabecera; el
+      // título se vuelve a dibujar en cada página con didDrawPage).
       autoTable(doc, {
         startY: 18,
-        margin: { left: 10, right: 10 },
+        margin: { left: 10, right: 10, top: 16 },
         head: [["Grupo", "Hora", "Hoyo", "Jugador", "Licencia", "Hándicap"]],
         body: filas.map((f) => [f.grupo, f.hora, f.hoyo, f.jugador, f.licencia, f.handicap]),
-        styles: { fontSize, cellPadding },
+        styles: { fontSize: 9, cellPadding: 2, overflow: "linebreak" },
         headStyles: { fillColor: [31, 77, 51] },
         theme: "grid",
+        didDrawPage: dibujarTitulo,
       });
 
       doc.save(`salidas-${torneoSlug}.pdf`);
