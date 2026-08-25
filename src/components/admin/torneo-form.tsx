@@ -200,7 +200,7 @@ export function TorneoForm({
         </div>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <div>
           <label htmlFor="modo_juego" className="block text-sm font-medium text-ajag-verde-900">
             Modalidad
@@ -250,18 +250,9 @@ export function TorneoForm({
           >
             <option value="consecutivo">Consecutivo</option>
             <option value="shotgun">A tiro (shotgun)</option>
+            <option value="shotgun_silencioso">A tiro silencioso</option>
           </select>
         </div>
-        <Select
-          id="modo_asignacion_salida"
-          label="Asignación de grupos"
-          defaultValue={torneo?.modo_asignacion_salida ?? "handicap"}
-          options={[
-            { value: "handicap", label: "Automático por hándicap" },
-            { value: "manual", label: "Manual" },
-            { value: "mixto", label: "Mezcla de niveles" },
-          ]}
-        />
       </div>
 
       {modoSalida === "consecutivo" ? (

@@ -17,7 +17,7 @@ export type FormatoPuntuacion =
   | "scramble"
   | "matchplay";
 export type ModoJuego = "individual" | "parejas";
-export type ModoSalida = "consecutivo" | "shotgun";
+export type ModoSalida = "consecutivo" | "shotgun" | "shotgun_silencioso";
 export type ModoAsignacionSalida = "handicap" | "manual" | "mixto";
 export type EstadoTorneo = "borrador" | "publicado" | "cerrado" | "finalizado";
 export type EstadoInscripcion = "carrito" | "pendiente_pago" | "confirmada" | "cancelada";

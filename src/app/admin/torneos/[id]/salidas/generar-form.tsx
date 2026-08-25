@@ -95,6 +95,16 @@ export function GenerarSalidasForm({
               />
               A tiro (shotgun)
             </label>
+            <label className="flex items-center gap-2 text-sm text-ajag-gris-500">
+              <input
+                type="radio"
+                name="modo"
+                value="shotgun_silencioso"
+                checked={modo === "shotgun_silencioso"}
+                onChange={() => setModo("shotgun_silencioso")}
+              />
+              A tiro silencioso
+            </label>
           </div>
         </div>
 

@@ -100,10 +100,11 @@ export default async function SalidasPublicasPage({
   const primerGrupo = gruposOrdenados[0];
   const segundoGrupo = gruposOrdenados[1];
   let detalle: string;
-  if (modo === "shotgun") {
+  if (modo === "shotgun" || modo === "shotgun_silencioso") {
+    const etiqueta = modo === "shotgun_silencioso" ? "Salida a tiro silencioso" : "Salida a tiro (shotgun)";
     detalle = primerGrupo?.horaSalida
-      ? `Salida a tiro (shotgun) a partir de las ${primerGrupo.horaSalida.slice(0, 5)}`
-      : "Salida a tiro (shotgun)";
+      ? `${etiqueta} a partir de las ${primerGrupo.horaSalida.slice(0, 5)}`
+      : etiqueta;
   } else {
     const partes = ["Salidas consecutivas"];
     if (primerGrupo?.hoyoSalida) partes.push(`desde el tee #${primerGrupo.hoyoSalida}`);
