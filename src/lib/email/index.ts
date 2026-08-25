@@ -1,7 +1,21 @@
 import nodemailer from "nodemailer";
 import { formatearPrecio, formatearFecha } from "@/lib/format";
+import type { OrganizadorEmailInfo } from "@/lib/data/organizador";
 
-const FROM = process.env.SMTP_FROM || "AJAG Golf <no-reply@localhost>";
+const MARCA_DEFECTO = "AJAG Golf";
+const FROM_DEFECTO = process.env.SMTP_FROM || "AJAG Golf <no-reply@localhost>";
+
+// Solo se personaliza el nombre visible del remitente (y a quién se
+// responde): la dirección real de envío es siempre la de la cuenta SMTP
+// configurada (SMTP_FROM), porque la mayoría de proveedores rechazan o
+// marcan como spam un remitente de un dominio no verificado en esa
+// cuenta. "<user@dominio>" -> "user@dominio"; si no hay "<...>" se asume
+// que SMTP_FROM ya es solo la dirección.
+const DIRECCION_ENVIO = (FROM_DEFECTO.match(/<([^>]+)>/)?.[1] ?? FROM_DEFECTO).trim();
+
+function remitente(organizador?: OrganizadorEmailInfo | null): string {
+  return `${organizador?.nombre ?? MARCA_DEFECTO} <${DIRECCION_ENVIO}>`;
+}
 
 function escapeHtml(texto: string): string {
   return texto
@@ -34,11 +48,22 @@ function obtenerTransporte() {
 /** Devuelve true si el email se ha enviado, false si no (SMTP sin
  * configurar o fallo al enviar) para que quien llame pueda avisar de que
  * el envío no ha ocurrido en vez de darlo por hecho en silencio. */
-async function enviar(destinatario: string, asunto: string, html: string): Promise<boolean> {
+async function enviar(
+  destinatario: string,
+  asunto: string,
+  html: string,
+  organizador?: OrganizadorEmailInfo | null,
+): Promise<boolean> {
   const transporte = obtenerTransporte();
   if (!transporte) return false;
   try {
-    await transporte.sendMail({ from: FROM, to: destinatario, subject: asunto, html });
+    await transporte.sendMail({
+      from: remitente(organizador),
+      to: destinatario,
+      replyTo: organizador?.email_contacto ?? undefined,
+      subject: asunto,
+      html,
+    });
     return true;
   } catch (err) {
     console.error("Error enviando email:", err);
@@ -48,12 +73,17 @@ async function enviar(destinatario: string, asunto: string, html: string): Promi
 
 type ItemInscripcion = { torneoNombre: string; torneoFecha: string; precioCents: number };
 
-function envoltorio(titulo: string, cuerpoHtml: string): string {
+function envoltorio(
+  titulo: string,
+  cuerpoHtml: string,
+  organizador?: OrganizadorEmailInfo | null,
+): string {
+  const marca = organizador?.nombre ?? MARCA_DEFECTO;
   return `
     <div style="font-family: system-ui, sans-serif; background: #f3f6f3; padding: 32px 16px;">
       <div style="max-width: 480px; margin: 0 auto; background: #ffffff; border-radius: 16px; overflow: hidden; border: 1px solid #e4e9e4;">
         <div style="background: #1f4d33; padding: 20px 24px;">
-          <span style="color: #ffffff; font-size: 18px; font-weight: 600;">AJAG Golf</span>
+          <span style="color: #ffffff; font-size: 18px; font-weight: 600;">${escapeHtml(marca)}</span>
         </div>
         <div style="padding: 24px;">
           <h1 style="margin: 0 0 12px; font-size: 18px; color: #1f4d33;">${titulo}</h1>
@@ -98,6 +128,7 @@ export async function enviarEmailInscripcionRecibida(args: {
   destinatario: string;
   nombre: string;
   items: ItemInscripcion[];
+  organizador?: OrganizadorEmailInfo | null;
 }) {
   const asunto =
     args.items.length === 1
@@ -119,9 +150,10 @@ export async function enviarEmailInscripcionRecibida(args: {
         página de contacto de la web.
       </p>
     `,
+    args.organizador,
   );
 
-  return await enviar(args.destinatario, asunto, html);
+  return await enviar(args.destinatario, asunto, html, args.organizador);
 }
 
 export async function enviarEmailNuevaConsulta(args: {
@@ -129,6 +161,8 @@ export async function enviarEmailNuevaConsulta(args: {
   email: string;
   telefono: string | null;
   mensaje: string;
+  destinatario?: string;
+  organizador?: OrganizadorEmailInfo | null;
 }) {
   const html = envoltorio(
     "Nueva consulta de contacto",
@@ -139,9 +173,11 @@ export async function enviarEmailNuevaConsulta(args: {
       </p>
       <p style="color: #1f4d33; font-size: 14px; line-height: 1.5; white-space: pre-line; background: #f3f6f3; border-radius: 8px; padding: 12px;">${escapeHtml(args.mensaje)}</p>
     `,
+    args.organizador,
   );
 
-  return await enviar("info@aftergolf.es", `Nueva consulta de ${args.nombre}`, html);
+  const destinatario = args.destinatario ?? args.organizador?.email_contacto ?? "info@aftergolf.es";
+  return await enviar(destinatario, `Nueva consulta de ${args.nombre}`, html, args.organizador);
 }
 
 export async function enviarEmailRespuestaConsulta(args: {
@@ -149,6 +185,7 @@ export async function enviarEmailRespuestaConsulta(args: {
   nombre: string;
   mensajeOriginal: string;
   respuesta: string;
+  organizador?: OrganizadorEmailInfo | null;
 }) {
   const html = envoltorio(
     "Respuesta a tu consulta",
@@ -159,15 +196,23 @@ export async function enviarEmailRespuestaConsulta(args: {
         Tu mensaje original: "${escapeHtml(args.mensajeOriginal)}"
       </p>
     `,
+    args.organizador,
   );
 
-  return await enviar(args.destinatario, "Respuesta a tu consulta — AJAG Golf", html);
+  const marca = args.organizador?.nombre ?? MARCA_DEFECTO;
+  return await enviar(
+    args.destinatario,
+    `Respuesta a tu consulta — ${marca}`,
+    html,
+    args.organizador,
+  );
 }
 
 export async function enviarEmailInscripcionConfirmada(args: {
   destinatario: string;
   nombre: string;
   items: ItemInscripcion[];
+  organizador?: OrganizadorEmailInfo | null;
 }) {
   const asunto =
     args.items.length === 1
@@ -184,7 +229,8 @@ export async function enviarEmailInscripcionConfirmada(args: {
       </p>
       ${listaItems(args.items)}
     `,
+    args.organizador,
   );
 
-  return await enviar(args.destinatario, asunto, html);
+  return await enviar(args.destinatario, asunto, html, args.organizador);
 }

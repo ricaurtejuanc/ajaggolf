@@ -300,6 +300,7 @@ export type ConsultaContacto = {
   leido: boolean;
   respuesta: string | null;
   respondido_at: string | null;
+  organizador_id: string | null;
   created_at: string;
 };
 

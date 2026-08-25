@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { enviarEmailInscripcionRecibida } from "@/lib/email";
+import { obtenerOrganizadorPorId } from "@/lib/data/organizador";
 
 export async function quitarDelCarrito(inscripcionId: string) {
   const supabase = await createClient();
@@ -37,14 +38,14 @@ export async function finalizarPedido() {
 
   const { data: itemsData } = await supabase
     .from("inscripciones")
-    .select("id, precio_cents, torneos(nombre, fecha)")
+    .select("id, precio_cents, torneos(nombre, fecha, organizador_id)")
     .eq("jugador_id", jugador.id)
     .eq("estado", "carrito");
 
   const items = (itemsData ?? []) as unknown as {
     id: string;
     precio_cents: number;
-    torneos: { nombre: string; fecha: string } | null;
+    torneos: { nombre: string; fecha: string; organizador_id: string | null } | null;
   }[];
 
   if (items.length === 0) redirect("/carrito");
@@ -68,6 +69,10 @@ export async function finalizarPedido() {
     );
 
   if (jugador.email) {
+    // Un carrito casi siempre es de un único club (se navega desde su
+    // sitio); si por lo que sea mezclara torneos de organizadores
+    // distintos, se usa el del primero como marca del email.
+    const organizador = await obtenerOrganizadorPorId(supabase, items[0]?.torneos?.organizador_id ?? null);
     await enviarEmailInscripcionRecibida({
       destinatario: jugador.email,
       nombre: jugador.nombre,
@@ -76,6 +81,7 @@ export async function finalizarPedido() {
         torneoFecha: item.torneos?.fecha ?? new Date().toISOString().slice(0, 10),
         precioCents: item.precio_cents,
       })),
+      organizador,
     });
   }
 

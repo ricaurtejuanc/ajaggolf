@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { asegurarJugadorParaUsuario } from "@/lib/data/jugadores";
 import { enviarEmailInscripcionRecibida, enviarEmailInscripcionConfirmada } from "@/lib/email";
+import { obtenerOrganizadorPorId } from "@/lib/data/organizador";
 
 export type EstadoInscripcionForm = { ok: boolean; error: string | null };
 
@@ -41,13 +42,17 @@ export async function inscribirse(
 
   const { data: torneo } = await supabase
     .from("torneos")
-    .select("id, nombre, fecha, precio_cents, precio_socio_cents, estado, cupo_maximo, modo_pago")
+    .select(
+      "id, nombre, fecha, precio_cents, precio_socio_cents, estado, cupo_maximo, modo_pago, organizador_id",
+    )
     .eq("slug", torneoSlug)
     .maybeSingle();
 
   if (!torneo || torneo.estado !== "publicado") {
     return { ok: false, error: "Este torneo no admite inscripciones en este momento." };
   }
+
+  const organizador = await obtenerOrganizadorPorId(supabase, torneo.organizador_id);
 
   const tieneDistincionSocio = torneo.precio_socio_cents != null;
   if (tieneDistincionSocio && esSocioRaw !== "si" && esSocioRaw !== "no") {
@@ -121,6 +126,7 @@ export async function inscribirse(
           destinatario: email,
           nombre,
           items: [{ torneoNombre: torneo.nombre, torneoFecha: torneo.fecha, precioCents: precioAplicable }],
+          organizador,
         });
       }
 
@@ -149,6 +155,7 @@ export async function inscribirse(
         destinatario: email,
         nombre,
         items: [{ torneoNombre: torneo.nombre, torneoFecha: torneo.fecha, precioCents: precioAplicable }],
+        organizador,
       });
     }
 
@@ -259,9 +266,9 @@ export async function inscribirse(
 
     const item = { torneoNombre: torneo.nombre, torneoFecha: torneo.fecha, precioCents: precioAplicable };
     if (pagaEnClub) {
-      await enviarEmailInscripcionConfirmada({ destinatario: email, nombre, items: [item] });
+      await enviarEmailInscripcionConfirmada({ destinatario: email, nombre, items: [item], organizador });
     } else {
-      await enviarEmailInscripcionRecibida({ destinatario: email, nombre, items: [item] });
+      await enviarEmailInscripcionRecibida({ destinatario: email, nombre, items: [item], organizador });
     }
 
     urlConfirmacion = `/torneos/${torneoSlug}/inscripcion/confirmacion?pedido=${pedido.id}`;

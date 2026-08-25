@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { getUsuarioAdmin } from "@/lib/auth";
 import { enviarEmailRespuestaConsulta } from "@/lib/email";
+import { obtenerOrganizadorPorId } from "@/lib/data/organizador";
 
 export async function marcarConsultaLeida(consultaId: string) {
   const admin = await getUsuarioAdmin();
@@ -31,7 +32,7 @@ export async function responderConsulta(
   const supabase = await createClient();
   const { data: consulta } = await supabase
     .from("consultas_contacto")
-    .select("nombre, email, mensaje")
+    .select("nombre, email, mensaje, organizador_id")
     .eq("id", consultaId)
     .maybeSingle();
   if (!consulta) return { ok: false, error: "Consulta no encontrada.", aviso: null };
@@ -42,11 +43,13 @@ export async function responderConsulta(
     .eq("id", consultaId);
   if (error) return { ok: false, error: error.message, aviso: null };
 
+  const organizador = await obtenerOrganizadorPorId(supabase, consulta.organizador_id);
   const enviado = await enviarEmailRespuestaConsulta({
     destinatario: consulta.email,
     nombre: consulta.nombre,
     mensajeOriginal: consulta.mensaje,
     respuesta,
+    organizador,
   });
 
   revalidatePath("/admin/consultas");

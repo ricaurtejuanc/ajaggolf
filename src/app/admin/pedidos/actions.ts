@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { getUsuarioAdmin } from "@/lib/auth";
 import { enviarEmailInscripcionConfirmada } from "@/lib/email";
+import { obtenerOrganizadorPorId } from "@/lib/data/organizador";
 
 export async function confirmarPago(pedidoId: string) {
   const admin = await getUsuarioAdmin();
@@ -13,13 +14,15 @@ export async function confirmarPago(pedidoId: string) {
 
   const { data: pedidoDataRaw } = await supabase
     .from("pedidos_pago")
-    .select("inscripciones(precio_cents, torneos(nombre, fecha), jugadores(nombre, email))")
+    .select(
+      "inscripciones(precio_cents, torneos(nombre, fecha, organizador_id), jugadores(nombre, email))",
+    )
     .eq("id", pedidoId)
     .maybeSingle();
   const pedidoData = pedidoDataRaw as unknown as {
     inscripciones: {
       precio_cents: number;
-      torneos: { nombre: string; fecha: string } | null;
+      torneos: { nombre: string; fecha: string; organizador_id: string | null } | null;
       jugadores: { nombre: string; email: string | null } | null;
     }[];
   } | null;
@@ -41,6 +44,10 @@ export async function confirmarPago(pedidoId: string) {
   const inscripciones = pedidoData?.inscripciones ?? [];
   const destinatario = inscripciones[0]?.jugadores?.email;
   if (destinatario) {
+    const organizador = await obtenerOrganizadorPorId(
+      supabase,
+      inscripciones[0]?.torneos?.organizador_id ?? null,
+    );
     await enviarEmailInscripcionConfirmada({
       destinatario,
       nombre: inscripciones[0]!.jugadores!.nombre,
@@ -49,6 +56,7 @@ export async function confirmarPago(pedidoId: string) {
         torneoFecha: i.torneos?.fecha ?? new Date().toISOString().slice(0, 10),
         precioCents: i.precio_cents,
       })),
+      organizador,
     });
   }
 
