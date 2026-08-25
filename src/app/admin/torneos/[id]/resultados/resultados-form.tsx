@@ -1,7 +1,7 @@
 "use client";
 
-import { useActionState, useState } from "react";
-import { Plus, X } from "lucide-react";
+import { useActionState, useRef, useState } from "react";
+import { Download, Plus, Upload, X } from "lucide-react";
 import { guardarResultados } from "./actions";
 import { filaVacia, type FilaResultado } from "./fila-resultado";
 import type { FormatoPuntuacion } from "@/types/database";
@@ -26,6 +26,8 @@ export function ResultadosForm({
   const [filas, setFilas] = useState<FilaResultado[]>(
     filasIniciales.length > 0 ? filasIniciales : [filaVacia()],
   );
+  const [mensajeXls, setMensajeXls] = useState<string | null>(null);
+  const inputXlsRef = useRef<HTMLInputElement>(null);
 
   const guardarBorrador = guardarResultados.bind(null, torneoId, false);
   const publicarResultados = guardarResultados.bind(null, torneoId, true);
@@ -44,6 +46,7 @@ export function ResultadosForm({
   }
 
   const columnaPrincipal = formatoPuntuacion === "stableford" ? "puntos" : "golpes";
+  const nombreColumnaXls = columnaPrincipal === "puntos" ? "puntos Stableford" : "golpes";
 
   // Calcula la posición de cada jugador dentro de su categoría (si hay
   // categorías configuradas; si no, de todos juntos) a partir de su
@@ -140,6 +143,101 @@ export function ResultadosForm({
       }
     }
     return masCercana.nombre;
+  }
+
+  // Exporta la tabla actual a un XLS para rellenarlo fuera de la app (ej.
+  // en el campo, sin buena conexión) y volver a subirlo con "Subir XLS".
+  async function descargarXls() {
+    const XLSX = await import("xlsx");
+    const datos = filas.map((fila) => ({
+      id_torneo: torneoId,
+      categoría: categorias.length > 0 ? categoriaDeFila(fila) : "",
+      nombre: fila.nombreMostrado,
+      licencia: fila.licenciaFederativa,
+      handicap: fila.handicap,
+      [nombreColumnaXls]: fila[columnaPrincipal],
+    }));
+    const hoja = XLSX.utils.json_to_sheet(datos);
+    const libro = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(libro, hoja, "Resultados");
+    XLSX.writeFile(libro, `resultados-${torneoId}.xlsx`);
+  }
+
+  // Sube un XLS (descargado con "Descargar XLS" y rellenado, o hecho a
+  // mano con las mismas columnas) y actualiza la tabla: las filas que
+  // coinciden por licencia se actualizan, las que no existen se añaden.
+  // No se borra ninguna fila que no aparezca en el archivo.
+  async function subirXls(archivo: File) {
+    setMensajeXls(null);
+    try {
+      const XLSX = await import("xlsx");
+      const buffer = await archivo.arrayBuffer();
+      const libro = XLSX.read(buffer, { type: "array" });
+      const hoja = libro.Sheets[libro.SheetNames[0]];
+      if (!hoja) throw new Error("El archivo no tiene ninguna hoja.");
+      const filasXls = XLSX.utils.sheet_to_json<Record<string, unknown>>(hoja);
+
+      const leerTexto = (fila: Record<string, unknown>, clave: string) => {
+        const valor = fila[clave];
+        return valor == null ? "" : String(valor).trim();
+      };
+
+      let idsDistintos = false;
+      let actualizadas = 0;
+      let anadidas = 0;
+
+      setFilas((prev) => {
+        const siguiente = [...prev];
+        for (const filaXls of filasXls) {
+          const idTorneoFila = leerTexto(filaXls, "id_torneo");
+          if (idTorneoFila && idTorneoFila !== torneoId) idsDistintos = true;
+
+          const licencia = leerTexto(filaXls, "licencia");
+          const nombre = leerTexto(filaXls, "nombre");
+          const handicap = leerTexto(filaXls, "handicap");
+          const puntos = leerTexto(filaXls, nombreColumnaXls);
+          if (!licencia && !nombre) continue;
+
+          const indiceExistente = licencia
+            ? siguiente.findIndex(
+                (f) => f.licenciaFederativa.trim().toUpperCase() === licencia.toUpperCase(),
+              )
+            : -1;
+
+          if (indiceExistente !== -1) {
+            siguiente[indiceExistente] = {
+              ...siguiente[indiceExistente],
+              nombreMostrado: nombre || siguiente[indiceExistente].nombreMostrado,
+              handicap: handicap || siguiente[indiceExistente].handicap,
+              [columnaPrincipal]: puntos || siguiente[indiceExistente][columnaPrincipal],
+            };
+            actualizadas++;
+          } else {
+            siguiente.push(
+              filaVacia({
+                nombreMostrado: nombre,
+                licenciaFederativa: licencia,
+                handicap,
+                [columnaPrincipal]: puntos,
+              }),
+            );
+            anadidas++;
+          }
+        }
+        return siguiente;
+      });
+
+      const avisoTorneo = idsDistintos
+        ? " Ojo: alguna fila del archivo tenía un id_torneo distinto al de este torneo."
+        : "";
+      setMensajeXls(
+        `Actualizado desde el XLS: ${actualizadas} fila(s) actualizada(s), ${anadidas} nueva(s).${avisoTorneo}`,
+      );
+    } catch (err) {
+      setMensajeXls(
+        `No se pudo leer el archivo: ${err instanceof Error ? err.message : "formato no reconocido"}.`,
+      );
+    }
   }
 
   // Si el torneo tiene categorías reales por hándicap, se reparten las
@@ -300,6 +398,31 @@ export function ResultadosForm({
         >
           Generar clasificación
         </button>
+        <button
+          type="button"
+          onClick={descargarXls}
+          className="flex w-fit items-center gap-1.5 rounded-full border border-ajag-verde-700 px-3 py-1.5 text-sm font-medium text-ajag-verde-700 hover:bg-ajag-verde-50"
+        >
+          <Download size={15} /> Descargar XLS
+        </button>
+        <button
+          type="button"
+          onClick={() => inputXlsRef.current?.click()}
+          className="flex w-fit items-center gap-1.5 rounded-full border border-ajag-verde-700 px-3 py-1.5 text-sm font-medium text-ajag-verde-700 hover:bg-ajag-verde-50"
+        >
+          <Upload size={15} /> Subir XLS
+        </button>
+        <input
+          ref={inputXlsRef}
+          type="file"
+          accept=".xlsx,.xls,.csv"
+          className="hidden"
+          onChange={(e) => {
+            const archivo = e.target.files?.[0];
+            if (archivo) subirXls(archivo);
+            e.target.value = "";
+          }}
+        />
       </div>
       <p className="-mt-3 text-xs text-ajag-gris-500">
         Calcula la posición dentro de cada categoría a partir de{" "}
@@ -307,6 +430,14 @@ export function ResultadosForm({
         hándicap {columnaPrincipal === "puntos" ? "más bajo" : "más alto"}. Los retirados, no
         presentados o sin puntuación quedan sin posición. Revisa antes de guardar.
       </p>
+      <p className="-mt-3 text-xs text-ajag-gris-500">
+        &quot;Descargar XLS&quot; exporta la tabla actual (id_torneo, categoría, nombre,
+        licencia, handicap, {nombreColumnaXls}) para rellenarla fuera de la app; &quot;Subir
+        XLS&quot; vuelve a leerla y actualiza cada fila por licencia (añade las que no
+        existan todavía).
+      </p>
+
+      {mensajeXls ? <p className="-mt-3 text-xs text-ajag-verde-700">{mensajeXls}</p> : null}
 
       {estadoBorrador.error ? (
         <p className="text-sm text-ajag-rojo-600">{estadoBorrador.error}</p>
