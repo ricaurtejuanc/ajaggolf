@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { Trophy } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { obtenerTorneoPorSlug } from "@/lib/data/torneos";
+import { formatearFecha } from "@/lib/format";
 import { CuadroDeHonor, hayCuadroDeHonor } from "@/components/torneos/cuadro-de-honor";
 import { ClasificacionTabs } from "./clasificacion-tabs";
 
@@ -138,8 +139,11 @@ export default async function ClasificacionPage({
       <Link href={hrefVolver} className="text-sm text-ajag-gris-500 hover:underline">
         ← {textoVolver}
       </Link>
-      <h1 className="mt-2 flex items-center gap-2 font-display text-2xl font-semibold text-ajag-verde-900">
-        <Trophy size={22} className="text-ajag-oro-600" /> Clasificación
+      <p className="mt-2 text-xs font-medium uppercase tracking-wide text-ajag-oro-600">
+        {formatearFecha(torneo.fecha)}
+      </p>
+      <h1 className="flex items-center gap-2 font-display text-2xl font-semibold text-ajag-verde-900">
+        <Trophy size={22} className="text-ajag-oro-600" /> {torneo.nombre}
       </h1>
 
       <ClasificacionTabs general={general} cuadroHonor={cuadroHonor} />

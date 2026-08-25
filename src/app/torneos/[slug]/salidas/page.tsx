@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { Flag, Clock } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { obtenerTorneoPorSlug } from "@/lib/data/torneos";
+import { formatearFecha } from "@/lib/format";
 
 export async function generateMetadata({
   params,
@@ -32,8 +33,11 @@ export default async function SalidasPublicasPage({
         <Link href="/horarios" className="text-sm text-ajag-gris-500 hover:underline">
           ← Horarios
         </Link>
-        <h1 className="mt-2 font-display text-2xl font-semibold text-ajag-verde-900">
-          Horarios
+        <p className="mt-2 text-xs font-medium uppercase tracking-wide text-ajag-oro-600">
+          {formatearFecha(torneo.fecha)}
+        </p>
+        <h1 className="font-display text-2xl font-semibold text-ajag-verde-900">
+          {torneo.nombre}
         </h1>
         <div className="mt-6 overflow-hidden rounded-2xl border border-ajag-gris-100">
           <iframe
@@ -123,9 +127,10 @@ export default async function SalidasPublicasPage({
       <Link href="/horarios" className="text-sm text-ajag-gris-500 hover:underline">
         ← Horarios
       </Link>
-      <h1 className="mt-2 font-display text-2xl font-semibold text-ajag-verde-900">
-        Cuadro de salidas
-      </h1>
+      <p className="mt-2 text-xs font-medium uppercase tracking-wide text-ajag-oro-600">
+        {formatearFecha(torneo.fecha)}
+      </p>
+      <h1 className="font-display text-2xl font-semibold text-ajag-verde-900">{torneo.nombre}</h1>
       <p className="text-sm text-ajag-gris-500">{detalle}</p>
 
       <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
