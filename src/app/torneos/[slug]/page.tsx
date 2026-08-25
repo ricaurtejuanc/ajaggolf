@@ -290,9 +290,7 @@ export default async function TorneoDetallePage({
           <Users size={15} />
           {inscritos}
           {torneo.cupo_maximo ? ` / ${torneo.cupo_maximo}` : ""} inscritos
-          {torneo.cupo_maximo != null
-            ? ` · ${Math.max(torneo.cupo_maximo - inscritos, 0)} plazas disponibles`
-            : ""}
+          {torneo.cupo_maximo != null ? ` · ${lleno ? "Completo" : `${Math.max(torneo.cupo_maximo - inscritos, 0)} plazas disponibles`}` : ""}
         </p>
 
         {cerrado || lleno ? (
