@@ -1,44 +1,56 @@
 import type { Metadata } from "next";
 import Image from "next/image";
-import Link from "next/link";
-import { CalendarDays, Trophy, Wallet, Users, Handshake, ShieldCheck } from "lucide-react";
+import {
+  CalendarDays,
+  Trophy,
+  Wallet,
+  Flag,
+  Handshake,
+  Settings,
+} from "lucide-react";
 
 export const metadata: Metadata = {
   title: "AfterGolf Torneos — software de torneos para clubes y asociaciones",
   description:
-    "Calendario, inscripciones, pagos, salidas y clasificaciones para tu asociación o club de golf. Sencillo, rápido de poner en marcha y sin gastar de más.",
+    "Calendario, inscripciones, pagos, salidas, clasificaciones y patrocinadores, todo gestionado desde una única plataforma y con la identidad de tu organización.",
 };
 
 const caracteristicas = [
   {
     icon: CalendarDays,
     titulo: "Calendario y torneos",
-    texto: "Publica tus torneos con póster, precios, cupo y toda la información en minutos.",
+    texto:
+      "Crea y publica tus torneos en minutos. Añade póster, fecha, campo, precios, categorías, plazas disponibles y toda la información que necesitan tus jugadores.",
   },
   {
     icon: Wallet,
     titulo: "Inscripciones y pagos",
-    texto: "Tus jugadores se inscriben y pagan online — Bizum manual o pasarela, tú eliges.",
+    texto:
+      "Centraliza las inscripciones de tus jugadores y facilita el pago online — hoy con Bizum, y con más métodos de pago a medida que tu organización los necesite.",
   },
   {
-    icon: Users,
-    titulo: "Salidas automáticas",
-    texto: "Genera el cuadro de salidas por hándicap o a tiro en segundos, no en una hoja de cálculo.",
+    icon: Flag,
+    titulo: "Salidas y horarios",
+    texto:
+      "Genera las salidas automáticamente por hándicap, a tiro o como prefieras, respetando quién quiere jugar con quién, y tenlas listas en segundos para enviar al campo.",
   },
   {
     icon: Trophy,
     titulo: "Clasificaciones y ligas",
-    texto: "Ranking, pool o la liga que quieras, con tabla de puntos configurable.",
+    texto:
+      "Gestiona rankings, pools y ligas con sistemas de puntuación configurables. Incorpora directamente el PDF o la foto de resultados del campo, o introdúcelos a mano si no los tienes.",
   },
   {
     icon: Handshake,
     titulo: "Patrocinadores",
-    texto: "Una sección propia para lucir a las empresas que os ayudan.",
+    texto:
+      "Da visibilidad a las empresas que apoyan tus torneos con un espacio propio para mostrar sus logos, información y presencia durante la competición.",
   },
   {
-    icon: ShieldCheck,
+    icon: Settings,
     titulo: "Panel de administración",
-    texto: "Todo lo anterior gestionado desde un panel simple, sin depender de nadie más.",
+    texto:
+      "Gestiona torneos, jugadores, inscripciones, salidas, clasificaciones, patrocinadores y contenidos desde un único panel, sin depender de Excel, emails o herramientas dispersas.",
   },
 ];
 
@@ -61,13 +73,19 @@ export default function ProductoLandingPage() {
           AfterGolf Torneos
         </p>
         <h1 className="mx-auto mt-3 max-w-2xl font-serif text-4xl font-bold text-aftergolf-verde-900 sm:text-5xl">
-          El software de torneos para tu club o asociación, sin complicarte ni gastar de más
+          Organiza tus torneos de golf. Todo en un solo lugar.
         </h1>
         <div className="mx-auto mt-5 h-px w-16 bg-aftergolf-oro-500" />
         <p className="mx-auto mt-5 max-w-xl text-aftergolf-verde-800/80">
-          Calendario, inscripciones, pagos, salidas, clasificaciones y patrocinadores en una
-          sola web con tu propia identidad — pensado para organizadores independientes que
-          quieren algo serio sin pagar precios de empresa grande.
+          Calendario, inscripciones, pagos, salidas, clasificaciones y patrocinadores, todo
+          gestionado desde una única plataforma y con la identidad de tu organización.
+        </p>
+        <p className="mx-auto mt-4 max-w-xl font-serif text-lg font-semibold text-aftergolf-verde-900">
+          Tu espacio. Tu marca. Tus torneos.
+        </p>
+        <p className="mx-auto mt-3 max-w-xl text-aftergolf-verde-800/80">
+          Una solución profesional y personalizable para asociaciones, clubes y organizadores
+          independientes de golf.
         </p>
         <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
           <a
@@ -80,25 +98,37 @@ export default function ProductoLandingPage() {
             href="https://ajag.torneos.aftergolf.es/"
             className="rounded-full border border-aftergolf-verde-700/40 px-6 py-3 text-sm font-medium text-aftergolf-verde-800 transition hover:bg-aftergolf-verde-50"
           >
-            Ver un ejemplo en vivo (AJAG)
+            Ver un ejemplo
           </a>
         </div>
       </section>
 
       <section className="mx-auto max-w-3xl px-4 py-14 text-center">
         <h2 className="font-serif text-2xl font-bold text-aftergolf-verde-900">
-          Para asociaciones y clubs que organizan sus propios torneos
+          Tu web de torneos, a tu manera
         </h2>
         <p className="mt-3 text-aftergolf-verde-800/70">
-          Si organizas torneos de golf por tu cuenta — una asociación de jugadores, un grupo de
-          amigos con liga propia, un club pequeño — y hoy lo llevas todo por WhatsApp, Excel y
-          transferencias, AfterGolf Torneos te da una web real sin necesitar un departamento de
-          IT.
+          Crea un espacio personalizado para tus torneos, con tu imagen, tu calendario y toda
+          la información que necesitan tus jugadores.
+        </p>
+        <p className="mt-3 text-aftergolf-verde-800/70">
+          Tus jugadores consultan el torneo, se inscriben y pagan sin salir de tu espacio —
+          con tu marca y tu dominio, no el nuestro. Y cuando llega el día de juego, sigues
+          trabajando con tu campo como siempre: le envías las salidas ya generadas y, al
+          terminar, subes el PDF o la foto de resultados que te entreguen para publicar la
+          clasificación.
+        </p>
+        <p className="mt-4 font-medium text-aftergolf-verde-900">
+          No necesitas cambiar cómo te relacionas con el campo. Solo centralizar y
+          profesionalizar todo lo demás.
         </p>
       </section>
 
       <section className="bg-aftergolf-verde-50 px-4 py-14">
-        <div className="mx-auto grid max-w-5xl gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <h2 className="mx-auto max-w-2xl text-center font-serif text-2xl font-bold text-aftergolf-verde-900">
+          Todo lo que necesitas para organizar tus torneos
+        </h2>
+        <div className="mx-auto mt-8 grid max-w-5xl gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {caracteristicas.map((c) => (
             <div key={c.titulo} className="card-aftergolf p-5">
               <c.icon size={22} className="text-aftergolf-verde-700" />
@@ -113,18 +143,19 @@ export default function ProductoLandingPage() {
 
       <section className="mx-auto max-w-3xl px-4 py-14 text-center">
         <h2 className="font-serif text-2xl font-bold text-aftergolf-verde-900">
-          Ya lo usa AJAG
+          Nuestros clientes
         </h2>
-        <p className="mt-3 text-aftergolf-verde-800/70">
-          La Asociación de Jugadores Amateur de Golf gestiona todo su calendario, inscripciones
-          y clasificaciones con AfterGolf Torneos.
+        <div className="mt-8 flex justify-center">
+          <Image
+            src="/Logo_AJAG.svg"
+            alt="AJAG — Asociación de Jugadores Amateur de Golf"
+            width={140}
+            height={140}
+          />
+        </div>
+        <p className="mt-3 text-sm text-aftergolf-verde-800/60">
+          AJAG · Asociación de Jugadores Amateur de Golf
         </p>
-        <Link
-          href="/torneos"
-          className="mt-5 inline-block rounded-full bg-aftergolf-verde-700 px-6 py-3 text-sm font-medium text-white transition hover:bg-aftergolf-verde-600"
-        >
-          Ver el calendario de AJAG →
-        </Link>
       </section>
 
       <section className="px-4 py-16 text-center">
