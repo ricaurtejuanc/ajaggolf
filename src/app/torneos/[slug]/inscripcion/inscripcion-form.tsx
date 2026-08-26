@@ -27,6 +27,9 @@ export function InscripcionForm({
     { ok: false, error: null },
   );
 
+  const [sinLicencia, setSinLicencia] = useState(
+    jugador?.licencia_federativa?.startsWith("AJAG") ?? false,
+  );
   const [juegaConAlguien, setJuegaConAlguien] = useState(false);
   const [acompanantes, setAcompanantes] = useState<number[]>([0]);
   const [esSocio, setEsSocio] = useState<"si" | "no" | null>(null);
@@ -79,15 +82,32 @@ export function InscripcionForm({
         </div>
         <div>
           <label htmlFor="licencia_federativa" className="block text-sm font-medium text-ajag-verde-900">
-            Licencia federativa *
+            Licencia federativa {sinLicencia ? "" : "*"}
           </label>
-          <input
-            id="licencia_federativa"
-            name="licencia_federativa"
-            required
-            defaultValue={jugador?.licencia_federativa ?? ""}
-            className="mt-1 w-full rounded-xl border border-ajag-gris-200 px-4 py-2.5 text-sm outline-none focus:border-ajag-verde-600"
-          />
+          {sinLicencia ? (
+            <p className="mt-1 w-full rounded-xl border border-dashed border-ajag-gris-200 px-4 py-2.5 text-sm text-ajag-gris-500">
+              {jugador?.licencia_federativa?.startsWith("AJAG")
+                ? jugador.licencia_federativa
+                : "Se generará automáticamente al confirmar"}
+            </p>
+          ) : (
+            <input
+              id="licencia_federativa"
+              name="licencia_federativa"
+              required
+              defaultValue={jugador?.licencia_federativa ?? ""}
+              className="mt-1 w-full rounded-xl border border-ajag-gris-200 px-4 py-2.5 text-sm outline-none focus:border-ajag-verde-600"
+            />
+          )}
+          <label className="mt-1.5 flex items-center gap-2 text-xs text-ajag-gris-500">
+            <input
+              type="checkbox"
+              name="sin_licencia"
+              checked={sinLicencia}
+              onChange={(e) => setSinLicencia(e.target.checked)}
+            />
+            No tengo licencia federativa
+          </label>
         </div>
       </div>
 

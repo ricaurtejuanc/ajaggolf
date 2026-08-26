@@ -67,3 +67,21 @@ export async function asegurarJugadorParaUsuario(
 
   return creado;
 }
+
+/**
+ * Código de licencia único (AJAG + 6 dígitos) para un jugador que se
+ * inscribe sin tener licencia federativa real. Comprueba que no choque con
+ * ninguna ya guardada antes de devolverlo.
+ */
+export async function generarLicenciaUnica(supabase: SupabaseClient<Database>): Promise<string> {
+  for (let intento = 0; intento < 20; intento++) {
+    const codigo = `AJAG${Math.floor(100000 + Math.random() * 900000)}`;
+    const { data } = await supabase
+      .from("jugadores")
+      .select("id")
+      .eq("licencia_federativa", codigo)
+      .maybeSingle();
+    if (!data) return codigo;
+  }
+  throw new Error("No se pudo generar una licencia única. Inténtalo de nuevo.");
+}

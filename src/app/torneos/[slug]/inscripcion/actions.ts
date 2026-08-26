@@ -3,7 +3,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { asegurarJugadorParaUsuario } from "@/lib/data/jugadores";
+import { asegurarJugadorParaUsuario, generarLicenciaUnica } from "@/lib/data/jugadores";
 import { enviarEmailInscripcionRecibida, enviarEmailInscripcionConfirmada } from "@/lib/email";
 import { obtenerOrganizadorPorId } from "@/lib/data/organizador";
 
@@ -22,7 +22,8 @@ export async function inscribirse(
   const nombre = String(formData.get("nombre") ?? "").trim();
   const apellidos = String(formData.get("apellidos") ?? "").trim();
   const email = String(formData.get("email") ?? "").trim();
-  const licencia_federativa = String(formData.get("licencia_federativa") ?? "").trim();
+  const sinLicencia = formData.get("sin_licencia") === "on";
+  const licenciaEscrita = String(formData.get("licencia_federativa") ?? "").trim();
   const sexoRaw = String(formData.get("sexo") ?? "");
   const sexo = sexoRaw === "masculino" || sexoRaw === "femenino" ? sexoRaw : null;
   const juegaConLicencias = formData
@@ -33,7 +34,7 @@ export async function inscribirse(
   const handicapRaw = String(formData.get("handicap") ?? "").trim().replace(",", ".");
   const handicap = handicapRaw ? Number(handicapRaw) : null;
 
-  if (!nombre || !apellidos || !email || !licencia_federativa || !sexo) {
+  if (!nombre || !apellidos || !email || (!sinLicencia && !licenciaEscrita) || !sexo) {
     return { ok: false, error: "Rellena todos los campos obligatorios." };
   }
   if (handicapRaw && Number.isNaN(handicap)) {
@@ -65,6 +66,9 @@ export async function inscribirse(
 
   if (user) {
     const jugador = await asegurarJugadorParaUsuario(supabase, user);
+    const licencia_federativa = sinLicencia
+      ? (jugador.licencia_federativa ?? (await generarLicenciaUnica(supabase)))
+      : licenciaEscrita;
 
     if (torneo.cupo_maximo != null) {
       const [{ data: cupo }, { data: yaInscrito }] = await Promise.all([
@@ -183,15 +187,21 @@ export async function inscribirse(
       }
     }
 
+    // Sin licencia real que buscar, cada invitado "sin licencia" es
+    // tratado como nuevo: se le genera una propia y se crea su ficha.
+    const licencia_federativa = sinLicencia ? await generarLicenciaUnica(admin) : licenciaEscrita;
+
     // La licencia federativa es única en `jugadores`. Un invitado que ya
     // jugó antes (como invitado o con cuenta) reutiliza esa fila en vez de
     // chocar con la restricción; si es una cuenta real (user_id no nulo)
     // no se le pisan sus datos guardados con lo que ha escrito el invitado.
-    const { data: jugadorExistente } = await admin
-      .from("jugadores")
-      .select("id, user_id")
-      .eq("licencia_federativa", licencia_federativa)
-      .maybeSingle();
+    const { data: jugadorExistente } = sinLicencia
+      ? { data: null }
+      : await admin
+          .from("jugadores")
+          .select("id, user_id")
+          .eq("licencia_federativa", licencia_federativa)
+          .maybeSingle();
 
     let jugadorId: string;
     if (jugadorExistente) {
