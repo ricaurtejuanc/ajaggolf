@@ -38,19 +38,21 @@ export function ClasificacionLigaTable({
   // ranking. Si no hay límite, los dos valores coinciden: se muestra
   // solo una columna de puntos totales.
   const limitada = mejoresN != null;
+  // Columnas más estrechas en móvil (para que quepa toda la tabla sin
+  // desplazamiento horizontal) y algo más cómodas a partir de sm.
   const gridCols = limitada
-    ? "grid-cols-[3rem_1fr_6rem_7rem_5rem]"
-    : "grid-cols-[3rem_1fr_6rem_5rem]";
+    ? "grid-cols-[1.5rem_1fr_3.25rem_4rem_2.75rem] sm:grid-cols-[3rem_1fr_6rem_7rem_5rem]"
+    : "grid-cols-[1.5rem_1fr_4rem_3rem] sm:grid-cols-[3rem_1fr_6rem_5rem]";
 
   return (
     <div className="overflow-hidden rounded-2xl border border-ajag-gris-100 bg-white">
       <div
-        className={`grid ${gridCols} items-center gap-2 border-b border-ajag-gris-100 px-4 py-3 text-xs uppercase text-ajag-gris-500`}
+        className={`grid ${gridCols} items-center gap-1 border-b border-ajag-gris-100 px-2 py-2.5 text-[0.65rem] uppercase text-ajag-gris-500 sm:gap-2 sm:px-4 sm:py-3 sm:text-xs`}
       >
         <span className="text-center">Pos.</span>
         <span>Jugador</span>
-        <span className="text-center">Puntos totales</span>
-        {limitada ? <span className="text-center">Mejores Resultados</span> : null}
+        <span className="text-center">Puntos</span>
+        {limitada ? <span className="text-center">Mejores</span> : null}
         <span className="text-center">Pruebas</span>
       </div>
       {filas.map((fila, i) => {
@@ -60,10 +62,10 @@ export function ClasificacionLigaTable({
             <button
               type="button"
               onClick={() => setAbierto(estaAbierto ? null : fila.jugadorId)}
-              className={`grid w-full ${gridCols} items-center gap-2 px-4 py-3 text-left text-sm transition hover:bg-ajag-verde-50/60`}
+              className={`grid w-full ${gridCols} items-center gap-1 px-2 py-2.5 text-left text-xs transition hover:bg-ajag-verde-50/60 sm:gap-2 sm:px-4 sm:py-3 sm:text-sm`}
             >
               <span className="text-center font-medium text-ajag-verde-900">{i + 1}</span>
-              <span className="text-ajag-verde-900">{fila.nombre}</span>
+              <span className="truncate text-ajag-verde-900">{fila.nombre}</span>
               <span className="text-center font-medium text-ajag-verde-900">
                 {fila.puntosTotalesBrutos}
               </span>
@@ -72,11 +74,11 @@ export function ClasificacionLigaTable({
                   {fila.puntosTotales}
                 </span>
               ) : null}
-              <span className="flex items-center justify-center gap-1 text-ajag-gris-500">
+              <span className="flex items-center justify-center gap-0.5 text-ajag-gris-500">
                 {fila.eventosJugados}
                 <ChevronDown
-                  size={15}
-                  className={`shrink-0 transition-transform ${estaAbierto ? "rotate-180" : ""}`}
+                  size={13}
+                  className={`shrink-0 transition-transform sm:size-[15px] ${estaAbierto ? "rotate-180" : ""}`}
                 />
               </span>
             </button>
