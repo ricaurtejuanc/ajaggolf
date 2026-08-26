@@ -250,6 +250,15 @@ export function ResultadosForm({
             anadidas++;
           }
         }
+        // Tras importar, la tabla se reordena por posición ascendente (sin
+        // posición asignada, o no numérica, va al final).
+        siguiente.sort((a, b) => {
+          const posA = parseInt(a.posicion, 10);
+          const posB = parseInt(b.posicion, 10);
+          const valorA = Number.isNaN(posA) ? Infinity : posA;
+          const valorB = Number.isNaN(posB) ? Infinity : posB;
+          return valorA - valorB;
+        });
         return siguiente;
       });
 
@@ -399,9 +408,9 @@ export function ResultadosForm({
                         type="number"
                         step="0.1"
                         value={fila[columnaPrincipal]}
-                        disabled={fila.estadoJuego !== ""}
+                        readOnly={fila.estadoJuego !== ""}
                         onChange={(e) => actualizarFila(fila.key, columnaPrincipal, e.target.value)}
-                        className="w-20 rounded-lg border border-ajag-gris-200 px-2 py-1.5 text-sm outline-none focus:border-ajag-verde-600 disabled:bg-ajag-gris-100"
+                        className="w-20 rounded-lg border border-ajag-gris-200 px-2 py-1.5 text-sm outline-none focus:border-ajag-verde-600 read-only:bg-ajag-gris-100"
                       />
                       <input
                         type="hidden"
@@ -413,13 +422,25 @@ export function ResultadosForm({
                       <select
                         name="estado_juego"
                         value={fila.estadoJuego}
-                        onChange={(e) =>
-                          actualizarFila(
-                            fila.key,
-                            "estadoJuego",
-                            e.target.value as FilaResultado["estadoJuego"],
-                          )
-                        }
+                        onChange={(e) => {
+                          const nuevoEstado = e.target.value as FilaResultado["estadoJuego"];
+                          setFilas((prev) =>
+                            prev.map((f) => {
+                              if (f.key !== fila.key) return f;
+                              // Un retirado/no presentado no ha completado la
+                              // vuelta: en stableford eso son 0 puntos (en
+                              // golpes no hay un equivalente sensato, se deja
+                              // en blanco). Al volver a "Normal" se limpia el
+                              // 0 puesto automáticamente para no dejarlo
+                              // colado si era un valor real.
+                              const puntosForzados =
+                                nuevoEstado !== "" && columnaPrincipal === "puntos" ? "0" : f.puntos;
+                              const puntosLimpios =
+                                nuevoEstado === "" && f.puntos === "0" ? "" : puntosForzados;
+                              return { ...f, estadoJuego: nuevoEstado, puntos: puntosLimpios };
+                            }),
+                          );
+                        }}
                         className="rounded-lg border border-ajag-gris-200 bg-white px-2 py-1.5 text-xs outline-none focus:border-ajag-verde-600"
                       >
                         <option value="">Normal</option>

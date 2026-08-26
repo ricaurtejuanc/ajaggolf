@@ -41,7 +41,7 @@ export default async function LigaDetallePage({
     torneos.length > 0
       ? supabase
           .from("resultados")
-          .select("jugador_id, posicion, puntos, golpes, handicap, torneo_id")
+          .select("jugador_id, posicion, puntos, golpes, handicap, estado_juego, torneo_id")
           .in(
             "torneo_id",
             torneos.map((t) => t.id),
@@ -55,6 +55,7 @@ export default async function LigaDetallePage({
             puntos: number | null;
             golpes: number | null;
             handicap: number | null;
+            estado_juego: string | null;
             torneo_id: string;
           }[],
         }),

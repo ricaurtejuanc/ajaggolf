@@ -42,7 +42,7 @@ export async function recalcularClasificacionGlobal(ligaId: string): Promise<voi
 
   const { data: resultados } = await supabase
     .from("resultados")
-    .select("jugador_id, torneo_id, posicion, puntos, golpes, handicap")
+    .select("jugador_id, torneo_id, posicion, puntos, golpes, handicap, estado_juego")
     .in("torneo_id", torneoIds)
     .eq("estado", "publicado")
     .not("jugador_id", "is", null);

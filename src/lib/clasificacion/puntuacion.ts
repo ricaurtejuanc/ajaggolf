@@ -5,6 +5,7 @@ export interface ResultadoParaPuntuar {
   puntos: number | null;
   golpes: number | null;
   handicap: number | null;
+  estado_juego: string | null;
 }
 
 /**
@@ -17,6 +18,12 @@ export function calcularPuntosPorTorneo(
   tablaPuntos: Record<string, number>,
   resultado: ResultadoParaPuntuar,
 ): number | null {
+  // Un retirado/no presentado nunca cuenta como participación puntuada,
+  // aunque la tabla de resultados muestre 0 puntos stableford por
+  // claridad visual — eso es solo para no dejar la celda en blanco, no
+  // implica que deba sumar como un 0 real en la clasificación.
+  if (resultado.estado_juego) return null;
+
   if (modoPuntuacion === "suma_stableford") {
     return resultado.puntos;
   }
