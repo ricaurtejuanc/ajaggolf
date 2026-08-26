@@ -114,19 +114,56 @@ export async function obtenerIdsConSalidaPublicada(torneoIds: string[]): Promise
   return new Set((data ?? []).map((s) => s.torneo_id));
 }
 
+// `torneos_cupo` es una vista que cuenta en vivo sobre `inscripciones` en
+// cada consulta. Esta función solo se usa para el número de plazas que se
+// enseña en las tarjetas (home, calendario) — no para decidir si cabe una
+// inscripción nueva (eso lo comprueba cada acción de inscripción aparte,
+// siempre en vivo) — así que cachear el conteo un rato no arriesga
+// sobrevender plazas, solo que la tarjeta tarde hasta 30s en reflejar la
+// última inscripción.
+const CACHE_INSCRITOS_TTL_MS = 30_000;
+const cacheInscritos = new Map<string, { inscritos: number; expira: number }>();
+
 export async function obtenerInscritosPorTorneo(
   supabase: Awaited<ReturnType<typeof createClient>>,
   torneoIds: string[],
 ): Promise<Record<string, number>> {
   if (torneoIds.length === 0) return {};
-  const { data } = await supabase
-    .from("torneos_cupo")
-    .select("torneo_id, inscritos")
-    .in("torneo_id", torneoIds);
 
+  const ahora = Date.now();
   const conteo: Record<string, number> = {};
-  for (const fila of data ?? []) {
-    conteo[fila.torneo_id] = fila.inscritos;
+  const idsAConsultar: string[] = [];
+
+  for (const id of torneoIds) {
+    const cacheado = cacheInscritos.get(id);
+    if (cacheado && cacheado.expira > ahora) {
+      conteo[id] = cacheado.inscritos;
+    } else {
+      idsAConsultar.push(id);
+    }
   }
+
+  if (idsAConsultar.length > 0) {
+    const { data } = await supabase
+      .from("torneos_cupo")
+      .select("torneo_id, inscritos")
+      .in("torneo_id", idsAConsultar);
+
+    const encontrados = new Set<string>();
+    for (const fila of data ?? []) {
+      conteo[fila.torneo_id] = fila.inscritos;
+      cacheInscritos.set(fila.torneo_id, { inscritos: fila.inscritos, expira: ahora + CACHE_INSCRITOS_TTL_MS });
+      encontrados.add(fila.torneo_id);
+    }
+    // Un torneo sin ninguna inscripción no sale en la vista (el group by no
+    // genera fila): se cachea igual como 0 para no volver a consultarlo.
+    for (const id of idsAConsultar) {
+      if (!encontrados.has(id)) {
+        conteo[id] = 0;
+        cacheInscritos.set(id, { inscritos: 0, expira: ahora + CACHE_INSCRITOS_TTL_MS });
+      }
+    }
+  }
+
   return conteo;
 }
