@@ -3,8 +3,21 @@
 import { useActionState, useRef, useState } from "react";
 import { Download, Plus, Upload, X } from "lucide-react";
 import { guardarResultados } from "./actions";
-import { filaVacia, type FilaResultado } from "./fila-resultado";
+import { filaVacia, type EstadoJuego, type FilaResultado } from "./fila-resultado";
 import type { FormatoPuntuacion } from "@/types/database";
+
+const ETIQUETA_ESTADO: Record<EstadoJuego, string> = {
+  "": "Normal",
+  retirado: "Retirado",
+  no_presentado: "No presentado",
+};
+
+function estadoDesdeTexto(texto: string): EstadoJuego {
+  const normalizado = texto.trim().toLowerCase();
+  if (normalizado === "retirado") return "retirado";
+  if (normalizado === "no presentado" || normalizado === "no_presentado") return "no_presentado";
+  return "";
+}
 
 export interface CategoriaClasificacion {
   nombre: string;
@@ -151,11 +164,13 @@ export function ResultadosForm({
     const XLSX = await import("xlsx");
     const datos = filas.map((fila) => ({
       id_torneo: torneoId,
-      categoría: categorias.length > 0 ? categoriaDeFila(fila) : "",
+      posición: fila.posicion,
+      categoría: categorias.length > 0 ? categoriaDeFila(fila) : "Categoría única",
       nombre: fila.nombreMostrado,
       licencia: fila.licenciaFederativa,
       handicap: fila.handicap,
       [nombreColumnaXls]: fila[columnaPrincipal],
+      estado: ETIQUETA_ESTADO[fila.estadoJuego],
     }));
     const hoja = XLSX.utils.json_to_sheet(datos);
     const libro = XLSX.utils.book_new();
@@ -177,9 +192,12 @@ export function ResultadosForm({
       if (!hoja) throw new Error("El archivo no tiene ninguna hoja.");
       const filasXls = XLSX.utils.sheet_to_json<Record<string, unknown>>(hoja);
 
-      const leerTexto = (fila: Record<string, unknown>, clave: string) => {
-        const valor = fila[clave];
-        return valor == null ? "" : String(valor).trim();
+      const leerTexto = (fila: Record<string, unknown>, ...claves: string[]) => {
+        for (const clave of claves) {
+          const valor = fila[clave];
+          if (valor != null && String(valor).trim() !== "") return String(valor).trim();
+        }
+        return "";
       };
 
       let idsDistintos = false;
@@ -196,6 +214,8 @@ export function ResultadosForm({
           const nombre = leerTexto(filaXls, "nombre");
           const handicap = leerTexto(filaXls, "handicap");
           const puntos = leerTexto(filaXls, nombreColumnaXls);
+          const posicion = leerTexto(filaXls, "posición", "posicion");
+          const estadoTexto = leerTexto(filaXls, "estado");
           if (!licencia && !nombre) continue;
 
           const indiceExistente = licencia
@@ -210,6 +230,10 @@ export function ResultadosForm({
               nombreMostrado: nombre || siguiente[indiceExistente].nombreMostrado,
               handicap: handicap || siguiente[indiceExistente].handicap,
               [columnaPrincipal]: puntos || siguiente[indiceExistente][columnaPrincipal],
+              posicion: posicion || siguiente[indiceExistente].posicion,
+              estadoJuego: estadoTexto
+                ? estadoDesdeTexto(estadoTexto)
+                : siguiente[indiceExistente].estadoJuego,
             };
             actualizadas++;
           } else {
@@ -219,6 +243,8 @@ export function ResultadosForm({
                 licenciaFederativa: licencia,
                 handicap,
                 [columnaPrincipal]: puntos,
+                posicion,
+                estadoJuego: estadoDesdeTexto(estadoTexto),
               }),
             );
             anadidas++;
@@ -290,10 +316,11 @@ export function ResultadosForm({
         />
       </div>
       <p className="-mt-3 text-xs text-ajag-gris-500">
-        &quot;Descargar XLS&quot; exporta la tabla actual (id_torneo, categoría, nombre,
-        licencia, handicap, {nombreColumnaXls}) para rellenarla fuera de la app; &quot;Subir
+        &quot;Descargar XLS&quot; exporta la tabla actual (id_torneo, posición, categoría —
+        &quot;Categoría única&quot; si el torneo no tiene tramos de hándicap —, nombre, licencia,
+        handicap, {nombreColumnaXls}, estado) para rellenarla fuera de la app; &quot;Subir
         XLS&quot; vuelve a leerla y actualiza cada fila por licencia (añade las que no
-        existan todavía).
+        existan todavía). Deja una celda en blanco para no tocar ese dato al subirlo.
       </p>
       {mensajeXls ? <p className="-mt-3 text-xs text-ajag-verde-700">{mensajeXls}</p> : null}
 
