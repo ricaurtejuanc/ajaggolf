@@ -47,11 +47,11 @@ export function ClasificacionLigaTable({
       <div
         className={`grid ${gridCols} items-center gap-2 border-b border-ajag-gris-100 px-4 py-3 text-xs uppercase text-ajag-gris-500`}
       >
-        <span>Pos.</span>
+        <span className="text-center">Pos.</span>
         <span>Jugador</span>
-        <span className="text-right">Puntos totales</span>
-        {limitada ? <span className="text-right">Mejores Resultados</span> : null}
-        <span className="text-right">Pruebas</span>
+        <span className="text-center">Puntos totales</span>
+        {limitada ? <span className="text-center">Mejores Resultados</span> : null}
+        <span className="text-center">Pruebas</span>
       </div>
       {filas.map((fila, i) => {
         const estaAbierto = abierto === fila.jugadorId;
@@ -62,17 +62,17 @@ export function ClasificacionLigaTable({
               onClick={() => setAbierto(estaAbierto ? null : fila.jugadorId)}
               className={`grid w-full ${gridCols} items-center gap-2 px-4 py-3 text-left text-sm transition hover:bg-ajag-verde-50/60`}
             >
-              <span className="font-medium text-ajag-verde-900">{i + 1}</span>
+              <span className="text-center font-medium text-ajag-verde-900">{i + 1}</span>
               <span className="text-ajag-verde-900">{fila.nombre}</span>
-              <span className="text-right font-medium text-ajag-verde-900">
+              <span className="text-center font-medium text-ajag-verde-900">
                 {fila.puntosTotalesBrutos}
               </span>
               {limitada ? (
-                <span className="text-right font-medium text-ajag-verde-900">
+                <span className="text-center font-medium text-ajag-verde-900">
                   {fila.puntosTotales}
                 </span>
               ) : null}
-              <span className="flex items-center justify-end gap-1 text-ajag-gris-500">
+              <span className="flex items-center justify-center gap-1 text-ajag-gris-500">
                 {fila.eventosJugados}
                 <ChevronDown
                   size={15}
