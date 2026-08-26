@@ -4,7 +4,8 @@ import { updateSession } from "@/lib/supabase/middleware";
 // Dominio "paraguas" del SaaS: en la raíz muestra la landing de producto,
 // no el sitio de un organizador concreto. Cualquier otra ruta bajo este
 // mismo host (/torneos, /admin, etc.) sigue sirviendo la app normal.
-const DOMINIOS_LANDING = new Set(["torneos.aftergolf.es", "www.torneos.aftergolf.es"]);
+const DOMINIO_PLATAFORMA = "torneos.aftergolf.es";
+const DOMINIOS_LANDING = new Set([DOMINIO_PLATAFORMA, `www.${DOMINIO_PLATAFORMA}`]);
 
 // Alias de producción que asigna Vercel automáticamente: no es un dominio
 // que quiera enseñarse (SEO duplicado, confunde a quien lo comparta), así
@@ -74,6 +75,25 @@ export async function proxy(request: NextRequest) {
   }
 
   const { pathname } = request.nextUrl;
+
+  // El panel "god" (super-admin, cruza organizadores) no es de ningún
+  // organizador: vive siempre en el dominio de la plataforma, nunca en el
+  // subdominio de un cliente (p.ej. ajag.torneos.aftergolf.es), aunque ese
+  // dominio resuelva por fallback a AJAG y por tanto también sirviera la
+  // ruta. Solo redirige subdominios *.torneos.aftergolf.es (los de
+  // clientes reales) — localhost y las URLs de preview de Vercel siguen
+  // sirviendo /god directamente, para poder probarlo antes de desplegar.
+  if (pathname === "/god" || pathname.startsWith("/god/")) {
+    const hostSinWww = host.replace(/^www\./, "");
+    if (hostSinWww !== DOMINIO_PLATAFORMA && hostSinWww.endsWith(`.${DOMINIO_PLATAFORMA}`)) {
+      const url = request.nextUrl.clone();
+      url.protocol = "https";
+      url.host = DOMINIO_PLATAFORMA;
+      url.port = "";
+      return NextResponse.redirect(url, 308);
+    }
+  }
+
   const debeReescribir = DOMINIOS_LANDING.has(host) && pathname === "/";
   const esLanding = debeReescribir || pathname === "/producto";
 
@@ -95,7 +115,15 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next({ request: { headers: requestHeaders } });
   }
 
-  return await updateSession(request, organizadorId ? { "x-organizador-id": organizadorId } : undefined);
+  // El panel god tampoco lleva la cabecera/pie de AJAG (su propio layout ya
+  // pone su propia navegación) — pero, a diferencia de /producto, sigue
+  // necesitando el refresco de sesión de updateSession en cada request,
+  // porque aquí sí hay una sesión de super-admin que mantener viva.
+  const extraHeaders: Record<string, string> = {};
+  if (organizadorId) extraHeaders["x-organizador-id"] = organizadorId;
+  if (pathname === "/god" || pathname.startsWith("/god/")) extraHeaders["x-show-god"] = "1";
+
+  return await updateSession(request, Object.keys(extraHeaders).length > 0 ? extraHeaders : undefined);
 }
 
 export const config = {
