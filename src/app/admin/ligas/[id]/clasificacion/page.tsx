@@ -24,7 +24,7 @@ export default async function ClasificacionLigaAdminPage({
 
   const { data: clasificacion } = await supabase
     .from("clasificacion_global")
-    .select("jugador_id, puntos_totales, eventos_jugados")
+    .select("jugador_id, puntos_totales, puntos_totales_brutos, eventos_jugados")
     .eq("liga_pool_id", id)
     .order("puntos_totales", { ascending: false });
 
@@ -45,14 +45,14 @@ export default async function ClasificacionLigaAdminPage({
       return filaVacia({
         nombreMostrado: `${jugador.nombre} ${jugador.apellidos}`.trim(),
         licenciaFederativa: jugador.licencia_federativa ?? "",
+        puntosTotalesBrutos: String(fila.puntos_totales_brutos),
         puntosTotales: String(fila.puntos_totales),
         eventosJugados: String(fila.eventos_jugados),
       });
     })
     .filter((f): f is FilaClasificacion => f != null);
 
-  const etiquetaPuntos =
-    liga.mejores_n_torneos != null ? `Mejores ${liga.mejores_n_torneos}` : "Puntos totales";
+  const etiquetaMejores = liga.mejores_n_torneos != null ? `Mejores ${liga.mejores_n_torneos}` : null;
 
   return (
     <div>
@@ -79,7 +79,7 @@ export default async function ClasificacionLigaAdminPage({
         <ClasificacionLigaAdminForm
           ligaId={liga.id}
           filasIniciales={filasIniciales}
-          etiquetaPuntos={etiquetaPuntos}
+          etiquetaMejores={etiquetaMejores}
         />
       </div>
     </div>

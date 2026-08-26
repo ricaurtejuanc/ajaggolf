@@ -59,6 +59,7 @@ export async function guardarClasificacionLiga(
 
   const nombres = formData.getAll("nombre").map((v) => String(v).trim());
   const licencias = formData.getAll("licencia").map((v) => String(v).trim());
+  const puntosTotalesBrutos = formData.getAll("puntos_totales_brutos").map((v) => String(v).trim());
   const puntosTotales = formData.getAll("puntos_totales").map((v) => String(v).trim());
   const eventosJugados = formData.getAll("eventos_jugados").map((v) => String(v).trim());
 
@@ -66,18 +67,28 @@ export async function guardarClasificacionLiga(
 
   const { data: liga } = await supabase
     .from("ligas_pool")
-    .select("id, slug")
+    .select("id, slug, mejores_n_torneos")
     .eq("id", ligaId)
     .maybeSingle();
   if (!liga) return { ok: false, error: "Liga no encontrada." };
 
+  // El campo "puntos_totales" (oficial, decide el orden del ranking) solo
+  // se muestra/edita por separado en el formulario cuando la liga limita a
+  // los mejores N resultados; si no, coincide con el total en bruto.
   const filasValidas = licencias
-    .map((licencia, i) => ({
-      licencia,
-      nombre: nombres[i] || "",
-      puntos_totales: puntosTotales[i] ? Number(puntosTotales[i].replace(",", ".")) : 0,
-      eventos_jugados: eventosJugados[i] ? parseInt(eventosJugados[i], 10) : 0,
-    }))
+    .map((licencia, i) => {
+      const bruto = puntosTotalesBrutos[i] ? Number(puntosTotalesBrutos[i].replace(",", ".")) : 0;
+      return {
+        licencia,
+        nombre: nombres[i] || "",
+        puntos_totales_brutos: bruto,
+        puntos_totales:
+          liga.mejores_n_torneos != null && puntosTotales[i]
+            ? Number(puntosTotales[i].replace(",", "."))
+            : bruto,
+        eventos_jugados: eventosJugados[i] ? parseInt(eventosJugados[i], 10) : 0,
+      };
+    })
     .filter((f) => f.licencia && f.nombre);
 
   if (filasValidas.length === 0) {
@@ -90,7 +101,12 @@ export async function guardarClasificacionLiga(
   // insert.
   const porJugador = new Map<
     string,
-    { jugador_id: string; puntos_totales: number; eventos_jugados: number }
+    {
+      jugador_id: string;
+      puntos_totales: number;
+      puntos_totales_brutos: number;
+      eventos_jugados: number;
+    }
   >();
   for (const fila of filasValidas) {
     const jugadorId = await resolverJugadorPorLicencia(supabase, fila.licencia, fila.nombre);
@@ -98,6 +114,7 @@ export async function guardarClasificacionLiga(
     porJugador.set(jugadorId, {
       jugador_id: jugadorId,
       puntos_totales: fila.puntos_totales,
+      puntos_totales_brutos: fila.puntos_totales_brutos,
       eventos_jugados: fila.eventos_jugados,
     });
   }

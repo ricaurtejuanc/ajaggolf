@@ -8,11 +8,12 @@ import { filaVacia, type FilaClasificacion } from "./fila-clasificacion";
 export function ClasificacionLigaAdminForm({
   ligaId,
   filasIniciales,
-  etiquetaPuntos,
+  etiquetaMejores,
 }: {
   ligaId: string;
   filasIniciales: FilaClasificacion[];
-  etiquetaPuntos: string;
+  /** "Mejores N" si la liga limita a los mejores N resultados, o null si no. */
+  etiquetaMejores: string | null;
 }) {
   const [filas, setFilas] = useState<FilaClasificacion[]>(
     filasIniciales.length > 0 ? filasIniciales : [filaVacia()],
@@ -38,7 +39,8 @@ export function ClasificacionLigaAdminForm({
       Id_Liga: ligaId,
       nombre: fila.nombreMostrado,
       licencia: fila.licenciaFederativa,
-      [etiquetaPuntos]: fila.puntosTotales,
+      "Puntos totales": fila.puntosTotalesBrutos,
+      ...(etiquetaMejores ? { [etiquetaMejores]: fila.puntosTotales } : {}),
       "pruebas jugadas": fila.eventosJugados,
     }));
     const hoja = XLSX.utils.json_to_sheet(datos);
@@ -77,7 +79,10 @@ export function ClasificacionLigaAdminForm({
 
           const licencia = leerTexto(filaXls, "licencia", "licencia_federativa");
           const nombre = leerTexto(filaXls, "nombre");
-          const puntos = leerTexto(filaXls, etiquetaPuntos, "puntos_totales", "puntos totales", "puntos");
+          const puntosBrutos = leerTexto(filaXls, "Puntos totales", "puntos_totales_brutos", "puntos totales");
+          const puntosMejores = etiquetaMejores
+            ? leerTexto(filaXls, etiquetaMejores, "puntos_totales", "mejores")
+            : "";
           const eventos = leerTexto(
             filaXls,
             "pruebas jugadas",
@@ -97,7 +102,8 @@ export function ClasificacionLigaAdminForm({
             siguiente[indiceExistente] = {
               ...siguiente[indiceExistente],
               nombreMostrado: nombre || siguiente[indiceExistente].nombreMostrado,
-              puntosTotales: puntos || siguiente[indiceExistente].puntosTotales,
+              puntosTotalesBrutos: puntosBrutos || siguiente[indiceExistente].puntosTotalesBrutos,
+              puntosTotales: puntosMejores || puntosBrutos || siguiente[indiceExistente].puntosTotales,
               eventosJugados: eventos || siguiente[indiceExistente].eventosJugados,
             };
             actualizadas++;
@@ -106,14 +112,16 @@ export function ClasificacionLigaAdminForm({
               filaVacia({
                 nombreMostrado: nombre,
                 licenciaFederativa: licencia,
-                puntosTotales: puntos || "0",
+                puntosTotalesBrutos: puntosBrutos || "0",
+                puntosTotales: puntosMejores || puntosBrutos || "0",
                 eventosJugados: eventos || "0",
               }),
             );
             anadidas++;
           }
         }
-        // Tras importar, se reordena por puntos totales descendente.
+        // Tras importar, se reordena por el valor oficial de ranking (puntos
+        // totales si la liga no limita, o mejores resultados si limita).
         siguiente.sort((a, b) => {
           const puntosA = parseFloat(a.puntosTotales.replace(",", "."));
           const puntosB = parseFloat(b.puntosTotales.replace(",", "."));
@@ -192,9 +200,10 @@ export function ClasificacionLigaAdminForm({
         </button>
       </div>
       <p className="-mt-3 text-xs text-ajag-gris-500">
-        &quot;Descargar XLS&quot; exporta la tabla actual (Id_Liga, nombre, licencia,{" "}
-        {etiquetaPuntos.toLowerCase()}, pruebas jugadas); &quot;Subir XLS&quot; vuelve a leerla
-        y actualiza cada fila por licencia (añade las que no existan todavía).
+        &quot;Descargar XLS&quot; exporta la tabla actual (Id_Liga, nombre, licencia, puntos
+        totales{etiquetaMejores ? `, ${etiquetaMejores.toLowerCase()}` : ""}, pruebas jugadas);
+        &quot;Subir XLS&quot; vuelve a leerla y actualiza cada fila por licencia (añade las que
+        no existan todavía).
       </p>
       {mensajeXls ? <p className="-mt-3 text-xs text-ajag-verde-700">{mensajeXls}</p> : null}
       {mensajeRecalculo ? <p className="-mt-3 text-xs text-ajag-verde-700">{mensajeRecalculo}</p> : null}
@@ -205,7 +214,8 @@ export function ClasificacionLigaAdminForm({
             <tr>
               <th className="py-2 pr-2">Jugador</th>
               <th className="py-2 pr-2">Licencia</th>
-              <th className="py-2 pr-2">{etiquetaPuntos}</th>
+              <th className="py-2 pr-2">Puntos totales</th>
+              {etiquetaMejores ? <th className="py-2 pr-2">{etiquetaMejores}</th> : null}
               <th className="py-2 pr-2">Pruebas jugadas</th>
               <th />
             </tr>
@@ -233,14 +243,26 @@ export function ClasificacionLigaAdminForm({
                 </td>
                 <td className="py-1.5 pr-2">
                   <input
-                    name="puntos_totales"
+                    name="puntos_totales_brutos"
                     type="number"
                     step="0.1"
-                    value={fila.puntosTotales}
-                    onChange={(e) => actualizarFila(fila.key, "puntosTotales", e.target.value)}
+                    value={fila.puntosTotalesBrutos}
+                    onChange={(e) => actualizarFila(fila.key, "puntosTotalesBrutos", e.target.value)}
                     className="w-24 rounded-lg border border-ajag-gris-200 px-2 py-1.5 text-sm outline-none focus:border-ajag-verde-600"
                   />
                 </td>
+                {etiquetaMejores ? (
+                  <td className="py-1.5 pr-2">
+                    <input
+                      name="puntos_totales"
+                      type="number"
+                      step="0.1"
+                      value={fila.puntosTotales}
+                      onChange={(e) => actualizarFila(fila.key, "puntosTotales", e.target.value)}
+                      className="w-24 rounded-lg border border-ajag-gris-200 px-2 py-1.5 text-sm outline-none focus:border-ajag-verde-600"
+                    />
+                  </td>
+                ) : null}
                 <td className="py-1.5 pr-2">
                   <input
                     name="eventos_jugados"

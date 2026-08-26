@@ -18,27 +18,39 @@ export interface FilaClasificacionLiga {
   jugadorId: string;
   nombre: string;
   puntosTotales: number;
+  puntosTotalesBrutos: number;
   eventosJugados: number;
   detalle: DetalleTorneoJugador[];
 }
 
 export function ClasificacionLigaTable({
   filas,
-  etiquetaPuntos = "Puntos totales",
   mejoresN = null,
 }: {
   filas: FilaClasificacionLiga[];
-  etiquetaPuntos?: string;
   mejoresN?: number | null;
 }) {
   const [abierto, setAbierto] = useState<string | null>(null);
 
+  // Si la liga limita a los mejores N resultados, se muestran dos
+  // columnas: el total en bruto de todo lo jugado (informativo) y el
+  // total oficial de "Mejores Resultados" que decide el orden del
+  // ranking. Si no hay límite, los dos valores coinciden: se muestra
+  // solo una columna de puntos totales.
+  const limitada = mejoresN != null;
+  const gridCols = limitada
+    ? "grid-cols-[3rem_1fr_6rem_7rem_5rem]"
+    : "grid-cols-[3rem_1fr_6rem_5rem]";
+
   return (
     <div className="overflow-hidden rounded-2xl border border-ajag-gris-100 bg-white">
-      <div className="grid grid-cols-[3rem_1fr_5rem_6rem] items-center gap-2 border-b border-ajag-gris-100 px-4 py-3 text-xs uppercase text-ajag-gris-500">
+      <div
+        className={`grid ${gridCols} items-center gap-2 border-b border-ajag-gris-100 px-4 py-3 text-xs uppercase text-ajag-gris-500`}
+      >
         <span>Pos.</span>
         <span>Jugador</span>
-        <span className="text-right">{etiquetaPuntos}</span>
+        <span className="text-right">Puntos totales</span>
+        {limitada ? <span className="text-right">Mejores Resultados</span> : null}
         <span className="text-right">Pruebas</span>
       </div>
       {filas.map((fila, i) => {
@@ -48,13 +60,18 @@ export function ClasificacionLigaTable({
             <button
               type="button"
               onClick={() => setAbierto(estaAbierto ? null : fila.jugadorId)}
-              className="grid w-full grid-cols-[3rem_1fr_5rem_6rem] items-center gap-2 px-4 py-3 text-left text-sm transition hover:bg-ajag-verde-50/60"
+              className={`grid w-full ${gridCols} items-center gap-2 px-4 py-3 text-left text-sm transition hover:bg-ajag-verde-50/60`}
             >
               <span className="font-medium text-ajag-verde-900">{i + 1}</span>
               <span className="text-ajag-verde-900">{fila.nombre}</span>
               <span className="text-right font-medium text-ajag-verde-900">
-                {fila.puntosTotales}
+                {fila.puntosTotalesBrutos}
               </span>
+              {limitada ? (
+                <span className="text-right font-medium text-ajag-verde-900">
+                  {fila.puntosTotales}
+                </span>
+              ) : null}
               <span className="flex items-center justify-end gap-1 text-ajag-gris-500">
                 {fila.eventosJugados}
                 <ChevronDown

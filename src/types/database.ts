@@ -282,6 +282,7 @@ export type ClasificacionGlobal = {
   liga_pool_id: string;
   jugador_id: string;
   puntos_totales: number;
+  puntos_totales_brutos: number;
   eventos_jugados: number;
   updated_at: string;
 };
@@ -345,6 +346,7 @@ export type ClasificacionPublica = {
   apellidos: string;
   handicap: number | null;
   puntos_totales: number;
+  puntos_totales_brutos: number;
   eventos_jugados: number;
 };
 

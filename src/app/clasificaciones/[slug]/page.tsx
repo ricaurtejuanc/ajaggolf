@@ -94,12 +94,11 @@ export default async function LigaDetallePage({
     lista.sort((a, b) => a.fecha.localeCompare(b.fecha));
   }
 
-  const etiquetaPuntos = liga.mejores_n_torneos != null ? "Mejores Resultados" : "Puntos totales";
-
   const filasClasificacion: FilaClasificacionLiga[] = (clasificacion ?? []).map((c) => ({
     jugadorId: c.jugador_id,
     nombre: `${c.nombre} ${c.apellidos}`,
     puntosTotales: c.puntos_totales,
+    puntosTotalesBrutos: c.puntos_totales_brutos,
     eventosJugados: c.eventos_jugados,
     detalle: detallePorJugador.get(c.jugador_id) ?? [],
   }));
@@ -162,11 +161,7 @@ export default async function LigaDetallePage({
           torneo de esta liga.
         </div>
       ) : (
-        <ClasificacionLigaTable
-          filas={filasClasificacion}
-          etiquetaPuntos={etiquetaPuntos}
-          mejoresN={liga.mejores_n_torneos}
-        />
+        <ClasificacionLigaTable filas={filasClasificacion} mejoresN={liga.mejores_n_torneos} />
       )}
 
       <h2 className="mt-10 mb-4 font-display text-xl font-semibold text-ajag-verde-900">

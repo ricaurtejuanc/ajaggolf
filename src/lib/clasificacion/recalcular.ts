@@ -71,7 +71,12 @@ export async function recalcularClasificacionGlobal(ligaId: string): Promise<voi
   const filas = Array.from(valoresPorJugador.entries()).map(([jugador_id, valores]) => ({
     liga_pool_id: ligaId,
     jugador_id,
+    // puntos_totales es el valor oficial que decide el orden del ranking:
+    // la suma de los mejores N resultados si la liga los limita, o de
+    // todos si no. puntos_totales_brutos es siempre la suma de todos los
+    // resultados jugados, sin limitar — solo informativo.
     puntos_totales: sumarMejores(valores, liga.mejores_n_torneos, menorMejor),
+    puntos_totales_brutos: sumarMejores(valores, null, menorMejor),
     eventos_jugados: torneosPorJugador.get(jugador_id)?.size ?? valores.length,
     updated_at: new Date().toISOString(),
   }));
