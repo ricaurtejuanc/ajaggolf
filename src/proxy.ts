@@ -14,6 +14,16 @@ const DOMINIOS_LANDING = new Set(["torneos.aftergolf.es", "www.torneos.aftergolf
 const ALIAS_VERCEL = "ajaggolf-umber.vercel.app";
 const DOMINIO_CANONICO = "ajag.torneos.aftergolf.es";
 
+// La resolución de organizador por dominio se repite en TODAS las
+// peticiones (el middleware corre en cada navegación) pero el resultado
+// casi nunca cambia, así que se cachea en memoria un rato: evita ir a la
+// REST API de Supabase en cada visita, que era el mayor cuello de botella
+// del tiempo de respuesta inicial. Vive por instancia de la función edge
+// (no es un caché compartido entre regiones), pero con eso ya basta para
+// eliminar la inmensa mayoría de las idas y vueltas repetidas.
+const CACHE_ORGANIZADOR_TTL_MS = 5 * 60_000;
+const cacheOrganizador = new Map<string, { id: string | null; expira: number }>();
+
 /**
  * Resuelve a qué organizador pertenece esta visita según el dominio
  * (`organizadores.dominio`), con fallback a AJAG (slug "ajag") si no hay
@@ -23,12 +33,16 @@ const DOMINIO_CANONICO = "ajag.torneos.aftergolf.es";
  * cookies/sesión aquí, solo de la clave anónima.
  */
 async function resolverOrganizadorId(host: string): Promise<string | null> {
+  const hostSinWww = host.replace(/^www\./, "");
+
+  const cacheado = cacheOrganizador.get(hostSinWww);
+  if (cacheado && cacheado.expira > Date.now()) return cacheado.id;
+
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   if (!url || !key) return null;
 
   try {
-    const hostSinWww = host.replace(/^www\./, "");
     const params = new URLSearchParams({
       select: "id,slug,dominio",
       or: `(dominio.eq.${hostSinWww},slug.eq.ajag)`,
@@ -40,7 +54,9 @@ async function resolverOrganizadorId(host: string): Promise<string | null> {
     if (!respuesta.ok) return null;
     const filas: { id: string; slug: string; dominio: string | null }[] = await respuesta.json();
     const porDominio = filas.find((f) => f.dominio === hostSinWww);
-    return (porDominio ?? filas.find((f) => f.slug === "ajag"))?.id ?? null;
+    const id = (porDominio ?? filas.find((f) => f.slug === "ajag"))?.id ?? null;
+    cacheOrganizador.set(hostSinWww, { id, expira: Date.now() + CACHE_ORGANIZADOR_TTL_MS });
+    return id;
   } catch {
     return null;
   }
