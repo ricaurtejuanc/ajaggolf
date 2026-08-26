@@ -99,22 +99,30 @@ export default async function ClasificacionPage({
     const columnaPrincipal = torneo.formato_puntuacion === "stableford" ? "puntos" : "golpes";
     general = (
       <div className="overflow-x-auto rounded-2xl border border-ajag-gris-100 bg-white">
-        <table className="w-full min-w-[480px] text-left text-sm">
-          <thead className="border-b border-ajag-gris-100 text-xs uppercase text-ajag-gris-500">
+        <table className="w-full text-left text-xs sm:text-sm">
+          <thead className="border-b border-ajag-gris-100 text-[0.65rem] uppercase text-ajag-gris-500 sm:text-xs">
             <tr>
-              <th className="px-4 py-3">Pos.</th>
-              <th className="px-4 py-3">Jugador</th>
-              <th className="px-4 py-3">Hcp</th>
-              <th className="px-4 py-3">{columnaPrincipal === "puntos" ? "Puntos" : "Golpes"}</th>
+              <th className="px-2 py-2 sm:px-4 sm:py-3">Pos.</th>
+              <th className="px-2 py-2 sm:px-4 sm:py-3">Jugador</th>
+              <th className="px-2 py-2 sm:px-4 sm:py-3">Hcp</th>
+              <th className="px-2 py-2 sm:px-4 sm:py-3">
+                {columnaPrincipal === "puntos" ? "Puntos" : "Golpes"}
+              </th>
             </tr>
           </thead>
           <tbody>
             {resultados.map((r) => (
               <tr key={r.id} className="border-b border-ajag-gris-100 last:border-0">
-                <td className="px-4 py-3 font-medium text-ajag-verde-900">{r.posicion ?? "—"}</td>
-                <td className="px-4 py-3 text-ajag-verde-900">{r.nombre_mostrado}</td>
-                <td className="px-4 py-3 text-ajag-gris-500">{r.handicap ?? "—"}</td>
-                <td className="px-4 py-3 text-ajag-gris-500">
+                <td className="px-2 py-2 font-medium text-ajag-verde-900 sm:px-4 sm:py-3">
+                  {r.posicion ?? "—"}
+                </td>
+                <td className="px-2 py-2 text-ajag-verde-900 sm:px-4 sm:py-3">
+                  {r.nombre_mostrado}
+                </td>
+                <td className="px-2 py-2 text-ajag-gris-500 sm:px-4 sm:py-3">
+                  {r.handicap ?? "—"}
+                </td>
+                <td className="px-2 py-2 text-ajag-gris-500 sm:px-4 sm:py-3">
                   {r.estado_juego === "retirado"
                     ? "Retirado"
                     : r.estado_juego === "no_presentado"
