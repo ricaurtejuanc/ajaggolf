@@ -53,6 +53,12 @@ export default async function AdminLigasPage() {
               </div>
               <div className="flex items-center gap-3">
                 <Link
+                  href={`/admin/ligas/${liga.id}/clasificacion`}
+                  className="text-sm font-medium text-ajag-verde-700 hover:underline"
+                >
+                  Clasificación
+                </Link>
+                <Link
                   href={`/admin/ligas/${liga.id}/editar`}
                   className="text-sm font-medium text-ajag-verde-700 hover:underline"
                 >
