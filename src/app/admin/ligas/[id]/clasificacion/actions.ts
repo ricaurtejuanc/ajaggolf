@@ -9,19 +9,26 @@ import type { Database } from "@/types/database";
 
 export type EstadoClasificacionLiga = { ok: boolean; error: string | null };
 
+/** Divide un nombre completo en nombre/apellidos (jugadores exige ambos por separado). */
+function dividirNombreCompleto(nombreCompleto: string): { nombre: string; apellidos: string } {
+  const partes = nombreCompleto.trim().split(/\s+/);
+  return { nombre: partes[0] ?? nombreCompleto, apellidos: partes.slice(1).join(" ") };
+}
+
 /**
  * Busca un jugador por su licencia federativa (clave natural ya usada en
  * el resto de la app); si no existe se crea como ficha "invitada" (sin
  * cuenta), igual que en la inscripción sin licencia. Si ya existe, se
- * actualiza el nombre/apellidos con lo escrito aquí para no dejar la ficha
+ * actualiza el nombre con lo escrito aquí para no dejar la ficha
  * desactualizada.
  */
 async function resolverJugadorPorLicencia(
   supabase: SupabaseClient<Database>,
   licencia: string,
-  nombre: string,
-  apellidos: string,
+  nombreCompleto: string,
 ): Promise<string | null> {
+  const { nombre, apellidos } = dividirNombreCompleto(nombreCompleto);
+
   const { data: existente } = await supabase
     .from("jugadores")
     .select("id")
@@ -51,7 +58,6 @@ export async function guardarClasificacionLiga(
   if (!admin) return { ok: false, error: "No autorizado." };
 
   const nombres = formData.getAll("nombre").map((v) => String(v).trim());
-  const apellidos = formData.getAll("apellidos").map((v) => String(v).trim());
   const licencias = formData.getAll("licencia").map((v) => String(v).trim());
   const puntosTotales = formData.getAll("puntos_totales").map((v) => String(v).trim());
   const eventosJugados = formData.getAll("eventos_jugados").map((v) => String(v).trim());
@@ -69,7 +75,6 @@ export async function guardarClasificacionLiga(
     .map((licencia, i) => ({
       licencia,
       nombre: nombres[i] || "",
-      apellidos: apellidos[i] || "",
       puntos_totales: puntosTotales[i] ? Number(puntosTotales[i].replace(",", ".")) : 0,
       eventos_jugados: eventosJugados[i] ? parseInt(eventosJugados[i], 10) : 0,
     }))
@@ -88,7 +93,7 @@ export async function guardarClasificacionLiga(
     { jugador_id: string; puntos_totales: number; eventos_jugados: number }
   >();
   for (const fila of filasValidas) {
-    const jugadorId = await resolverJugadorPorLicencia(supabase, fila.licencia, fila.nombre, fila.apellidos);
+    const jugadorId = await resolverJugadorPorLicencia(supabase, fila.licencia, fila.nombre);
     if (!jugadorId) continue;
     porJugador.set(jugadorId, {
       jugador_id: jugadorId,

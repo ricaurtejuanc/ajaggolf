@@ -17,7 +17,7 @@ export default async function ClasificacionLigaAdminPage({
 
   const { data: liga } = await supabase
     .from("ligas_pool")
-    .select("id, nombre, slug")
+    .select("id, nombre, slug, mejores_n_torneos")
     .eq("id", id)
     .maybeSingle();
   if (!liga) notFound();
@@ -43,14 +43,16 @@ export default async function ClasificacionLigaAdminPage({
       const jugador = jugadorPorId.get(fila.jugador_id);
       if (!jugador) return null;
       return filaVacia({
-        nombre: jugador.nombre,
-        apellidos: jugador.apellidos,
+        nombreMostrado: `${jugador.nombre} ${jugador.apellidos}`.trim(),
         licenciaFederativa: jugador.licencia_federativa ?? "",
         puntosTotales: String(fila.puntos_totales),
         eventosJugados: String(fila.eventos_jugados),
       });
     })
     .filter((f): f is FilaClasificacion => f != null);
+
+  const etiquetaPuntos =
+    liga.mejores_n_torneos != null ? `Mejores ${liga.mejores_n_torneos}` : "Puntos totales";
 
   return (
     <div>
@@ -66,9 +68,19 @@ export default async function ClasificacionLigaAdminPage({
         que hagas aquí se perderá la próxima vez que se publiquen resultados de un torneo
         de esta liga, salvo que uses &quot;Recalcular desde resultados&quot; después.
       </p>
+      {liga.mejores_n_torneos != null ? (
+        <p className="mt-1 max-w-2xl text-sm text-ajag-gris-500">
+          Se cogen los mejores {liga.mejores_n_torneos} resultados de toda la liga. Cambia
+          este número desde &quot;Editar&quot; liga.
+        </p>
+      ) : null}
 
       <div className="mt-6">
-        <ClasificacionLigaAdminForm ligaId={liga.id} filasIniciales={filasIniciales} />
+        <ClasificacionLigaAdminForm
+          ligaId={liga.id}
+          filasIniciales={filasIniciales}
+          etiquetaPuntos={etiquetaPuntos}
+        />
       </div>
     </div>
   );

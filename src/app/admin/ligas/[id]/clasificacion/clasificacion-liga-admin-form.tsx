@@ -8,9 +8,11 @@ import { filaVacia, type FilaClasificacion } from "./fila-clasificacion";
 export function ClasificacionLigaAdminForm({
   ligaId,
   filasIniciales,
+  etiquetaPuntos,
 }: {
   ligaId: string;
   filasIniciales: FilaClasificacion[];
+  etiquetaPuntos: string;
 }) {
   const [filas, setFilas] = useState<FilaClasificacion[]>(
     filasIniciales.length > 0 ? filasIniciales : [filaVacia()],
@@ -33,11 +35,11 @@ export function ClasificacionLigaAdminForm({
   async function descargarXls() {
     const XLSX = await import("xlsx");
     const datos = filas.map((fila) => ({
-      nombre: fila.nombre,
-      apellidos: fila.apellidos,
+      Id_Liga: ligaId,
+      nombre: fila.nombreMostrado,
       licencia: fila.licenciaFederativa,
-      puntos_totales: fila.puntosTotales,
-      eventos_jugados: fila.eventosJugados,
+      [etiquetaPuntos]: fila.puntosTotales,
+      "pruebas jugadas": fila.eventosJugados,
     }));
     const hoja = XLSX.utils.json_to_sheet(datos);
     const libro = XLSX.utils.book_new();
@@ -63,17 +65,26 @@ export function ClasificacionLigaAdminForm({
         return "";
       };
 
+      let idsDistintos = false;
       let actualizadas = 0;
       let anadidas = 0;
 
       setFilas((prev) => {
         const siguiente = [...prev];
         for (const filaXls of filasXls) {
+          const idLigaFila = leerTexto(filaXls, "Id_Liga", "id_liga");
+          if (idLigaFila && idLigaFila !== ligaId) idsDistintos = true;
+
           const licencia = leerTexto(filaXls, "licencia", "licencia_federativa");
           const nombre = leerTexto(filaXls, "nombre");
-          const apellidos = leerTexto(filaXls, "apellidos");
-          const puntos = leerTexto(filaXls, "puntos_totales", "puntos totales", "puntos");
-          const eventos = leerTexto(filaXls, "eventos_jugados", "eventos jugados", "eventos");
+          const puntos = leerTexto(filaXls, etiquetaPuntos, "puntos_totales", "puntos totales", "puntos");
+          const eventos = leerTexto(
+            filaXls,
+            "pruebas jugadas",
+            "pruebas_jugadas",
+            "eventos_jugados",
+            "eventos jugados",
+          );
           if (!licencia && !nombre) continue;
 
           const indiceExistente = licencia
@@ -85,8 +96,7 @@ export function ClasificacionLigaAdminForm({
           if (indiceExistente !== -1) {
             siguiente[indiceExistente] = {
               ...siguiente[indiceExistente],
-              nombre: nombre || siguiente[indiceExistente].nombre,
-              apellidos: apellidos || siguiente[indiceExistente].apellidos,
+              nombreMostrado: nombre || siguiente[indiceExistente].nombreMostrado,
               puntosTotales: puntos || siguiente[indiceExistente].puntosTotales,
               eventosJugados: eventos || siguiente[indiceExistente].eventosJugados,
             };
@@ -94,8 +104,7 @@ export function ClasificacionLigaAdminForm({
           } else {
             siguiente.push(
               filaVacia({
-                nombre,
-                apellidos,
+                nombreMostrado: nombre,
                 licenciaFederativa: licencia,
                 puntosTotales: puntos || "0",
                 eventosJugados: eventos || "0",
@@ -113,7 +122,12 @@ export function ClasificacionLigaAdminForm({
         return siguiente;
       });
 
-      setMensajeXls(`Actualizado desde el XLS: ${actualizadas} fila(s) actualizada(s), ${anadidas} nueva(s).`);
+      const avisoLiga = idsDistintos
+        ? " Ojo: alguna fila del archivo tenía un Id_Liga distinto al de esta liga."
+        : "";
+      setMensajeXls(
+        `Actualizado desde el XLS: ${actualizadas} fila(s) actualizada(s), ${anadidas} nueva(s).${avisoLiga}`,
+      );
     } catch (err) {
       setMensajeXls(
         `No se pudo leer el archivo: ${err instanceof Error ? err.message : "formato no reconocido"}.`,
@@ -178,9 +192,9 @@ export function ClasificacionLigaAdminForm({
         </button>
       </div>
       <p className="-mt-3 text-xs text-ajag-gris-500">
-        &quot;Descargar XLS&quot; exporta la tabla actual (nombre, apellidos, licencia, puntos
-        totales, eventos jugados); &quot;Subir XLS&quot; vuelve a leerla y actualiza cada fila
-        por licencia (añade las que no existan todavía).
+        &quot;Descargar XLS&quot; exporta la tabla actual (Id_Liga, nombre, licencia,{" "}
+        {etiquetaPuntos.toLowerCase()}, pruebas jugadas); &quot;Subir XLS&quot; vuelve a leerla
+        y actualiza cada fila por licencia (añade las que no existan todavía).
       </p>
       {mensajeXls ? <p className="-mt-3 text-xs text-ajag-verde-700">{mensajeXls}</p> : null}
       {mensajeRecalculo ? <p className="-mt-3 text-xs text-ajag-verde-700">{mensajeRecalculo}</p> : null}
@@ -189,11 +203,10 @@ export function ClasificacionLigaAdminForm({
         <table className="w-full min-w-[640px] text-left text-sm">
           <thead className="border-b border-ajag-gris-100 text-xs uppercase text-ajag-gris-500">
             <tr>
-              <th className="py-2 pr-2">Nombre</th>
-              <th className="py-2 pr-2">Apellidos</th>
+              <th className="py-2 pr-2">Jugador</th>
               <th className="py-2 pr-2">Licencia</th>
-              <th className="py-2 pr-2">Puntos totales</th>
-              <th className="py-2 pr-2">Eventos jugados</th>
+              <th className="py-2 pr-2">{etiquetaPuntos}</th>
+              <th className="py-2 pr-2">Pruebas jugadas</th>
               <th />
             </tr>
           </thead>
@@ -203,18 +216,10 @@ export function ClasificacionLigaAdminForm({
                 <td className="py-1.5 pr-2">
                   <input
                     name="nombre"
-                    value={fila.nombre}
-                    onChange={(e) => actualizarFila(fila.key, "nombre", e.target.value)}
+                    value={fila.nombreMostrado}
+                    onChange={(e) => actualizarFila(fila.key, "nombreMostrado", e.target.value)}
                     required
-                    className="w-full min-w-[8rem] rounded-lg border border-ajag-gris-200 px-2 py-1.5 text-sm outline-none focus:border-ajag-verde-600"
-                  />
-                </td>
-                <td className="py-1.5 pr-2">
-                  <input
-                    name="apellidos"
-                    value={fila.apellidos}
-                    onChange={(e) => actualizarFila(fila.key, "apellidos", e.target.value)}
-                    className="w-full min-w-[8rem] rounded-lg border border-ajag-gris-200 px-2 py-1.5 text-sm outline-none focus:border-ajag-verde-600"
+                    className="w-full min-w-[10rem] rounded-lg border border-ajag-gris-200 px-2 py-1.5 text-sm outline-none focus:border-ajag-verde-600"
                   />
                 </td>
                 <td className="py-1.5 pr-2">

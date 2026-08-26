@@ -24,10 +24,12 @@ export interface FilaClasificacionLiga {
 
 export function ClasificacionLigaTable({
   filas,
-  etiquetaPuntos = "Puntos",
+  etiquetaPuntos = "Puntos totales",
+  mejoresN = null,
 }: {
   filas: FilaClasificacionLiga[];
   etiquetaPuntos?: string;
+  mejoresN?: number | null;
 }) {
   const [abierto, setAbierto] = useState<string | null>(null);
 
@@ -111,6 +113,11 @@ export function ClasificacionLigaTable({
           </div>
         );
       })}
+      {mejoresN != null ? (
+        <p className="border-t border-ajag-gris-100 px-4 py-3 text-xs text-ajag-gris-500">
+          Se cogen los mejores {mejoresN} resultados de toda la liga.
+        </p>
+      ) : null}
     </div>
   );
 }
