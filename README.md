@@ -78,9 +78,9 @@ un proyecto de Google Cloud. La URL de redirect a autorizar en Google es
 
 ### 4. Dar de alta el primer organizador y su equipo admin
 
-Un super-admin da de alta el organizador desde el panel `/god`. El equipo
-de ese club/asociación necesita una fila en `usuarios_admin` para acceder
-a `/admin`. Primero deben iniciar sesión una vez en la web (Google o
+Un super-admin da de alta el organizador desde el panel `/god`. El primer
+admin de ese club/asociación necesita una fila en `usuarios_admin` para
+acceder a `/admin` — debe iniciar sesión una vez en la web (Google o
 email) y luego, desde el SQL Editor de Supabase:
 
 ```sql
@@ -90,6 +90,10 @@ values ('<auth.users.id del usuario>', 'Nombre Apellido', 'email@ejemplo.com', '
 
 El primer super-admin (acceso a `/god`) se da de alta igual, en
 `super_admins`.
+
+A partir de ahí, ese primer admin puede dar de alta al resto de su equipo
+desde `/admin/administradores` sin volver a tocar SQL — solo hace falta
+que la persona haya iniciado sesión una vez en la web antes.
 
 ### 5. Instalar dependencias y arrancar
 

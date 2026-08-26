@@ -9,6 +9,7 @@ import {
   Settings,
   Medal,
   Handshake,
+  Users,
 } from "lucide-react";
 import { getUsuarioAdmin } from "@/lib/auth";
 
@@ -19,6 +20,7 @@ const adminLinks = [
   { href: "/admin/patrocinadores", label: "Patrocinadores", icon: Handshake },
   { href: "/admin/pedidos", label: "Pagos", icon: Wallet },
   { href: "/admin/consultas", label: "Consultas", icon: MessageSquare },
+  { href: "/admin/administradores", label: "Administradores", icon: Users },
   { href: "/admin/configuracion", label: "Configuración", icon: Settings },
 ];
 
