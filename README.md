@@ -12,32 +12,48 @@ Storage + RLS) · Tailwind CSS v4 · Vercel.
 
 ## Funcionalidad
 
-- Resolución de tenant por dominio (`src/proxy.ts`): cada organizador tiene
-  su propio dominio/subdominio; el dominio "paraguas" muestra una landing
-  de producto en vez del sitio de un organizador concreto.
+- Resolución de tenant por dominio (`src/proxy.ts`, con caché en memoria de
+  5 min para no ir a Supabase en cada navegación): cada organizador tiene
+  su propio dominio/subdominio; el dominio "paraguas"
+  (`torneos.aftergolf.es`) muestra una landing de producto en vez del
+  sitio de un organizador concreto, y es también el único dominio desde el
+  que se sirve `/god` (una visita desde el subdominio de un cliente
+  redirige ahí automáticamente).
 - Auth con Google y enlace mágico por email (Supabase Auth).
 - Calendario público de torneos + ficha de torneo, con inscripción (cuenta
-  o invitado) y carrito de compra multi-torneo.
+  o invitado, con generación automática de licencia federativa si el
+  jugador no tiene) y carrito de compra multi-torneo.
 - Checkout con instrucciones de Bizum (número configurable por el admin),
   marcado "ya he pagado" por el usuario y confirmación manual por el
   admin. El método de pago está abstraído (`src/lib/pagos`) para poder
   añadir otros proveedores sin tocar el resto del flujo.
 - Motor de generación de cuadros de salida: agrupa por hándicap o
   manualmente, respeta las peticiones de "quiero jugar con" entre
-  jugadores, y exporta a PDF/XLS.
+  jugadores, y exporta a PDF/XLS. Modos de salida: consecutivo, a tiro y a
+  tiro silencioso.
 - Entrada de resultados por tres vías que confluyen en la misma tabla:
   manual, extracción automática desde un PDF/foto de clasificación
-  subido, o descarga/edición/re-subida en XLS.
-- Clasificación de liga/ranking, con dos modos de puntuación (tabla de
-  puntos por posición, o suma directa de puntos Stableford) y cálculo de
-  posiciones por categoría de hándicap con desempate.
+  subido, o descarga/edición/re-subida en XLS. Un jugador retirado o no
+  presentado no puntúa en la liga aunque la tabla muestre 0 puntos
+  Stableford por claridad visual.
+- Clasificación de liga/ranking, con tres modos de puntuación (tabla de
+  puntos por posición, suma directa de puntos Stableford, o suma de golpes
+  netos en medal play) y cálculo de posiciones por categoría de hándicap
+  con desempate. Una liga puede limitar la puntuación oficial a los
+  mejores N resultados del jugador ("Mejores Resultados"), manteniendo
+  también el total sin limitar como dato informativo. Cada liga tiene su
+  propia sección de clasificación en el panel admin para verla, editarla a
+  mano, descargarla/subirla en XLS o recalcularla desde los resultados
+  publicados (una edición manual se pierde en el siguiente recálculo).
 - Cuadro de honor: premios por categoría de hándicap y premios por hoyo
   (drive más largo, bola más cercana...) de forma independiente.
 - Formulario de contacto y panel de gestión de consultas (responder,
   marcar leída, eliminar), con email personalizado por organizador.
 - Panel admin por organizador (`/admin`): torneos, ligas, patrocinadores,
-  pedidos, consultas, configuración. Panel "god" (`/god`, solo
-  super-admins) para dar de alta y gestionar organizadores.
+  pedidos, consultas, configuración, y alta self-service de más admins del
+  propio organizador en `/admin/administradores`. Panel "god" (`/god`,
+  solo super-admins, servido únicamente desde el dominio de la
+  plataforma) para dar de alta y gestionar organizadores.
 - Analítica de visitas propia + Vercel Analytics y Speed Insights.
 
 ## Puesta en marcha
@@ -78,10 +94,17 @@ un proyecto de Google Cloud. La URL de redirect a autorizar en Google es
 
 ### 4. Dar de alta el primer organizador y su equipo admin
 
-Un super-admin da de alta el organizador desde el panel `/god`. El primer
-admin de ese club/asociación necesita una fila en `usuarios_admin` para
-acceder a `/admin` — debe iniciar sesión una vez en la web (Google o
-email) y luego, desde el SQL Editor de Supabase:
+Un super-admin da de alta el organizador desde el panel `/god`. `/god`
+solo se sirve desde el dominio de la plataforma (`torneos.aftergolf.es`,
+hard-codeado en `src/proxy.ts`) — una visita desde el dominio de un
+organizador concreto redirige ahí automáticamente, y como la sesión de
+Supabase es por dominio (no hay `domain` compartido entre subdominios),
+hay que iniciar sesión ya en ese dominio para entrar sin un salto extra
+de login.
+
+El primer admin de ese club/asociación necesita una fila en
+`usuarios_admin` para acceder a `/admin` — debe iniciar sesión una vez en
+la web (Google o email) y luego, desde el SQL Editor de Supabase:
 
 ```sql
 insert into usuarios_admin (user_id, nombre, email, organizador_id)
