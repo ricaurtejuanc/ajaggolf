@@ -185,7 +185,7 @@ export function CategoriasExtrasForm({ categoriasIniciales }: { categoriasInicia
         })}
       </div>
 
-      <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         <input
           value={nuevaCategoria}
           onChange={(e) => setNuevaCategoria(e.target.value)}
@@ -196,7 +196,7 @@ export function CategoriasExtrasForm({ categoriasIniciales }: { categoriasInicia
             }
           }}
           placeholder="Nueva sección..."
-          className="flex-1 rounded-xl border border-dashed border-ajag-gris-200 px-4 py-2.5 text-sm outline-none focus:border-ajag-verde-600"
+          className="min-w-0 flex-1 rounded-xl border border-dashed border-ajag-gris-200 px-4 py-2.5 text-sm outline-none focus:border-ajag-verde-600"
         />
         <button
           type="button"

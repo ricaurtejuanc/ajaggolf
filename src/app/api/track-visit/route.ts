@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createHash } from "node:crypto";
 import { createClient } from "@/lib/supabase/server";
+import { obtenerOrganizadorIdActual } from "@/lib/data/organizador";
 
 export async function POST(request: NextRequest) {
   let body: { ruta?: string; referrer?: string | null };
@@ -23,6 +24,7 @@ export async function POST(request: NextRequest) {
     referrer: body.referrer ?? null,
     user_agent: request.headers.get("user-agent"),
     ip_hash: ipHash,
+    organizador_id: await obtenerOrganizadorIdActual(),
   });
 
   return NextResponse.json({ ok: true });

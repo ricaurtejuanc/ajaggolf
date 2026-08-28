@@ -294,6 +294,7 @@ export type VisitaWeb = {
   referrer: string | null;
   user_agent: string | null;
   ip_hash: string | null;
+  organizador_id: string | null;
   created_at: string;
 };
 
