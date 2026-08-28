@@ -59,12 +59,20 @@ export default async function GodOrganizadoresPage() {
                   </p>
                 </div>
               </div>
-              <Link
-                href={`/god/organizadores/${organizador.id}/editar`}
-                className="text-sm font-medium text-aftergolf-verde-700 hover:underline"
-              >
-                Editar
-              </Link>
+              <div className="flex shrink-0 items-center gap-4">
+                <Link
+                  href={`/god/organizadores/${organizador.id}/administradores`}
+                  className="text-sm font-medium text-aftergolf-verde-700 hover:underline"
+                >
+                  Administradores
+                </Link>
+                <Link
+                  href={`/god/organizadores/${organizador.id}/editar`}
+                  className="text-sm font-medium text-aftergolf-verde-700 hover:underline"
+                >
+                  Editar
+                </Link>
+              </div>
             </div>
           ))
         )}
