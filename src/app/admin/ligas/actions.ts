@@ -67,7 +67,7 @@ export async function crearLiga(
   formData: FormData,
 ): Promise<EstadoLigaForm> {
   const admin = await getUsuarioAdmin();
-  if (!admin) return { ok: false, error: "No autorizado." };
+  if (!admin?.organizador_id) return { ok: false, error: "No autorizado." };
 
   const campos = leerCamposLiga(formData);
   if (!campos.nombre) return { ok: false, error: "El nombre es obligatorio." };
@@ -78,7 +78,7 @@ export async function crearLiga(
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("ligas_pool")
-    .insert({ ...campos, slug: slugify(campos.nombre) })
+    .insert({ ...campos, slug: slugify(campos.nombre), organizador_id: admin.organizador_id })
     .select("id")
     .single();
 

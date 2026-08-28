@@ -24,6 +24,7 @@ function dividirNombreCompleto(nombreCompleto: string): { nombre: string; apelli
  */
 async function resolverJugadorPorLicencia(
   supabase: SupabaseClient<Database>,
+  organizadorId: string,
   licencia: string,
   nombreCompleto: string,
 ): Promise<string | null> {
@@ -42,7 +43,7 @@ async function resolverJugadorPorLicencia(
 
   const { data: nuevo, error } = await supabase
     .from("jugadores")
-    .insert({ nombre, apellidos, licencia_federativa: licencia, user_id: null })
+    .insert({ nombre, apellidos, licencia_federativa: licencia, user_id: null, organizador_id: organizadorId })
     .select("id")
     .single();
   if (error || !nuevo) return null;
@@ -55,7 +56,7 @@ export async function guardarClasificacionLiga(
   formData: FormData,
 ): Promise<EstadoClasificacionLiga> {
   const admin = await getUsuarioAdmin();
-  if (!admin) return { ok: false, error: "No autorizado." };
+  if (!admin?.organizador_id) return { ok: false, error: "No autorizado." };
 
   const nombres = formData.getAll("nombre").map((v) => String(v).trim());
   const licencias = formData.getAll("licencia").map((v) => String(v).trim());
@@ -109,7 +110,7 @@ export async function guardarClasificacionLiga(
     }
   >();
   for (const fila of filasValidas) {
-    const jugadorId = await resolverJugadorPorLicencia(supabase, fila.licencia, fila.nombre);
+    const jugadorId = await resolverJugadorPorLicencia(supabase, admin.organizador_id, fila.licencia, fila.nombre);
     if (!jugadorId) continue;
     porJugador.set(jugadorId, {
       jugador_id: jugadorId,

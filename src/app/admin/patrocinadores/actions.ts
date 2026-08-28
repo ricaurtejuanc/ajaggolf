@@ -21,14 +21,16 @@ export async function crearPatrocinador(
   formData: FormData,
 ): Promise<EstadoPatrocinadorForm> {
   const admin = await getUsuarioAdmin();
-  if (!admin) return { ok: false, error: "No autorizado." };
+  if (!admin?.organizador_id) return { ok: false, error: "No autorizado." };
 
   const campos = leerCamposPatrocinador(formData);
   if (!campos.nombre) return { ok: false, error: "El nombre es obligatorio." };
   if (!campos.logo_url) return { ok: false, error: "Sube un logo." };
 
   const supabase = await createClient();
-  const { error } = await supabase.from("patrocinadores").insert(campos);
+  const { error } = await supabase
+    .from("patrocinadores")
+    .insert({ ...campos, organizador_id: admin.organizador_id });
 
   if (error) return { ok: false, error: error.message };
 

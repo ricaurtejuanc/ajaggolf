@@ -93,7 +93,7 @@ export async function crearTorneo(
   formData: FormData,
 ): Promise<EstadoTorneoForm> {
   const admin = await getUsuarioAdmin();
-  if (!admin) return { ok: false, error: "No autorizado." };
+  if (!admin?.organizador_id) return { ok: false, error: "No autorizado." };
 
   const campos = leerCamposTorneo(formData);
   if (!campos.nombre || !campos.campo_golf || !campos.fecha) {
@@ -103,7 +103,12 @@ export async function crearTorneo(
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("torneos")
-    .insert({ ...campos, slug: slugify(campos.nombre), created_by: admin.id })
+    .insert({
+      ...campos,
+      slug: slugify(campos.nombre),
+      created_by: admin.id,
+      organizador_id: admin.organizador_id,
+    })
     .select("id")
     .single();
 

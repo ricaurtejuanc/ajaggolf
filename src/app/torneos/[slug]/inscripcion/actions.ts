@@ -234,7 +234,16 @@ export async function inscribirse(
       licencia_federativa = sinLicencia ? await generarLicenciaUnica(admin) : licenciaEscrita;
       const { data: jugadorInvitado, error: errorJugador } = await admin
         .from("jugadores")
-        .insert({ nombre, apellidos, email, licencia_federativa, sexo, handicap, user_id: null })
+        .insert({
+          nombre,
+          apellidos,
+          email,
+          licencia_federativa,
+          sexo,
+          handicap,
+          user_id: null,
+          organizador_id: torneo.organizador_id,
+        })
         .select("id")
         .single();
       if (errorJugador || !jugadorInvitado) {

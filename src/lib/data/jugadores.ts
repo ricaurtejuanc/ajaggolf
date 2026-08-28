@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database, Jugador } from "@/types/database";
 import type { User } from "@supabase/supabase-js";
+import { obtenerOrganizadorIdActual } from "@/lib/data/organizador";
 
 /**
  * Devuelve el registro de `jugadores` ligado al usuario autenticado,
@@ -62,7 +63,14 @@ export async function asegurarJugadorParaUsuario(
 
   const { data: creado, error } = await supabase
     .from("jugadores")
-    .insert({ user_id: user.id, nombre, apellidos, email: user.email ?? null, telefono })
+    .insert({
+      user_id: user.id,
+      nombre,
+      apellidos,
+      email: user.email ?? null,
+      telefono,
+      organizador_id: await obtenerOrganizadorIdActual(),
+    })
     .select("*")
     .single();
 
