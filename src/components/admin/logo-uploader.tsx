@@ -10,31 +10,46 @@ export function LogoUploader({ logoUrlInicial, organizadorId }: { logoUrlInicial
   const [subiendo, setSubiendo] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const tieneOrganizador = !!organizadorId;
+
   async function handleFile(e: ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    setSubiendo(true);
-    setError(null);
-
-    const supabase = createClient();
-    const extension = file.name.split(".").pop() ?? "png";
-    const path = `organizations/${organizadorId}/${crypto.randomUUID()}.${extension}`;
-
-    const { error: uploadError } = await supabase.storage
-      .from("patrocinadores")
-      .upload(path, file, { upsert: false });
-
-    if (uploadError) {
-      console.error("Logo upload error:", uploadError);
-      setError(`No se pudo subir el logo: ${uploadError.message || "error desconocido"}`);
-      setSubiendo(false);
+    if (!tieneOrganizador) {
+      setError("Error: no hay contexto de organizador");
+      console.error("LogoUploader: organizadorId es vacío", { organizadorId });
       return;
     }
 
-    const { data } = supabase.storage.from("patrocinadores").getPublicUrl(path);
-    setLogoUrl(data.publicUrl);
-    setSubiendo(false);
+    setSubiendo(true);
+    setError(null);
+
+    try {
+      const supabase = createClient();
+      const extension = file.name.split(".").pop() ?? "png";
+      const path = `organizations/${organizadorId}/${crypto.randomUUID()}.${extension}`;
+      console.log("Subiendo logo a:", path);
+
+      const { error: uploadError } = await supabase.storage
+        .from("patrocinadores")
+        .upload(path, file, { upsert: false });
+
+      if (uploadError) {
+        console.error("Logo upload error:", uploadError);
+        setError(`No se pudo subir el logo: ${uploadError.message || "error desconocido"}`);
+        setSubiendo(false);
+        return;
+      }
+
+      const { data } = supabase.storage.from("patrocinadores").getPublicUrl(path);
+      setLogoUrl(data.publicUrl);
+      setSubiendo(false);
+    } catch (err) {
+      console.error("Excepción al subir logo:", err);
+      setError(`Error inesperado: ${err instanceof Error ? err.message : "desconocido"}`);
+      setSubiendo(false);
+    }
   }
 
   return (
@@ -58,13 +73,17 @@ export function LogoUploader({ logoUrlInicial, organizadorId }: { logoUrlInicial
           )}
         </div>
 
-        <label className="cursor-pointer rounded-xl border border-ajag-gris-200 px-4 py-2.5 text-sm font-medium text-ajag-verde-900 hover:bg-ajag-verde-50">
+        <label className={`rounded-xl border px-4 py-2.5 text-sm font-medium transition ${
+          subiendo || !tieneOrganizador
+            ? "cursor-not-allowed border-ajag-gris-200 bg-ajag-gris-50 text-ajag-gris-500"
+            : "cursor-pointer border-ajag-gris-200 text-ajag-verde-900 hover:bg-ajag-verde-50"
+        }`}>
           {subiendo ? "Subiendo..." : logoUrl ? "Cambiar logo" : "Elegir logo"}
           <input
             type="file"
             accept="image/*"
             className="hidden"
-            disabled={subiendo}
+            disabled={subiendo || !tieneOrganizador}
             onChange={handleFile}
           />
         </label>
