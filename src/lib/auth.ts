@@ -1,6 +1,7 @@
 import "server-only";
 import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
+import { obtenerOrganizadorIdActual } from "@/lib/data/organizador";
 import type { SuperAdmin, UsuarioAdmin } from "@/types/database";
 
 // supabase.auth.getUser() valida el token contra el servidor de Auth en cada
@@ -15,7 +16,17 @@ export const getUsuarioActual = cache(async () => {
   return user;
 });
 
-/** Devuelve el registro de usuarios_admin del usuario autenticado, o null si no es admin. */
+/**
+ * Devuelve el registro de usuarios_admin del usuario autenticado para el
+ * organizador del dominio actual, o null si no es admin (o lo es, pero de
+ * otro organizador). Antes solo miraba user_id+activo, sin comprobar el
+ * dominio: un admin de AJAG que entrara en /admin desde el subdominio de
+ * OTRO organizador (p.ej. tgeagolf.torneos.aftergolf.es/admin) pasaba el
+ * `if (!admin)` igual, y como las consultas de ese panel se filtran por
+ * "el organizador del propio admin" (no por el dominio visitado), acababa
+ * viendo y editando los torneos/usuarios de AJAG ahí — cada admin debe
+ * quedar atado al organizador de su propio sitio, nunca al de otro.
+ */
 export const getUsuarioAdmin = cache(async (): Promise<UsuarioAdmin | null> => {
   const user = await getUsuarioActual();
   if (!user) return null;
@@ -27,6 +38,11 @@ export const getUsuarioAdmin = cache(async (): Promise<UsuarioAdmin | null> => {
     .eq("user_id", user.id)
     .eq("activo", true)
     .maybeSingle();
+
+  if (!data) return null;
+
+  const organizadorIdActual = await obtenerOrganizadorIdActual();
+  if (organizadorIdActual && data.organizador_id !== organizadorIdActual) return null;
 
   return data;
 });
