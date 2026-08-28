@@ -17,11 +17,11 @@ export function OrganizadorForm({
   const [state, formAction, pending] = useActionState(action, { ok: false, error: null });
 
   return (
-    <form action={formAction} className="card-ajag flex max-w-lg flex-col gap-5 p-6">
+    <form action={formAction} className="card-aftergolf flex max-w-lg flex-col gap-5 p-6">
       <OrganizadorLogoUploader logoUrlInicial={organizador?.logo_url} />
 
       <div>
-        <label htmlFor="nombre" className="text-sm font-medium text-ajag-verde-900">
+        <label htmlFor="nombre" className="text-sm font-medium text-aftergolf-verde-900">
           Nombre *
         </label>
         <input
@@ -29,12 +29,12 @@ export function OrganizadorForm({
           name="nombre"
           required
           defaultValue={organizador?.nombre}
-          className="mt-1 w-full rounded-xl border border-ajag-gris-200 px-4 py-2.5 text-sm outline-none focus:border-ajag-verde-600"
+          className="mt-1 w-full rounded-xl border border-aftergolf-oro-200 px-4 py-2.5 text-sm outline-none focus:border-aftergolf-verde-600"
         />
       </div>
 
       <div>
-        <label htmlFor="slug" className="text-sm font-medium text-ajag-verde-900">
+        <label htmlFor="slug" className="text-sm font-medium text-aftergolf-verde-900">
           URL (slug)
         </label>
         <input
@@ -42,7 +42,7 @@ export function OrganizadorForm({
           name="slug"
           placeholder="se genera automáticamente si lo dejas vacío"
           defaultValue={organizador?.slug}
-          className="mt-1 w-full rounded-xl border border-ajag-gris-200 px-4 py-2.5 text-sm outline-none focus:border-ajag-verde-600"
+          className="mt-1 w-full rounded-xl border border-aftergolf-oro-200 px-4 py-2.5 text-sm outline-none focus:border-aftergolf-verde-600"
         />
         <p className="mt-1 text-xs text-ajag-gris-500">
           Ej. &quot;ajag&quot; → torneos.aftergolf.es/ajag (o subdominio ajag.torneos.aftergolf.es).
@@ -51,7 +51,7 @@ export function OrganizadorForm({
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
-          <label htmlFor="color_primario" className="text-sm font-medium text-ajag-verde-900">
+          <label htmlFor="color_primario" className="text-sm font-medium text-aftergolf-verde-900">
             Color primario
           </label>
           <input
@@ -60,11 +60,11 @@ export function OrganizadorForm({
             type="text"
             placeholder="#1e4a2c"
             defaultValue={organizador?.color_primario ?? ""}
-            className="mt-1 w-full rounded-xl border border-ajag-gris-200 px-4 py-2.5 text-sm outline-none focus:border-ajag-verde-600"
+            className="mt-1 w-full rounded-xl border border-aftergolf-oro-200 px-4 py-2.5 text-sm outline-none focus:border-aftergolf-verde-600"
           />
         </div>
         <div>
-          <label htmlFor="dominio" className="text-sm font-medium text-ajag-verde-900">
+          <label htmlFor="dominio" className="text-sm font-medium text-aftergolf-verde-900">
             Dominio propio
           </label>
           <input
@@ -73,13 +73,13 @@ export function OrganizadorForm({
             type="text"
             placeholder="torneos.suclub.com"
             defaultValue={organizador?.dominio ?? ""}
-            className="mt-1 w-full rounded-xl border border-ajag-gris-200 px-4 py-2.5 text-sm outline-none focus:border-ajag-verde-600"
+            className="mt-1 w-full rounded-xl border border-aftergolf-oro-200 px-4 py-2.5 text-sm outline-none focus:border-aftergolf-verde-600"
           />
         </div>
       </div>
 
       <div>
-        <label htmlFor="email_contacto" className="text-sm font-medium text-ajag-verde-900">
+        <label htmlFor="email_contacto" className="text-sm font-medium text-aftergolf-verde-900">
           Email de contacto
         </label>
         <input
@@ -87,21 +87,21 @@ export function OrganizadorForm({
           name="email_contacto"
           type="email"
           defaultValue={organizador?.email_contacto ?? ""}
-          className="mt-1 w-full rounded-xl border border-ajag-gris-200 px-4 py-2.5 text-sm outline-none focus:border-ajag-verde-600"
+          className="mt-1 w-full rounded-xl border border-aftergolf-oro-200 px-4 py-2.5 text-sm outline-none focus:border-aftergolf-verde-600"
         />
       </div>
 
-      <label className="flex items-center gap-2 text-sm text-ajag-verde-900">
+      <label className="flex items-center gap-2 text-sm text-aftergolf-verde-900">
         <input type="checkbox" name="activo" defaultChecked={organizador?.activo ?? true} />
         Organizador activo
       </label>
 
-      {state.error ? <p className="text-sm text-ajag-rojo-600">{state.error}</p> : null}
+      {state.error ? <p className="text-sm text-aftergolf-granate">{state.error}</p> : null}
 
       <button
         type="submit"
         disabled={pending}
-        className="self-start rounded-xl bg-ajag-verde-700 px-6 py-2.5 text-sm font-medium text-white transition hover:bg-ajag-verde-600 disabled:opacity-60"
+        className="self-start rounded-xl bg-aftergolf-verde-700 px-6 py-2.5 text-sm font-medium text-white transition hover:bg-aftergolf-verde-600 disabled:opacity-60"
       >
         {pending ? "Guardando..." : textoBoton}
       </button>

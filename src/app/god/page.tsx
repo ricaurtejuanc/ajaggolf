@@ -22,15 +22,15 @@ export default async function GodDashboardPage() {
 
   return (
     <div>
-      <h1 className="font-display text-2xl font-semibold text-ajag-verde-900">Resumen</h1>
+      <h1 className="font-display text-2xl font-semibold text-aftergolf-verde-900">Resumen</h1>
       <p className="mt-1 text-sm text-ajag-gris-500">
         Panel de administración de AfterGolf Torneos: alta y gestión de organizadores.
       </p>
 
       <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
         {stats.map((stat) => (
-          <div key={stat.label} className="card-ajag p-4">
-            <p className="font-display text-2xl font-semibold text-ajag-verde-900">
+          <div key={stat.label} className="card-aftergolf p-4">
+            <p className="font-display text-2xl font-semibold text-aftergolf-verde-900">
               {stat.value}
             </p>
             <p className="mt-1 text-xs text-ajag-gris-500">{stat.label}</p>
@@ -40,7 +40,7 @@ export default async function GodDashboardPage() {
 
       <Link
         href="/god/organizadores/nuevo"
-        className="mt-6 inline-block rounded-full bg-ajag-verde-700 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-ajag-verde-600"
+        className="mt-6 inline-block rounded-full bg-aftergolf-verde-700 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-aftergolf-verde-600"
       >
         + Nuevo organizador
       </Link>

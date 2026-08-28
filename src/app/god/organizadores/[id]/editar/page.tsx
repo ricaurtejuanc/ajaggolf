@@ -32,7 +32,7 @@ export default async function EditarOrganizadorPage({
           ← Organizadores
         </Link>
       </div>
-      <h1 className="mb-6 font-display text-2xl font-semibold text-ajag-verde-900">
+      <h1 className="mb-6 font-display text-2xl font-semibold text-aftergolf-verde-900">
         Editar organizador
       </h1>
       <OrganizadorForm

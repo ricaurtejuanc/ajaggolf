@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Building2, LayoutDashboard } from "lucide-react";
@@ -13,13 +14,13 @@ export default async function GodLayout({ children }: LayoutProps<"/god">) {
   if (!superAdmin) redirect("/login?next=/god");
 
   return (
-    <div className="min-h-screen bg-ajag-verde-950">
+    <div className="min-h-screen bg-aftergolf-verde-950">
       <div className="mx-auto flex max-w-6xl gap-6 px-4 py-8">
         <aside className="hidden w-56 shrink-0 md:block">
           <div className="sticky top-8 flex flex-col gap-1">
             <div className="mb-3 flex items-center gap-2 px-2">
-              <span className="flex size-7 items-center justify-center rounded-full bg-ajag-oro-500 text-xs font-bold text-ajag-verde-950">
-                AG
+              <span className="flex size-8 items-center justify-center rounded-full bg-white/10 p-1">
+                <Image src="/Logo_AfterGolf.svg" alt="AfterGolf" width={24} height={24} />
               </span>
               <span className="font-display text-sm font-semibold text-white">
                 AfterGolf · God Mode
@@ -39,13 +40,13 @@ export default async function GodLayout({ children }: LayoutProps<"/god">) {
           </div>
         </aside>
 
-        <div className="min-w-0 flex-1 rounded-2xl bg-ajag-gris-50 p-6">
+        <div className="min-w-0 flex-1 rounded-2xl bg-aftergolf-crema p-6">
           <nav className="mb-4 flex gap-3 overflow-x-auto md:hidden">
             {godLinks.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
-                className="flex shrink-0 items-center gap-1.5 rounded-full border border-ajag-gris-200 px-3 py-1.5 text-xs font-medium text-ajag-verde-900"
+                className="flex shrink-0 items-center gap-1.5 rounded-full border border-aftergolf-oro-200 px-3 py-1.5 text-xs font-medium text-aftergolf-verde-900"
               >
                 <link.icon size={14} />
                 {link.label}

@@ -38,11 +38,11 @@ export function OrganizadorLogoUploader({ logoUrlInicial }: { logoUrlInicial?: s
 
   return (
     <div>
-      <span className="text-sm font-medium text-ajag-verde-900">Logo</span>
+      <span className="text-sm font-medium text-aftergolf-verde-900">Logo</span>
       <input type="hidden" name="logo_url" value={logoUrl ?? ""} />
 
       <div className="mt-1 flex items-center gap-4">
-        <div className="relative flex aspect-[4/3] w-32 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-dashed border-ajag-gris-200 bg-ajag-verde-50">
+        <div className="relative flex aspect-[4/3] w-32 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-dashed border-aftergolf-oro-200 bg-aftergolf-verde-50">
           {logoUrl ? (
             <Image
               src={logoUrl}
@@ -57,7 +57,7 @@ export function OrganizadorLogoUploader({ logoUrlInicial }: { logoUrlInicial?: s
           )}
         </div>
 
-        <label className="cursor-pointer rounded-xl border border-ajag-gris-200 px-4 py-2.5 text-sm font-medium text-ajag-verde-900 hover:bg-ajag-verde-50">
+        <label className="cursor-pointer rounded-xl border border-aftergolf-oro-200 px-4 py-2.5 text-sm font-medium text-aftergolf-verde-900 hover:bg-aftergolf-verde-50">
           {subiendo ? "Subiendo..." : logoUrl ? "Cambiar logo" : "Elegir logo"}
           <input
             type="file"
@@ -68,7 +68,7 @@ export function OrganizadorLogoUploader({ logoUrlInicial }: { logoUrlInicial?: s
           />
         </label>
       </div>
-      {error ? <p className="mt-1 text-sm text-ajag-rojo-600">{error}</p> : null}
+      {error ? <p className="mt-1 text-sm text-aftergolf-granate">{error}</p> : null}
     </div>
   );
 }
