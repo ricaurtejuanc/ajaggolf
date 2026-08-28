@@ -30,8 +30,8 @@ export async function crearPatrocinador(
   const supabase = await createClient();
 
   // Los nuevos patrocinadores van al final de la lista, no se mezclan con
-  // el orden manual ya establecido.
-  const { data: ultimo } = await supabase
+  // el orden manual ya establecido. Se calcula el máximo orden actual y se suma 1.
+  const { data: maxOrdenData } = await supabase
     .from("patrocinadores")
     .select("orden")
     .eq("organizador_id", admin.organizador_id)
@@ -39,9 +39,12 @@ export async function crearPatrocinador(
     .limit(1)
     .maybeSingle();
 
+  const maxOrden = maxOrdenData?.orden ?? 0;
+  const nuevoOrden = maxOrden + 1;
+
   const { error } = await supabase
     .from("patrocinadores")
-    .insert({ ...campos, organizador_id: admin.organizador_id, orden: (ultimo?.orden ?? 0) + 1 });
+    .insert({ ...campos, organizador_id: admin.organizador_id, orden: nuevoOrden });
 
   if (error) return { ok: false, error: error.message };
 
