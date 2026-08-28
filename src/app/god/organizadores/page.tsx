@@ -31,8 +31,11 @@ export default async function GodOrganizadoresPage() {
           <p className="text-sm text-ajag-gris-500">Todavía no hay organizadores dados de alta.</p>
         ) : (
           (organizadores ?? []).map((organizador) => (
-            <div key={organizador.id} className="card-aftergolf flex items-center justify-between p-4">
-              <div className="flex items-center gap-4">
+            <div
+              key={organizador.id}
+              className="card-aftergolf flex flex-wrap items-center justify-between gap-3 p-4"
+            >
+              <div className="flex min-w-0 items-center gap-4">
                 <div className="relative flex size-14 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-aftergolf-oro-200 bg-white">
                   {organizador.logo_url ? (
                     <Image
@@ -45,16 +48,16 @@ export default async function GodOrganizadoresPage() {
                     />
                   ) : null}
                 </div>
-                <div>
-                  <p className="font-medium text-aftergolf-verde-900">
-                    {organizador.nombre}
+                <div className="min-w-0">
+                  <p className="flex flex-wrap items-center gap-2 font-medium text-aftergolf-verde-900">
+                    <span className="truncate">{organizador.nombre}</span>
                     {!organizador.activo ? (
-                      <span className="ml-2 rounded-full bg-ajag-gris-100 px-2 py-0.5 text-xs text-ajag-gris-500">
+                      <span className="shrink-0 rounded-full bg-ajag-gris-100 px-2 py-0.5 text-xs text-ajag-gris-500">
                         inactivo
                       </span>
                     ) : null}
                   </p>
-                  <p className="text-xs text-ajag-gris-500">
+                  <p className="truncate text-xs text-ajag-gris-500">
                     /{organizador.slug} · {organizador.dominio || organizador.email_contacto || "sin dominio propio"}
                   </p>
                 </div>
