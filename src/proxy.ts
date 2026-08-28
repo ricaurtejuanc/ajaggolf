@@ -86,13 +86,18 @@ export async function proxy(request: NextRequest) {
 
   // El panel "god" (super-admin, cruza organizadores) no es de ningún
   // organizador: vive siempre en el dominio de la plataforma, nunca en el
-  // subdominio de un cliente (p.ej. ajag.torneos.aftergolf.es), aunque ese
-  // dominio resuelva por fallback a AJAG y por tanto también sirviera la
-  // ruta. Solo redirige subdominios *.torneos.aftergolf.es (los de
-  // clientes reales) — localhost y las URLs de preview de Vercel siguen
+  // subdominio de un cliente (p.ej. ajag.torneos.aftergolf.es). Antes se
+  // redirigía (308) al dominio de la plataforma, pero eso revela desde el
+  // dominio del cliente que "/god" existe y a dónde lleva; en vez de eso,
+  // esa ruta simplemente no existe ahí — se comporta como cualquier otra
+  // URL no definida en el sitio del organizador (404 normal, con su propia
+  // cabecera/pie). Solo afecta a subdominios *.torneos.aftergolf.es (los
+  // de clientes reales) — localhost y las URLs de preview de Vercel siguen
   // sirviendo /god directamente, para poder probarlo antes de desplegar.
   if (esGod && hostSinWww !== DOMINIO_PLATAFORMA && hostSinWww.endsWith(`.${DOMINIO_PLATAFORMA}`)) {
-    return redirigirA(DOMINIO_PLATAFORMA);
+    const url = request.nextUrl.clone();
+    url.pathname = `/__no-existe__${pathname}`;
+    return NextResponse.rewrite(url);
   }
 
   const esDominioPlataforma = DOMINIOS_LANDING.has(host);
