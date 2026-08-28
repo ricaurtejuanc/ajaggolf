@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getUsuarioAdmin } from "@/lib/auth";
 import { PatrocinadorForm } from "@/components/admin/patrocinador-form";
@@ -16,6 +16,7 @@ export default async function EditarPatrocinadorPage({
   const { id } = await params;
   const supabase = await createClient();
   const admin = await getUsuarioAdmin();
+  if (!admin?.organizador_id) redirect("/admin/patrocinadores");
 
   const { data: patrocinador } = await supabase
     .from("patrocinadores")
@@ -41,7 +42,7 @@ export default async function EditarPatrocinadorPage({
         patrocinador={patrocinador}
         action={accionConId}
         textoBoton="Guardar cambios"
-        organizadorId={admin?.organizador_id ?? ""}
+        organizadorId={admin.organizador_id}
       />
     </div>
   );
