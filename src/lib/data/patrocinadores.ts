@@ -5,9 +5,13 @@ import type { Patrocinador } from "@/types/database";
 export async function listarPatrocinadores(): Promise<Patrocinador[]> {
   const supabase = await createClient();
   const organizadorId = await obtenerOrganizadorIdActual();
-  let query = supabase.from("patrocinadores").select("*").order("orden");
-  if (organizadorId) query = query.eq("organizador_id", organizadorId);
+  if (!organizadorId) return [];
 
-  const { data } = await query;
+  const { data } = await supabase
+    .from("patrocinadores")
+    .select("*")
+    .eq("organizador_id", organizadorId)
+    .order("orden");
+
   return data ?? [];
 }
