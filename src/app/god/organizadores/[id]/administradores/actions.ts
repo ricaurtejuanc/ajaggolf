@@ -40,7 +40,7 @@ export async function crearAdministradorGod(
   if (error) {
     const mensaje =
       error.code === "23505"
-        ? "Esa persona ya es administrador (aquí o en otro organizador)."
+        ? "Esa persona ya es administrador de este organizador."
         : error.message;
     return { ok: false, error: mensaje };
   }

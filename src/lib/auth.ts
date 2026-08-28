@@ -18,18 +18,21 @@ export const getUsuarioActual = cache(async () => {
 
 /**
  * Devuelve el registro de usuarios_admin del usuario autenticado para el
- * organizador del dominio actual, o null si no es admin (o lo es, pero de
- * otro organizador). Antes solo miraba user_id+activo, sin comprobar el
- * dominio: un admin de AJAG que entrara en /admin desde el subdominio de
- * OTRO organizador (p.ej. tgeagolf.torneos.aftergolf.es/admin) pasaba el
- * `if (!admin)` igual, y como las consultas de ese panel se filtran por
- * "el organizador del propio admin" (no por el dominio visitado), acababa
- * viendo y editando los torneos/usuarios de AJAG ahí — cada admin debe
- * quedar atado al organizador de su propio sitio, nunca al de otro.
+ * organizador del dominio actual, o null si no es admin ahí (una misma
+ * persona puede ser admin de varios organizadores — cada uno con su
+ * propia fila — así que se filtra directamente por el organizador
+ * resuelto por dominio en vez de traer "la" fila del usuario y confiar en
+ * que solo tenga una: con dos o más, un simple user_id+activo sería
+ * ambiguo — igual que le pasaba a organizador_id_actual() en Postgres
+ * antes de la migración admin_multi_organizador, que arregla lo mismo del
+ * lado de las políticas RLS).
  */
 export const getUsuarioAdmin = cache(async (): Promise<UsuarioAdmin | null> => {
   const user = await getUsuarioActual();
   if (!user) return null;
+
+  const organizadorIdActual = await obtenerOrganizadorIdActual();
+  if (!organizadorIdActual) return null;
 
   const supabase = await createClient();
   const { data } = await supabase
@@ -37,12 +40,8 @@ export const getUsuarioAdmin = cache(async (): Promise<UsuarioAdmin | null> => {
     .select("*")
     .eq("user_id", user.id)
     .eq("activo", true)
+    .eq("organizador_id", organizadorIdActual)
     .maybeSingle();
-
-  if (!data) return null;
-
-  const organizadorIdActual = await obtenerOrganizadorIdActual();
-  if (organizadorIdActual && data.organizador_id !== organizadorIdActual) return null;
 
   return data;
 });
