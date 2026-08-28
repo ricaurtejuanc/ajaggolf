@@ -187,32 +187,42 @@ export async function inscribirse(
       }
     }
 
-    // Sin licencia real que buscar, cada invitado "sin licencia" es
-    // tratado como nuevo: se le genera una propia y se crea su ficha.
-    const licencia_federativa = sinLicencia ? await generarLicenciaUnica(admin) : licenciaEscrita;
-
     // La licencia federativa es única en `jugadores`. Un invitado que ya
     // jugó antes (como invitado o con cuenta) reutiliza esa fila en vez de
     // chocar con la restricción; si es una cuenta real (user_id no nulo)
     // no se le pisan sus datos guardados con lo que ha escrito el invitado.
+    // Sin licencia real que buscar, se empareja por email (mismo criterio
+    // que asegurarJugadorParaUsuario usa para reclamar un invitado): si
+    // no, la misma persona sin licencia acababa con una ficha nueva y un
+    // AJAG###### distinto cada vez que se inscribía a otro torneo.
     const { data: jugadorExistente } = sinLicencia
-      ? { data: null }
+      ? await admin
+          .from("jugadores")
+          .select("id, user_id, licencia_federativa")
+          .is("user_id", null)
+          .eq("email", email)
+          .order("created_at", { ascending: true })
+          .limit(1)
+          .maybeSingle()
       : await admin
           .from("jugadores")
-          .select("id, user_id")
-          .eq("licencia_federativa", licencia_federativa)
+          .select("id, user_id, licencia_federativa")
+          .eq("licencia_federativa", licenciaEscrita)
           .maybeSingle();
 
     let jugadorId: string;
+    let licencia_federativa: string;
     if (jugadorExistente) {
       jugadorId = jugadorExistente.id;
+      licencia_federativa = jugadorExistente.licencia_federativa ?? (await generarLicenciaUnica(admin));
       if (jugadorExistente.user_id == null) {
         await admin
           .from("jugadores")
-          .update({ nombre, apellidos, email, sexo, handicap })
+          .update({ nombre, apellidos, email, sexo, handicap, licencia_federativa })
           .eq("id", jugadorId);
       }
     } else {
+      licencia_federativa = sinLicencia ? await generarLicenciaUnica(admin) : licenciaEscrita;
       const { data: jugadorInvitado, error: errorJugador } = await admin
         .from("jugadores")
         .insert({ nombre, apellidos, email, licencia_federativa, sexo, handicap, user_id: null })

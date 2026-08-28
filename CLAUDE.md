@@ -4,6 +4,13 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Response style
+
+Responses to the user (Spanish) must be executive: **maximum 5 lines**. State what was
+done (acción) and what's next (próximos pasos), summarized — no step-by-step narration,
+no code excerpts unless explicitly asked. If something requires the user to act themselves
+(a dashboard, an external setting), include the direct link.
+
 ## Commands
 
 ```bash
