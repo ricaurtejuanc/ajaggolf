@@ -8,6 +8,7 @@ import { SiteHeader } from "@/components/layout/site-header";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { VisitTracker } from "@/components/analytics/visit-tracker";
 import { obtenerOrganizadorActual } from "@/lib/data/organizador";
+import { generarEscalaVerde } from "@/lib/color";
 
 const inter = Inter({
   variable: "--font-sans",
@@ -39,12 +40,31 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
   const cabeceras = await headers();
   const ocultarCabeceraAjag = cabeceras.get("x-show-landing") === "1";
 
+  // Cada organizador puede fijar su propio color de marca (color_primario)
+  // en /god; de ahí se deriva toda la escala de verdes que usa el resto
+  // del sitio (botones, textos, fondos), así que un solo campo repinta el
+  // sitio entero sin tocar cada componente. Sin color_primario, se queda
+  // con el verde de AJAG por defecto de globals.css.
+  const organizador = ocultarCabeceraAjag ? null : await obtenerOrganizadorActual();
+  const escalaColor = organizador?.color_primario
+    ? generarEscalaVerde(organizador.color_primario)
+    : null;
+
   return (
     <html
       lang="es"
       className={`${inter.variable} ${fraunces.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col bg-background text-foreground">
+        {escalaColor ? (
+          <style
+            dangerouslySetInnerHTML={{
+              __html: `:root{${Object.entries(escalaColor)
+                .map(([tono, valor]) => `--ajag-verde-${tono}:${valor};`)
+                .join("")}}`,
+            }}
+          />
+        ) : null}
         <VisitTracker />
         {ocultarCabeceraAjag ? null : <SiteHeader />}
         <main className="flex-1">{children}</main>
