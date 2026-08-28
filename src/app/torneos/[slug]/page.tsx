@@ -170,7 +170,7 @@ export default async function TorneoDetallePage({
           value={
             formatearHora(torneo.hora_inicio)
               ? `${formatearHora(torneo.hora_inicio)} · ${etiquetaModoSalida[torneo.modo_salida]}`
-              : "Por confirmar"
+              : etiquetaModoSalida[torneo.modo_salida] || "Por confirmar"
           }
         />
         <InfoPill icon={<Coins size={16} />} label="Precio" value={textoPrecio} />
