@@ -2,7 +2,7 @@
 
 import { createClient } from "@/lib/supabase/client";
 
-export function GoogleButton({ next }: { next?: string }) {
+export function GoogleButton({ next, plataforma = false }: { next?: string; plataforma?: boolean }) {
   const supabase = createClient();
 
   async function handleClick() {
@@ -19,7 +19,11 @@ export function GoogleButton({ next }: { next?: string }) {
     <button
       type="button"
       onClick={handleClick}
-      className="flex w-full items-center justify-center gap-3 rounded-xl border border-ajag-gris-200 bg-white px-4 py-3 text-sm font-medium text-ajag-verde-900 transition hover:bg-ajag-verde-50"
+      className={`flex w-full items-center justify-center gap-3 rounded-xl border bg-white px-4 py-3 text-sm font-medium transition ${
+        plataforma
+          ? "border-aftergolf-oro-200 text-aftergolf-verde-900 hover:bg-aftergolf-verde-50"
+          : "border-ajag-gris-200 text-ajag-verde-900 hover:bg-ajag-verde-50"
+      }`}
     >
       <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true">
         <path
