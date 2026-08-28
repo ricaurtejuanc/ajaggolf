@@ -182,7 +182,14 @@ export default async function TorneoDetallePage({
       </div>
 
       {torneo.descripcion ? (
-        <p className="mt-6 whitespace-pre-line text-ajag-verde-900/90">{torneo.descripcion}</p>
+        <div className="mt-6 card-ajag p-5">
+          <h2 className="mb-2 font-display text-base font-semibold text-ajag-verde-900">
+            Descripción
+          </h2>
+          <p className="whitespace-pre-line text-sm text-ajag-gris-500">
+            {torneo.descripcion}
+          </p>
+        </div>
       ) : null}
 
       {torneo.info_adicional ? (
