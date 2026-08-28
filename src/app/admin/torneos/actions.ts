@@ -73,6 +73,7 @@ function leerCamposTorneo(formData: FormData) {
     estado: String(formData.get("estado") ?? "borrador") as EstadoTorneo,
     modo_pago: String(formData.get("modo_pago") ?? "organizador") as ModoPagoTorneo,
     extras,
+    inscripcion_url_externa: String(formData.get("inscripcion_url_externa") ?? "").trim() || null,
   };
 }
 

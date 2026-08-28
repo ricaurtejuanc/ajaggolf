@@ -54,6 +54,9 @@ export function TorneoForm({
   const [formatoPuntuacion, setFormatoPuntuacion] = useState<FormatoPuntuacion>(
     torneo?.formato_puntuacion ?? "stableford",
   );
+  const [inscripcionExterna, setInscripcionExterna] = useState(
+    !!torneo?.inscripcion_url_externa,
+  );
 
   function cambiarModoJuego(nuevoModo: ModoJuego) {
     setModoJuego(nuevoModo);
@@ -398,6 +401,32 @@ export function TorneoForm({
       <PremiosEditor premiosIniciales={torneo?.premios ?? []} />
 
       <PremiosHoyoEditor premiosIniciales={torneo?.premios_hoyo ?? []} />
+
+      <div>
+        <label className="flex items-center gap-2 text-sm font-medium text-ajag-verde-900">
+          <input
+            type="checkbox"
+            checked={inscripcionExterna}
+            onChange={(e) => setInscripcionExterna(e.target.checked)}
+          />
+          Inscripciones en plataforma externa
+        </label>
+        <p className="mt-1 text-xs text-ajag-gris-500">
+          Actívalo si este torneo exige inscribirse en la web del propio campo, Golfdirecto,
+          NextCaddy... En vez del formulario de aquí, el botón &quot;Inscribirme&quot; llevará
+          directamente a esa web.
+        </p>
+        {inscripcionExterna ? (
+          <input
+            type="url"
+            name="inscripcion_url_externa"
+            required
+            placeholder="https://..."
+            defaultValue={torneo?.inscripcion_url_externa ?? ""}
+            className="mt-2 w-full rounded-xl border border-ajag-gris-200 px-4 py-2.5 text-sm outline-none focus:border-ajag-verde-600"
+          />
+        ) : null}
+      </div>
 
       {state.error ? <p className="text-sm text-ajag-rojo-600">{state.error}</p> : null}
 

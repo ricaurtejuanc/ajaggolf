@@ -171,6 +171,7 @@ export type Torneo = {
   premios_hoyo: PremioHoyo[];
   premios_ganadores: Record<string, string[]>;
   horarios_pdf_url: string | null;
+  inscripcion_url_externa: string | null;
   liga_pool_id: string | null;
   estado: EstadoTorneo;
   created_by: string | null;

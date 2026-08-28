@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { obtenerTorneoPorSlug } from "@/lib/data/torneos";
@@ -18,6 +18,10 @@ export default async function InscripcionPage({
   const torneo = await obtenerTorneoPorSlug(slug);
   if (!torneo) notFound();
   if (torneo.estado !== "publicado") notFound();
+  // Torneo con inscripción en plataforma externa: aquí no hay nada que
+  // rellenar, se manda directamente a esa web (por si alguien llega a
+  // esta ruta directamente en vez de por el botón "Inscribirme").
+  if (torneo.inscripcion_url_externa) redirect(torneo.inscripcion_url_externa);
 
   const supabase = await createClient();
   const {

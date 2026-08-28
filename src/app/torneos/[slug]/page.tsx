@@ -309,6 +309,15 @@ export default async function TorneoDetallePage({
           <span className="w-full rounded-full bg-ajag-gris-100 px-5 py-2.5 text-center text-sm font-medium text-ajag-gris-500">
             {lleno ? "Cupo completo" : "Inscripciones cerradas"}
           </span>
+        ) : torneo.inscripcion_url_externa ? (
+          <a
+            href={torneo.inscripcion_url_externa}
+            target="_blank"
+            rel="noreferrer"
+            className="w-full rounded-full bg-ajag-verde-700 px-6 py-2.5 text-center text-sm font-medium text-white transition hover:bg-ajag-verde-600"
+          >
+            Inscribirme ↗
+          </a>
         ) : (
           <Link
             href={`/torneos/${torneo.slug}/inscripcion`}
@@ -317,6 +326,11 @@ export default async function TorneoDetallePage({
             Inscribirme
           </Link>
         )}
+        {torneo.inscripcion_url_externa ? (
+          <p className="text-center text-xs text-ajag-gris-500">
+            La inscripción se hace en la web del campo/plataforma, no aquí.
+          </p>
+        ) : null}
       </div>
 
       {hayHorarios || hayClasificacion ? (

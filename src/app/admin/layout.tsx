@@ -11,6 +11,7 @@ import {
   Handshake,
   Users,
   UserRound,
+  Flag,
 } from "lucide-react";
 import { getUsuarioAdmin } from "@/lib/auth";
 
@@ -18,6 +19,7 @@ const adminLinks = [
   { href: "/admin", label: "Resumen", icon: LayoutDashboard },
   { href: "/admin/torneos", label: "Torneos", icon: Trophy },
   { href: "/admin/ligas", label: "Ligas y Pool", icon: Medal },
+  { href: "/admin/campos", label: "Campos de golf", icon: Flag },
   { href: "/admin/patrocinadores", label: "Patrocinadores", icon: Handshake },
   { href: "/admin/pedidos", label: "Pagos", icon: Wallet },
   { href: "/admin/consultas", label: "Consultas", icon: MessageSquare },
