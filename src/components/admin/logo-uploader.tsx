@@ -5,7 +5,7 @@ import Image from "next/image";
 import { ImagePlus } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
-export function LogoUploader({ logoUrlInicial }: { logoUrlInicial?: string | null }) {
+export function LogoUploader({ logoUrlInicial, organizadorId }: { logoUrlInicial?: string | null; organizadorId: string }) {
   const [logoUrl, setLogoUrl] = useState(logoUrlInicial ?? null);
   const [subiendo, setSubiendo] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -19,14 +19,15 @@ export function LogoUploader({ logoUrlInicial }: { logoUrlInicial?: string | nul
 
     const supabase = createClient();
     const extension = file.name.split(".").pop() ?? "png";
-    const path = `${crypto.randomUUID()}.${extension}`;
+    const path = `organizations/${organizadorId}/${crypto.randomUUID()}.${extension}`;
 
     const { error: uploadError } = await supabase.storage
       .from("patrocinadores")
       .upload(path, file, { upsert: false });
 
     if (uploadError) {
-      setError("No se pudo subir el logo.");
+      console.error("Logo upload error:", uploadError);
+      setError(`No se pudo subir el logo: ${uploadError.message || "error desconocido"}`);
       setSubiendo(false);
       return;
     }

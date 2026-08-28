@@ -9,16 +9,18 @@ export function PatrocinadorForm({
   patrocinador,
   action,
   textoBoton,
+  organizadorId,
 }: {
   patrocinador?: Patrocinador;
   action: (prevState: EstadoPatrocinadorForm, formData: FormData) => Promise<EstadoPatrocinadorForm>;
   textoBoton: string;
+  organizadorId: string;
 }) {
   const [state, formAction, pending] = useActionState(action, { ok: false, error: null });
 
   return (
     <form action={formAction} className="card-ajag flex max-w-lg flex-col gap-5 p-6">
-      <LogoUploader logoUrlInicial={patrocinador?.logo_url} />
+      <LogoUploader logoUrlInicial={patrocinador?.logo_url} organizadorId={organizadorId} />
 
       <div>
         <label htmlFor="nombre" className="text-sm font-medium text-ajag-verde-900">
