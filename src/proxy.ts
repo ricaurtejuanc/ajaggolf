@@ -65,16 +65,24 @@ async function resolverOrganizadorId(host: string): Promise<string | null> {
 
 export async function proxy(request: NextRequest) {
   const host = request.headers.get("host") ?? "";
+  const hostSinWww = host.replace(/^www\./, "");
+  const { pathname } = request.nextUrl;
+  const esGod = pathname === "/god" || pathname.startsWith("/god/");
 
-  if (host === ALIAS_VERCEL) {
+  function redirigirA(hostDestino: string) {
     const url = request.nextUrl.clone();
     url.protocol = "https";
-    url.host = DOMINIO_CANONICO;
+    url.host = hostDestino;
     url.port = "";
     return NextResponse.redirect(url, 308);
   }
 
-  const { pathname } = request.nextUrl;
+  if (host === ALIAS_VERCEL) {
+    // /god no debe ni pasar por AJAG de camino: si no, el alias de Vercel
+    // redirigía siempre a ajag.torneos.aftergolf.es (aunque fuera /god), y
+    // solo en un segundo salto se corregía al dominio de la plataforma.
+    return redirigirA(esGod ? DOMINIO_PLATAFORMA : DOMINIO_CANONICO);
+  }
 
   // El panel "god" (super-admin, cruza organizadores) no es de ningún
   // organizador: vive siempre en el dominio de la plataforma, nunca en el
@@ -83,45 +91,33 @@ export async function proxy(request: NextRequest) {
   // ruta. Solo redirige subdominios *.torneos.aftergolf.es (los de
   // clientes reales) — localhost y las URLs de preview de Vercel siguen
   // sirviendo /god directamente, para poder probarlo antes de desplegar.
-  if (pathname === "/god" || pathname.startsWith("/god/")) {
-    const hostSinWww = host.replace(/^www\./, "");
-    if (hostSinWww !== DOMINIO_PLATAFORMA && hostSinWww.endsWith(`.${DOMINIO_PLATAFORMA}`)) {
-      const url = request.nextUrl.clone();
-      url.protocol = "https";
-      url.host = DOMINIO_PLATAFORMA;
-      url.port = "";
-      return NextResponse.redirect(url, 308);
-    }
+  if (esGod && hostSinWww !== DOMINIO_PLATAFORMA && hostSinWww.endsWith(`.${DOMINIO_PLATAFORMA}`)) {
+    return redirigirA(DOMINIO_PLATAFORMA);
   }
 
-  const debeReescribir = DOMINIOS_LANDING.has(host) && pathname === "/";
-  const esLanding = debeReescribir || pathname === "/producto";
+  const esDominioPlataforma = DOMINIOS_LANDING.has(host);
+  const debeReescribir = esDominioPlataforma && pathname === "/";
+  // El dominio de la plataforma no es el sitio de ningún organizador,
+  // sea cual sea la ruta (landing, /god, un 404, cualquier cosa): nunca
+  // lleva la cabecera/pie de AJAG. Antes esto solo se aplicaba a "/",
+  // "/producto" y "/god" en concreto, así que cualquier otra ruta en este
+  // dominio (un 404 típicamente) seguía cayendo al fallback de AJAG y
+  // enseñando su marca — con esto queda cubierto todo el dominio.
+  const ocultarChromeAjag = esDominioPlataforma || pathname === "/producto" || esGod;
 
   const organizadorId = await resolverOrganizadorId(host);
 
-  if (esLanding) {
-    const requestHeaders = new Headers(request.headers);
-    requestHeaders.set("x-show-landing", "1");
-    if (organizadorId) requestHeaders.set("x-organizador-id", organizadorId);
-
-    if (debeReescribir) {
-      const url = request.nextUrl.clone();
-      url.pathname = "/producto";
-      return NextResponse.rewrite(url, { request: { headers: requestHeaders } });
-    }
-
-    // Visita directa a /producto (en cualquier host): solo hace falta la
-    // cabecera para que el layout raíz oculte la cabecera/pie de AJAG.
-    return NextResponse.next({ request: { headers: requestHeaders } });
-  }
-
-  // El panel god tampoco lleva la cabecera/pie de AJAG (su propio layout ya
-  // pone su propia navegación) — pero, a diferencia de /producto, sigue
-  // necesitando el refresco de sesión de updateSession en cada request,
-  // porque aquí sí hay una sesión de super-admin que mantener viva.
   const extraHeaders: Record<string, string> = {};
   if (organizadorId) extraHeaders["x-organizador-id"] = organizadorId;
-  if (pathname === "/god" || pathname.startsWith("/god/")) extraHeaders["x-show-god"] = "1";
+  if (ocultarChromeAjag) extraHeaders["x-show-landing"] = "1";
+
+  if (debeReescribir) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/producto";
+    const requestHeaders = new Headers(request.headers);
+    for (const [nombre, valor] of Object.entries(extraHeaders)) requestHeaders.set(nombre, valor);
+    return NextResponse.rewrite(url, { request: { headers: requestHeaders } });
+  }
 
   return await updateSession(request, Object.keys(extraHeaders).length > 0 ? extraHeaders : undefined);
 }

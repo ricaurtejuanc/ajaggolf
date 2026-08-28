@@ -29,13 +29,14 @@ export const metadata: Metadata = {
 };
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {
-  // La landing de producto (torneos.aftergolf.es en su raíz) y el panel
-  // god (super-admin, cruza organizadores) no son el sitio de ningún
-  // organizador concreto: ninguno de los dos lleva la cabecera/pie de
-  // AJAG — el panel god ya trae su propia navegación en su propio layout.
+  // Todo el dominio de la plataforma (torneos.aftergolf.es, sea cual sea
+  // la ruta: landing, /god, un 404...), más /god en cualquier otro
+  // dominio, no es el sitio de ningún organizador concreto: nunca lleva
+  // la cabecera/pie de AJAG (/god ya trae su propia navegación en su
+  // propio layout). Se decide en src/proxy.ts, que es quien sabe el host
+  // y la ruta reales de la petición.
   const cabeceras = await headers();
-  const ocultarCabeceraAjag =
-    cabeceras.get("x-show-landing") === "1" || cabeceras.get("x-show-god") === "1";
+  const ocultarCabeceraAjag = cabeceras.get("x-show-landing") === "1";
 
   return (
     <html
