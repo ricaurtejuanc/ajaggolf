@@ -52,12 +52,17 @@ export async function asegurarJugadorParaUsuario(
     user.email?.split("@")[0] ??
     "Jugador AJAG";
 
-  const nombre = givenName ?? nombreCompleto;
-  const apellidos = familyName ?? "";
+  // El registro con Google trae nombre/apellidos ya separados; el registro
+  // con email solo pide un campo "Nombre" (nombreCompleto), así que se
+  // divide por el mismo criterio que el resto de la app: primera palabra
+  // es el nombre, el resto los apellidos.
+  const nombre = givenName ?? nombreCompleto.trim().split(/\s+/)[0] ?? nombreCompleto;
+  const apellidos = familyName ?? nombreCompleto.trim().split(/\s+/).slice(1).join(" ");
+  const telefono = (user.user_metadata?.telefono as string | undefined) ?? null;
 
   const { data: creado, error } = await supabase
     .from("jugadores")
-    .insert({ user_id: user.id, nombre, apellidos, email: user.email ?? null })
+    .insert({ user_id: user.id, nombre, apellidos, email: user.email ?? null, telefono })
     .select("*")
     .single();
 

@@ -17,13 +17,20 @@ function traducirError(mensaje: string): string {
 
 export function PasswordForm({ next }: { next?: string }) {
   const [modo, setModo] = useState<"signin" | "signup">("signin");
+  const [nombre, setNombre] = useState("");
   const [email, setEmail] = useState("");
+  const [telefono, setTelefono] = useState("");
   const [password, setPassword] = useState("");
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [avisoConfirmacion, setAvisoConfirmacion] = useState(false);
   const router = useRouter();
   const supabase = createClient();
+
+  function cambiarModo(nuevoModo: "signin" | "signup") {
+    setModo(nuevoModo);
+    setError(null);
+  }
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -42,7 +49,11 @@ export function PasswordForm({ next }: { next?: string }) {
       return;
     }
 
-    const { data, error } = await supabase.auth.signUp({ email, password });
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: { data: { full_name: nombre, telefono } },
+    });
     if (error) {
       setError(traducirError(error.message));
       setPending(false);
@@ -67,63 +78,114 @@ export function PasswordForm({ next }: { next?: string }) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-3">
-      <div>
-        <label htmlFor="email" className="block text-sm font-medium text-ajag-verde-900">
-          Email
-        </label>
-        <input
-          id="email"
-          type="email"
-          required
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          placeholder="tu@email.com"
-          className="mt-1 w-full rounded-xl border border-ajag-gris-200 px-4 py-3 text-sm outline-none focus:border-ajag-verde-600"
-        />
-      </div>
-      <div>
-        <label htmlFor="password" className="block text-sm font-medium text-ajag-verde-900">
-          Contraseña
-        </label>
-        <input
-          id="password"
-          type="password"
-          required
-          minLength={6}
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          placeholder="••••••••"
-          className="mt-1 w-full rounded-xl border border-ajag-gris-200 px-4 py-3 text-sm outline-none focus:border-ajag-verde-600"
-        />
+    <div className="flex flex-col gap-4">
+      <div className="grid grid-cols-2 gap-2 rounded-xl bg-ajag-gris-100 p-1">
+        <button
+          type="button"
+          onClick={() => cambiarModo("signin")}
+          className={`rounded-lg px-4 py-2 text-sm font-medium transition ${
+            modo === "signin"
+              ? "bg-white text-ajag-verde-900 shadow-sm"
+              : "text-ajag-gris-500 hover:text-ajag-verde-700"
+          }`}
+        >
+          Iniciar sesión
+        </button>
+        <button
+          type="button"
+          onClick={() => cambiarModo("signup")}
+          className={`rounded-lg px-4 py-2 text-sm font-medium transition ${
+            modo === "signup"
+              ? "bg-white text-ajag-verde-900 shadow-sm"
+              : "text-ajag-gris-500 hover:text-ajag-verde-700"
+          }`}
+        >
+          Crear cuenta
+        </button>
       </div>
 
-      {error ? <p className="text-sm text-ajag-rojo-600">{error}</p> : null}
+      <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+        {modo === "signup" ? (
+          <div>
+            <label htmlFor="nombre" className="block text-sm font-medium text-ajag-verde-900">
+              Nombre
+            </label>
+            <input
+              id="nombre"
+              type="text"
+              required
+              value={nombre}
+              onChange={(e) => setNombre(e.target.value)}
+              placeholder="Tu nombre"
+              className="mt-1 w-full rounded-xl border border-ajag-gris-200 px-4 py-3 text-sm outline-none focus:border-ajag-verde-600"
+            />
+          </div>
+        ) : null}
 
-      <button
-        type="submit"
-        disabled={pending}
-        className="rounded-xl bg-ajag-verde-700 px-4 py-3 text-sm font-medium text-white transition hover:bg-ajag-verde-600 disabled:opacity-60"
-      >
-        {pending
-          ? modo === "signin"
-            ? "Entrando..."
-            : "Creando cuenta..."
-          : modo === "signin"
-            ? "Iniciar sesión"
-            : "Crear cuenta"}
-      </button>
+        <div>
+          <label htmlFor="email" className="block text-sm font-medium text-ajag-verde-900">
+            Email
+          </label>
+          <input
+            id="email"
+            type="email"
+            required
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="tu@email.com"
+            className="mt-1 w-full rounded-xl border border-ajag-gris-200 px-4 py-3 text-sm outline-none focus:border-ajag-verde-600"
+          />
+        </div>
 
-      <button
-        type="button"
-        onClick={() => {
-          setModo(modo === "signin" ? "signup" : "signin");
-          setError(null);
-        }}
-        className="text-center text-sm font-medium text-ajag-verde-700 hover:underline"
-      >
-        {modo === "signin" ? "¿No tienes cuenta? Regístrate" : "¿Ya tienes cuenta? Inicia sesión"}
-      </button>
-    </form>
+        {modo === "signup" ? (
+          <div>
+            <label htmlFor="telefono" className="block text-sm font-medium text-ajag-verde-900">
+              Teléfono
+            </label>
+            <input
+              id="telefono"
+              type="tel"
+              required
+              value={telefono}
+              onChange={(e) => setTelefono(e.target.value)}
+              placeholder="600 000 000"
+              className="mt-1 w-full rounded-xl border border-ajag-gris-200 px-4 py-3 text-sm outline-none focus:border-ajag-verde-600"
+            />
+          </div>
+        ) : null}
+
+        <div>
+          <label htmlFor="password" className="block text-sm font-medium text-ajag-verde-900">
+            Contraseña
+          </label>
+          <input
+            id="password"
+            type="password"
+            required
+            minLength={6}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="••••••••"
+            className="mt-1 w-full rounded-xl border border-ajag-gris-200 px-4 py-3 text-sm outline-none focus:border-ajag-verde-600"
+          />
+        </div>
+
+        {error ? <p className="text-sm text-ajag-rojo-600">{error}</p> : null}
+
+        <button
+          type="submit"
+          disabled={pending}
+          className="rounded-xl bg-ajag-verde-700 px-4 py-3 text-sm font-medium text-white transition hover:bg-ajag-verde-600 disabled:opacity-60"
+        >
+          {pending
+            ? modo === "signin"
+              ? "Entrando..."
+              : "Creando cuenta..."
+            : modo === "signin"
+              ? "Iniciar sesión"
+              : "Crear cuenta"}
+        </button>
+      </form>
+    </div>
   );
 }
