@@ -19,6 +19,12 @@ const etiquetaFormato = {
   matchplay: "Match Play",
 } as const;
 
+const etiquetaModoSalida = {
+  consecutivo: "Consecutivo",
+  shotgun: "A tiro",
+  shotgun_silencioso: "A tiro silencioso",
+} as const;
+
 export async function generateMetadata({
   params,
 }: {
@@ -161,7 +167,11 @@ export default async function TorneoDetallePage({
         <InfoPill
           icon={<CalendarDays size={16} />}
           label="Hora"
-          value={formatearHora(torneo.hora_inicio) ?? "Por confirmar"}
+          value={
+            formatearHora(torneo.hora_inicio)
+              ? `${formatearHora(torneo.hora_inicio)} · ${etiquetaModoSalida[torneo.modo_salida]}`
+              : "Por confirmar"
+          }
         />
         <InfoPill icon={<Coins size={16} />} label="Precio" value={textoPrecio} />
         <InfoPill
