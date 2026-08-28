@@ -66,9 +66,22 @@ export async function asegurarJugadorParaUsuario(
     .select("*")
     .single();
 
-  if (error || !creado) {
-    throw error ?? new Error("No se pudo crear el registro de jugador.");
+  if (error) {
+    // Otra petición concurrente para el mismo usuario (doble pestaña, doble
+    // navegación antes de que la primera terminase) ganó la carrera y ya
+    // creó su ficha: jugadores.user_id es unique, así que esto no es un
+    // fallo real, solo hay que devolver la que ya existe en vez de duplicarla.
+    if (error.code === "23505") {
+      const { data: yaCreado } = await supabase
+        .from("jugadores")
+        .select("*")
+        .eq("user_id", user.id)
+        .single();
+      if (yaCreado) return yaCreado;
+    }
+    throw error;
   }
+  if (!creado) throw new Error("No se pudo crear el registro de jugador.");
 
   return creado;
 }

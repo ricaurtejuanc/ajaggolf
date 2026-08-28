@@ -58,7 +58,15 @@ export async function actualizarPerfil(
     .update({ nombre, apellidos, email, licencia_federativa, telefono, sexo, handicap })
     .eq("user_id", user.id);
 
-  if (error) return { ok: false, error: error.message };
+  if (error) {
+    if (error.code === "23505" && error.message.includes("licencia_federativa")) {
+      return {
+        ok: false,
+        error: "Ya existe un jugador registrado con esa licencia federativa. Revisa el número e inténtalo de nuevo.",
+      };
+    }
+    return { ok: false, error: error.message };
+  }
 
   revalidatePath("/cuenta");
   return { ok: true, error: null };
