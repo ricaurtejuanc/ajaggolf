@@ -19,6 +19,12 @@ export default async function LoginPage({
   } = await supabase.auth.getUser();
   if (user) redirect(next ?? "/cuenta");
 
+  // "Acceder sin crear cuenta" solo tiene sentido volviendo a una
+  // inscripción de torneo (ahí el propio formulario ya soporta invitados):
+  // el resto de destinos protegidos (/admin, /cuenta, /carrito, /god)
+  // exigen sí o sí una cuenta, así que no tiene sentido ofrecerlo ahí.
+  const esInscripcion = next != null && /^\/torneos\/[^/]+\/inscripcion$/.test(next);
+
   return (
     <div className="mx-auto flex min-h-[70vh] max-w-md flex-col justify-center px-4 py-16">
       <h1 className="font-display text-2xl font-semibold text-ajag-verde-900">
@@ -41,13 +47,17 @@ export default async function LoginPage({
 
         <PasswordForm next={next} />
 
-        <div className="flex items-center gap-3">
-          <div className="h-px flex-1 bg-ajag-gris-200" />
-          <span className="text-xs text-ajag-gris-500">o sin crear cuenta</span>
-          <div className="h-px flex-1 bg-ajag-gris-200" />
-        </div>
+        {esInscripcion ? (
+          <>
+            <div className="flex items-center gap-3">
+              <div className="h-px flex-1 bg-ajag-gris-200" />
+              <span className="text-xs text-ajag-gris-500">o sin crear cuenta</span>
+              <div className="h-px flex-1 bg-ajag-gris-200" />
+            </div>
 
-        <GuestButton next={next} />
+            <GuestButton next={next} />
+          </>
+        ) : null}
       </div>
     </div>
   );
