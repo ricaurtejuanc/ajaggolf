@@ -3,6 +3,7 @@ import Image from "next/image";
 import { ShoppingCart } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { getUsuarioActual, getUsuarioAdmin } from "@/lib/auth";
+import { obtenerOrganizadorActual } from "@/lib/data/organizador";
 import { MobileNav } from "./mobile-nav";
 
 const navLinks = [
@@ -18,6 +19,7 @@ export async function SiteHeader() {
   const supabase = await createClient();
   const user = await getUsuarioActual();
   const admin = user ? await getUsuarioAdmin() : null;
+  const organizador = await obtenerOrganizadorActual();
 
   let itemsCarrito = 0;
   if (user) {
@@ -40,9 +42,15 @@ export async function SiteHeader() {
     <header className="sticky top-0 z-40 border-b border-ajag-gris-100 bg-white/90 backdrop-blur print:hidden">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4">
         <Link href="/" className="flex items-center gap-2 shrink-0">
-          <Image src="/Logo_AJAG.svg" alt="AJAG Golf" width={40} height={40} priority />
+          <Image
+            src={organizador?.logo_url || "/Logo_AJAG.svg"}
+            alt={organizador?.nombre ?? "AJAG Golf"}
+            width={40}
+            height={40}
+            priority
+          />
           <span className="font-display text-lg font-semibold text-ajag-verde-900">
-            AJAG Golf
+            {organizador?.nombre ?? "AJAG Golf"}
           </span>
         </Link>
 

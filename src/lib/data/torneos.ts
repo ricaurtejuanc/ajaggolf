@@ -1,23 +1,28 @@
 import { createClient } from "@/lib/supabase/server";
 import { getUsuarioAdmin } from "@/lib/auth";
+import { obtenerOrganizadorIdActual } from "@/lib/data/organizador";
 import { hayCuadroDeHonor } from "@/components/torneos/cuadro-de-honor";
 import type { Torneo } from "@/types/database";
 
 export async function listarTorneosPublicos(): Promise<Torneo[]> {
   const supabase = await createClient();
-  const { data } = await supabase
+  const organizadorId = await obtenerOrganizadorIdActual();
+  let query = supabase
     .from("torneos")
     .select("*")
     .in("estado", ["publicado", "cerrado", "finalizado", "cancelado"])
     .order("fecha", { ascending: true });
+  if (organizadorId) query = query.eq("organizador_id", organizadorId);
 
+  const { data } = await query;
   return data ?? [];
 }
 
 export async function listarProximosTorneos(limite = 3): Promise<Torneo[]> {
   const supabase = await createClient();
+  const organizadorId = await obtenerOrganizadorIdActual();
   const hoy = new Date().toISOString().slice(0, 10);
-  const { data } = await supabase
+  let query = supabase
     .from("torneos")
     .select("*")
     // "Completo" (cerrado) sigue contando como próximo torneo, igual que en
@@ -26,23 +31,30 @@ export async function listarProximosTorneos(limite = 3): Promise<Torneo[]> {
     .gte("fecha", hoy)
     .order("fecha", { ascending: true })
     .limit(limite);
+  if (organizadorId) query = query.eq("organizador_id", organizadorId);
 
+  const { data } = await query;
   return data ?? [];
 }
 
 /**
  * Un admin puede ver la ficha de un torneo en cualquier estado (incluido
  * "borrador"), para revisar cómo queda antes de publicarlo. Para el resto
- * de visitantes, solo torneos ya publicados/cerrados/finalizados.
+ * de visitantes, solo torneos ya publicados/cerrados/finalizados. El slug
+ * ya es único por torneo (no por organizador), pero se filtra igual por el
+ * organizador del dominio actual para que un torneo de otro organizador
+ * nunca se cuele por su slug en un sitio que no es el suyo.
  */
 export async function obtenerTorneoPorSlug(slug: string): Promise<Torneo | null> {
   const supabase = await createClient();
   const admin = await getUsuarioAdmin();
+  const organizadorId = await obtenerOrganizadorIdActual();
 
   let query = supabase.from("torneos").select("*").eq("slug", slug);
   if (!admin) {
     query = query.in("estado", ["publicado", "cerrado", "finalizado", "cancelado"]);
   }
+  if (organizadorId) query = query.eq("organizador_id", organizadorId);
 
   const { data } = await query.maybeSingle();
   return data;

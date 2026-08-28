@@ -11,16 +11,22 @@ export async function actualizarBizumNumero(
   formData: FormData,
 ): Promise<EstadoConfiguracion> {
   const admin = await getUsuarioAdmin();
-  if (!admin) return { ok: false, error: "No autorizado." };
+  if (!admin?.organizador_id) return { ok: false, error: "No autorizado." };
 
   const numero = String(formData.get("bizum_numero") ?? "").trim();
   if (!numero) return { ok: false, error: "Introduce un número válido." };
 
   const supabase = await createClient();
-  const { error } = await supabase
-    .from("configuracion")
-    .update({ valor: numero, actualizado_por: admin.id, updated_at: new Date().toISOString() })
-    .eq("clave", "bizum_numero");
+  const { error } = await supabase.from("configuracion").upsert(
+    {
+      clave: "bizum_numero",
+      organizador_id: admin.organizador_id,
+      valor: numero,
+      actualizado_por: admin.id,
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: "organizador_id,clave" },
+  );
 
   if (error) return { ok: false, error: error.message };
 
@@ -34,7 +40,7 @@ export async function actualizarCategoriasExtras(
   formData: FormData,
 ): Promise<EstadoConfiguracion> {
   const admin = await getUsuarioAdmin();
-  if (!admin) return { ok: false, error: "No autorizado." };
+  if (!admin?.organizador_id) return { ok: false, error: "No autorizado." };
 
   let categoriasCrudo: unknown;
   try {
@@ -68,11 +74,12 @@ export async function actualizarCategoriasExtras(
   const { error } = await supabase.from("configuracion").upsert(
     {
       clave: "categorias_extras",
+      organizador_id: admin.organizador_id,
       valor: categorias,
       actualizado_por: admin.id,
       updated_at: new Date().toISOString(),
     },
-    { onConflict: "clave" },
+    { onConflict: "organizador_id,clave" },
   );
 
   if (error) return { ok: false, error: error.message };

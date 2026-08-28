@@ -1,11 +1,15 @@
 import type { Metadata } from "next";
 import { listarPatrocinadores } from "@/lib/data/patrocinadores";
+import { obtenerOrganizadorActual } from "@/lib/data/organizador";
 import { PatrocinadorTile } from "@/components/patrocinadores/patrocinador-tile";
 
 export const metadata: Metadata = { title: "Patrocinadores" };
 
 export default async function PatrocinadoresPage() {
-  const patrocinadores = await listarPatrocinadores();
+  const [patrocinadores, organizador] = await Promise.all([
+    listarPatrocinadores(),
+    obtenerOrganizadorActual(),
+  ]);
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-10">
@@ -13,7 +17,7 @@ export default async function PatrocinadoresPage() {
         Patrocinadores
       </h1>
       <p className="mt-2 max-w-2xl text-ajag-gris-500">
-        Gracias a las empresas que hacen posible AJAG Golf.
+        Gracias a las empresas que hacen posible {organizador?.nombre ?? "nuestros torneos"}.
       </p>
 
       {patrocinadores.length === 0 ? (

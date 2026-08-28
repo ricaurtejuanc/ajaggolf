@@ -7,6 +7,7 @@ import "./globals.css";
 import { SiteHeader } from "@/components/layout/site-header";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { VisitTracker } from "@/components/analytics/visit-tracker";
+import { obtenerOrganizadorActual } from "@/lib/data/organizador";
 
 const inter = Inter({
   variable: "--font-sans",
@@ -19,14 +20,14 @@ const fraunces = Fraunces({
   weight: ["500", "600", "700"],
 });
 
-export const metadata: Metadata = {
-  title: {
-    default: "AJAG Golf — Asociación de Jugadores Amateur de Golf",
-    template: "%s · AJAG Golf",
-  },
-  description:
-    "Calendario de torneos, inscripciones, salidas y clasificaciones de AJAG, la Asociación de Jugadores Amateur de Golf.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const organizador = await obtenerOrganizadorActual();
+  const nombre = organizador?.nombre ?? "AJAG Golf";
+  return {
+    title: { default: nombre, template: `%s · ${nombre}` },
+    description: `Calendario de torneos, inscripciones, salidas y clasificaciones de ${nombre}.`,
+  };
+}
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {
   // Todo el dominio de la plataforma (torneos.aftergolf.es, sea cual sea

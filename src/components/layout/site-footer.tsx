@@ -1,16 +1,26 @@
 import Link from "next/link";
 import Image from "next/image";
+import { obtenerOrganizadorActual } from "@/lib/data/organizador";
 
-export function SiteFooter() {
+export async function SiteFooter() {
+  const organizador = await obtenerOrganizadorActual();
+
   return (
     <footer className="mt-16 border-t border-ajag-gris-100 bg-ajag-verde-50 print:hidden">
       <div className="mx-auto grid max-w-6xl gap-8 px-4 py-10 sm:grid-cols-3">
         <div className="flex items-center gap-2">
-          <Image src="/Logo_AJAG.svg" alt="AJAG Golf" width={36} height={36} />
+          <Image
+            src={organizador?.logo_url || "/Logo_AJAG.svg"}
+            alt={organizador?.nombre ?? "AJAG Golf"}
+            width={36}
+            height={36}
+          />
           <div>
-            <p className="font-display font-semibold text-ajag-verde-900">AJAG Golf</p>
+            <p className="font-display font-semibold text-ajag-verde-900">
+              {organizador?.nombre ?? "AJAG Golf"}
+            </p>
             <p className="text-sm text-ajag-gris-500">
-              Asociación de Jugadores Amateur de Golf
+              {organizador?.email_contacto ?? "Asociación de Jugadores Amateur de Golf"}
             </p>
           </div>
         </div>
@@ -35,7 +45,7 @@ export function SiteFooter() {
         </div>
       </div>
       <div className="border-t border-ajag-gris-100 px-4 py-4 text-center text-xs text-ajag-gris-500">
-        © {new Date().getFullYear()} AJAG Golf. Todos los derechos reservados.
+        © {new Date().getFullYear()} {organizador?.nombre ?? "AJAG Golf"}. Todos los derechos reservados.
         <br />
         Powered by{" "}
         <a

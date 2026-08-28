@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { asegurarJugadorParaUsuario, generarLicenciaUnica } from "@/lib/data/jugadores";
 import { enviarEmailInscripcionRecibida, enviarEmailInscripcionConfirmada } from "@/lib/email";
-import { obtenerOrganizadorPorId } from "@/lib/data/organizador";
+import { obtenerOrganizadorPorId, obtenerOrganizadorIdActual } from "@/lib/data/organizador";
 
 export type EstadoInscripcionForm = { ok: boolean; error: string | null };
 
@@ -50,6 +50,15 @@ export async function inscribirse(
     .maybeSingle();
 
   if (!torneo || torneo.estado !== "publicado") {
+    return { ok: false, error: "Este torneo no admite inscripciones en este momento." };
+  }
+
+  // El slug no es único por organizador: sin este chequeo, esta acción
+  // (invocada directamente, sin pasar por la página que ya filtra por
+  // dominio) podría inscribir a alguien en el torneo de OTRO organizador
+  // si conociera su slug.
+  const organizadorIdActual = await obtenerOrganizadorIdActual();
+  if (organizadorIdActual && torneo.organizador_id !== organizadorIdActual) {
     return { ok: false, error: "Este torneo no admite inscripciones en este momento." };
   }
 

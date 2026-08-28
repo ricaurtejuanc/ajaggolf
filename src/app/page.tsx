@@ -1,10 +1,12 @@
 import Link from "next/link";
 import { listarProximosTorneos, obtenerInscritosPorTorneo } from "@/lib/data/torneos";
+import { obtenerOrganizadorActual } from "@/lib/data/organizador";
 import { createClient } from "@/lib/supabase/server";
 import { TorneoCard } from "@/components/torneos/torneo-card";
 
 export default async function Home() {
   const proximos = await listarProximosTorneos(3);
+  const organizador = await obtenerOrganizadorActual();
   const supabase = await createClient();
   const inscritosPorTorneo = await obtenerInscritosPorTorneo(
     supabase,
@@ -19,8 +21,8 @@ export default async function Home() {
             Torneos amateur de golf, sin complicaciones
           </h1>
           <p className="max-w-xl text-white/85">
-            Calendario, inscripciones, salidas y clasificaciones de la
-            Asociación de Jugadores Amateur de Golf.
+            Calendario, inscripciones, salidas y clasificaciones de{" "}
+            {organizador?.nombre ?? "AJAG Golf"}.
           </p>
           <div className="mt-1 flex flex-wrap justify-center gap-3">
             <Link
