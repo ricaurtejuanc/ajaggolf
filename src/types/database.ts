@@ -82,6 +82,7 @@ export type Patrocinador = {
   web: string | null;
   telefono: string | null;
   organizador_id: string | null;
+  orden: number;
   created_at: string;
 };
 

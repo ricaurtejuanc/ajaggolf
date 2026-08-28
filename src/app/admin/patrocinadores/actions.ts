@@ -28,15 +28,55 @@ export async function crearPatrocinador(
   if (!campos.logo_url) return { ok: false, error: "Sube un logo." };
 
   const supabase = await createClient();
+
+  // Los nuevos patrocinadores van al final de la lista, no se mezclan con
+  // el orden manual ya establecido.
+  const { data: ultimo } = await supabase
+    .from("patrocinadores")
+    .select("orden")
+    .eq("organizador_id", admin.organizador_id)
+    .order("orden", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
   const { error } = await supabase
     .from("patrocinadores")
-    .insert({ ...campos, organizador_id: admin.organizador_id });
+    .insert({ ...campos, organizador_id: admin.organizador_id, orden: (ultimo?.orden ?? 0) + 1 });
 
   if (error) return { ok: false, error: error.message };
 
   revalidatePath("/admin/patrocinadores");
   revalidatePath("/patrocinadores");
   redirect("/admin/patrocinadores");
+}
+
+/** Intercambia el orden con el patrocinador inmediatamente anterior/siguiente
+ * (dentro del mismo organizador) para moverlo una posición arriba/abajo en
+ * la web. */
+export async function moverPatrocinador(patrocinadorId: string, direccion: "arriba" | "abajo") {
+  const admin = await getUsuarioAdmin();
+  if (!admin?.organizador_id) return;
+
+  const supabase = await createClient();
+  const { data: lista } = await supabase
+    .from("patrocinadores")
+    .select("id, orden")
+    .eq("organizador_id", admin.organizador_id)
+    .order("orden", { ascending: true });
+  if (!lista) return;
+
+  const indice = lista.findIndex((p) => p.id === patrocinadorId);
+  const indiceVecino = direccion === "arriba" ? indice - 1 : indice + 1;
+  if (indice === -1 || indiceVecino < 0 || indiceVecino >= lista.length) return;
+
+  const actual = lista[indice];
+  const vecino = lista[indiceVecino];
+
+  await supabase.from("patrocinadores").update({ orden: vecino.orden }).eq("id", actual.id);
+  await supabase.from("patrocinadores").update({ orden: actual.orden }).eq("id", vecino.id);
+
+  revalidatePath("/admin/patrocinadores");
+  revalidatePath("/patrocinadores");
 }
 
 export async function actualizarPatrocinador(

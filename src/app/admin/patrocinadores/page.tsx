@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { listarPatrocinadores } from "@/lib/data/patrocinadores";
 import { EliminarPatrocinadorButton } from "./eliminar-button";
+import { MoverPatrocinadorBotones } from "./mover-botones";
 
 export const metadata: Metadata = { title: "Patrocinadores · Admin" };
 
@@ -27,9 +28,14 @@ export default async function AdminPatrocinadoresPage() {
         {patrocinadores.length === 0 ? (
           <p className="text-sm text-ajag-gris-500">Todavía no hay patrocinadores dados de alta.</p>
         ) : (
-          patrocinadores.map((patrocinador) => (
+          patrocinadores.map((patrocinador, indice) => (
             <div key={patrocinador.id} className="card-ajag flex items-center justify-between p-4">
               <div className="flex items-center gap-4">
+                <MoverPatrocinadorBotones
+                  patrocinadorId={patrocinador.id}
+                  esPrimero={indice === 0}
+                  esUltimo={indice === patrocinadores.length - 1}
+                />
                 <div className="relative flex size-14 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-ajag-gris-100 bg-white">
                   <Image
                     src={patrocinador.logo_url}
