@@ -29,8 +29,11 @@ export default async function AdminPatrocinadoresPage() {
           <p className="text-sm text-ajag-gris-500">Todavía no hay patrocinadores dados de alta.</p>
         ) : (
           patrocinadores.map((patrocinador, indice) => (
-            <div key={patrocinador.id} className="card-ajag flex items-center justify-between p-4">
-              <div className="flex items-center gap-4">
+            <div
+              key={patrocinador.id}
+              className="card-ajag flex flex-wrap items-center justify-between gap-3 p-4"
+            >
+              <div className="flex min-w-0 items-center gap-4">
                 <MoverPatrocinadorBotones
                   patrocinadorId={patrocinador.id}
                   esPrimero={indice === 0}
@@ -46,14 +49,14 @@ export default async function AdminPatrocinadoresPage() {
                     sizes="56px"
                   />
                 </div>
-                <div>
-                  <p className="font-medium text-ajag-verde-900">{patrocinador.nombre}</p>
-                  <p className="text-xs text-ajag-gris-500">
+                <div className="min-w-0">
+                  <p className="truncate font-medium text-ajag-verde-900">{patrocinador.nombre}</p>
+                  <p className="truncate text-xs text-ajag-gris-500">
                     {patrocinador.web ?? patrocinador.telefono ?? "Sin web ni teléfono"}
                   </p>
                 </div>
               </div>
-              <div className="flex items-center gap-3">
+              <div className="flex shrink-0 items-center gap-3">
                 <Link
                   href={`/admin/patrocinadores/${patrocinador.id}/editar`}
                   className="text-sm font-medium text-ajag-verde-700 hover:underline"
