@@ -15,7 +15,7 @@ interface Club {
   recorridos: { id: string; recorrido: string }[];
 }
 
-export function CamposList({ clubes }: { clubes: Club[] }) {
+export function CamposList({ clubes, esOwner }: { clubes: Club[]; esOwner: boolean }) {
   const [busqueda, setBusqueda] = useState("");
   const [estadoAlta, dispatchAlta, pendingAlta] = useActionState<EstadoCampo, FormData>(crearCampo, {
     ok: false,
@@ -92,14 +92,14 @@ export function CamposList({ clubes }: { clubes: Club[] }) {
         {clubesFiltrados.length === 0 ? (
           <p className="text-sm text-ajag-gris-500">Sin resultados.</p>
         ) : (
-          clubesFiltrados.map((club) => <ClubCard key={club.nombre} club={club} />)
+          clubesFiltrados.map((club) => <ClubCard key={club.nombre} club={club} esOwner={esOwner} />)
         )}
       </div>
     </div>
   );
 }
 
-function ClubCard({ club }: { club: Club }) {
+function ClubCard({ club, esOwner }: { club: Club; esOwner: boolean }) {
   const [editandoNombre, setEditandoNombre] = useState(false);
   const [nombreEditado, setNombreEditado] = useState(club.nombre);
   const [pendiente, startTransition] = useTransition();
@@ -172,14 +172,14 @@ function ClubCard({ club }: { club: Club }) {
 
       <ul className="flex flex-col gap-1.5">
         {club.recorridos.map((r) => (
-          <RecorridoRow key={r.id} id={r.id} recorrido={r.recorrido} />
+          <RecorridoRow key={r.id} id={r.id} recorrido={r.recorrido} esOwner={esOwner} />
         ))}
       </ul>
     </div>
   );
 }
 
-function RecorridoRow({ id, recorrido }: { id: string; recorrido: string }) {
+function RecorridoRow({ id, recorrido, esOwner }: { id: string; recorrido: string; esOwner: boolean }) {
   const [editando, setEditando] = useState(false);
   const [valor, setValor] = useState(recorrido);
   const [pendiente, startTransition] = useTransition();
@@ -250,15 +250,17 @@ function RecorridoRow({ id, recorrido }: { id: string; recorrido: string }) {
               >
                 <Pencil size={13} />
               </button>
-              <button
-                type="button"
-                disabled={pendiente}
-                onClick={borrar}
-                className="text-ajag-gris-500 hover:text-ajag-rojo-600 disabled:opacity-50"
-                aria-label={`Eliminar recorrido ${recorrido}`}
-              >
-                <Trash2 size={13} />
-              </button>
+              {esOwner && (
+                <button
+                  type="button"
+                  disabled={pendiente}
+                  onClick={borrar}
+                  className="text-ajag-gris-500 hover:text-ajag-rojo-600 disabled:opacity-50"
+                  aria-label={`Eliminar recorrido ${recorrido}`}
+                >
+                  <Trash2 size={13} />
+                </button>
+              )}
             </div>
           </>
         )}

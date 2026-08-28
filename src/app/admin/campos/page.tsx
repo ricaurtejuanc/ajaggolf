@@ -1,12 +1,13 @@
 import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
+import { getUsuarioAdmin } from "@/lib/auth";
 import { CamposList } from "./campos-list";
 
 export const metadata: Metadata = { title: "Campos de golf · Admin" };
 
 export default async function CamposPage() {
-  const supabase = await createClient();
-  const { data: campos } = await supabase
+  const [supabaseClient, admin] = await Promise.all([createClient(), getUsuarioAdmin()]);
+  const { data: campos } = await supabaseClient
     .from("campos_golf")
     .select("id, nombre, recorrido")
     .order("nombre")
@@ -22,6 +23,8 @@ export default async function CamposPage() {
     .map(([nombre, recorridos]) => ({ nombre, recorridos }))
     .sort((a, b) => a.nombre.localeCompare(b.nombre));
 
+  const esOwner = admin?.rol === "owner";
+
   return (
     <div>
       <h1 className="mb-2 font-display text-2xl font-semibold text-ajag-verde-900">
@@ -32,7 +35,7 @@ export default async function CamposPage() {
         Cambiarlo aquí no modifica los torneos que ya usan un nombre/recorrido — solo afecta a
         las sugerencias a partir de ahora.
       </p>
-      <CamposList clubes={clubesOrdenados} />
+      <CamposList clubes={clubesOrdenados} esOwner={esOwner} />
     </div>
   );
 }

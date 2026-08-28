@@ -32,6 +32,7 @@ export type EstadoPedidoPago =
 export type EstadoSalida = "borrador" | "publicado";
 export type EstadoResultado = "preview" | "publicado";
 export type EstadoPdfResultados = "preview" | "publicado" | "descartado";
+export type RolAdmin = "owner" | "admin";
 
 export type Organizador = {
   id: string;
@@ -58,7 +59,7 @@ export type UsuarioAdmin = {
   user_id: string;
   nombre: string;
   email: string;
-  rol: "admin";
+  rol: RolAdmin;
   activo: boolean;
   organizador_id: string | null;
   created_at: string;

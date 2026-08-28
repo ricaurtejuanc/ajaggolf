@@ -66,6 +66,9 @@ export async function actualizarRecorrido(id: string, recorridoNuevo: string): P
 export async function eliminarRecorrido(id: string): Promise<EstadoCampo> {
   const admin = await getUsuarioAdmin();
   if (!admin) return { ok: false, error: "No autorizado." };
+  if (admin.rol !== "owner") {
+    return { ok: false, error: "Solo el owner del organizador puede eliminar campos." };
+  }
 
   const supabase = await createClient();
   const { error } = await supabase.from("campos_golf").delete().eq("id", id);
