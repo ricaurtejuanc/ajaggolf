@@ -50,7 +50,7 @@ export default async function AdminSalidasPage({
   const { data: torneo } = await supabase
     .from("torneos")
     .select(
-      "id, nombre, slug, modo_salida, modo_asignacion_salida, tees_consecutivo, horarios_pdf_url",
+      "id, nombre, slug, modo_salida, modo_asignacion_salida, tees_consecutivo, hora_inicio, horarios_pdf_url",
     )
     .eq("id", id)
     .maybeSingle();
@@ -146,6 +146,7 @@ export default async function AdminSalidasPage({
             modoSalidaDefecto={torneo.modo_salida}
             modoAsignacionDefecto={torneo.modo_asignacion_salida}
             teesConsecutivoDefecto={torneo.tees_consecutivo}
+            horaInicioDefecto={torneo.hora_inicio}
             salidaExistente={salida}
             nJugadoresConfirmados={jugadoresConfirmados.length}
           />

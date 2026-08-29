@@ -11,6 +11,7 @@ export function GenerarSalidasForm({
   modoSalidaDefecto,
   modoAsignacionDefecto,
   teesConsecutivoDefecto,
+  horaInicioDefecto,
   salidaExistente,
   nJugadoresConfirmados,
 }: {
@@ -18,6 +19,7 @@ export function GenerarSalidasForm({
   modoSalidaDefecto: ModoSalida;
   modoAsignacionDefecto: ModoAsignacionSalida;
   teesConsecutivoDefecto: number[];
+  horaInicioDefecto: string | null;
   salidaExistente: Salida | null;
   nJugadoresConfirmados: number;
 }) {
@@ -137,7 +139,7 @@ export function GenerarSalidasForm({
               id="hora_inicio"
               name="hora_inicio"
               type="time"
-              defaultValue={(configExistente.hora_inicio as string) ?? "08:00"}
+              defaultValue={(configExistente.hora_inicio as string) ?? horaInicioDefecto ?? "08:00"}
               className="mt-1 w-full rounded-xl border border-ajag-gris-200 px-4 py-2.5 text-sm outline-none focus:border-ajag-verde-600"
             />
           </div>
@@ -188,7 +190,7 @@ export function GenerarSalidasForm({
               id="hora_inicio"
               name="hora_inicio"
               type="time"
-              defaultValue={(configExistente.hora_inicio as string) ?? "08:00"}
+              defaultValue={(configExistente.hora_inicio as string) ?? horaInicioDefecto ?? "08:00"}
               className="mt-1 w-full rounded-xl border border-ajag-gris-200 px-4 py-2.5 text-sm outline-none focus:border-ajag-verde-600"
             />
           </div>
