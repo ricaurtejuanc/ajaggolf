@@ -21,7 +21,7 @@ export type ModoSalida = "consecutivo" | "shotgun" | "shotgun_silencioso";
 export type ModoAsignacionSalida = "handicap" | "manual" | "mixto";
 export type EstadoTorneo = "borrador" | "publicado" | "cerrado" | "finalizado" | "cancelado";
 export type EstadoInscripcion = "carrito" | "pendiente_pago" | "confirmada" | "cancelada";
-export type MetodoPago = "bizum" | "stripe" | "club";
+export type MetodoPago = "bizum" | "transferencia" | "tarjeta" | "stripe" | "club";
 export type ModoPagoTorneo = "organizador" | "club";
 export type EstadoPedidoPago =
   | "pendiente_confirmacion"
@@ -43,6 +43,10 @@ export type Organizador = {
   dominio: string | null;
   email_contacto: string | null;
   activo: boolean;
+  bizum_numero: string | null;
+  bizum_nombre: string | null;
+  transferencia_numero: string | null;
+  transferencia_nombre: string | null;
   created_at: string;
 };
 
