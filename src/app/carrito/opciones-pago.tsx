@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useState } from "react";
 import { CreditCard, Smartphone, Banknote } from "lucide-react";
 import { finalizarPedido } from "./actions";
 
@@ -12,15 +12,28 @@ type DatosPago = {
 };
 
 export function OpcionesPago({ datosPago }: { datosPago: DatosPago }) {
-  const [state, formAction, pending] = useActionState(finalizarPedido, {
-    ok: false,
-    error: null,
-  });
   const [metodoPago, setMetodoPago] = useState<string>("bizum");
+  const [pending, setPending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setPending(true);
+    setError(null);
+
+    const formData = new FormData(e.currentTarget);
+    formData.set("metodo_pago", metodoPago);
+
+    try {
+      await finalizarPedido(undefined, formData);
+    } catch (err) {
+      setError((err as Error).message || "Error al procesar el pedido");
+      setPending(false);
+    }
+  };
 
   return (
-    <form action={formAction} className="mt-4 flex flex-col gap-3">
-      <input type="hidden" name="metodo_pago" value={metodoPago} />
+    <form onSubmit={handleSubmit} className="mt-4 flex flex-col gap-3">
 
       <div className="space-y-3">
         {/* Bizum */}
@@ -88,7 +101,7 @@ export function OpcionesPago({ datosPago }: { datosPago: DatosPago }) {
         </label>
       </div>
 
-      {state.error ? <p className="text-sm text-ajag-rojo-600">{state.error}</p> : null}
+      {error ? <p className="text-sm text-ajag-rojo-600">{error}</p> : null}
 
       <button
         type="submit"

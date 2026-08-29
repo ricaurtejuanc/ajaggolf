@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
-import { obtenerOrganizadorIdActual, obtenerOrganizadorActual } from "@/lib/data/organizador";
+import { obtenerOrganizadorIdActual } from "@/lib/data/organizador";
 import type { CategoriaExtra } from "@/types/database";
 
 export async function obtenerBizumNumero(): Promise<string> {
@@ -18,15 +18,17 @@ export async function obtenerBizumNumero(): Promise<string> {
 }
 
 export async function obtenerDatosPago() {
-  const organizador = await obtenerOrganizadorActual();
-  if (!organizador) return null;
+  const organizadorId = await obtenerOrganizadorIdActual();
+  if (!organizadorId) return null;
 
-  return {
-    bizum_numero: organizador.bizum_numero,
-    bizum_nombre: organizador.bizum_nombre,
-    transferencia_numero: organizador.transferencia_numero,
-    transferencia_nombre: organizador.transferencia_nombre,
-  };
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("organizadores")
+    .select("bizum_numero, bizum_nombre, transferencia_numero, transferencia_nombre")
+    .eq("id", organizadorId)
+    .maybeSingle();
+
+  return data ?? null;
 }
 
 export async function obtenerCategoriasExtras(): Promise<CategoriaExtra[]> {

@@ -45,6 +45,32 @@ const bizumProvider: ProveedorPago = {
   },
 };
 
+const transferenciaProvider: ProveedorPago = {
+  metodo: "transferencia",
+  obtenerInstrucciones({ totalCents }) {
+    return {
+      titulo: "Paga con transferencia",
+      pasos: [
+        `Realiza una transferencia de ${(totalCents / 100).toLocaleString("es-ES", { style: "currency", currency: "EUR" })}.`,
+        "Incluye tu nombre y el nombre del torneo en el concepto.",
+        "El organizador confirmará el ingreso y tu inscripción quedará en firme.",
+      ],
+      requiereConfirmacionManual: true,
+    };
+  },
+};
+
+const tarjetaProvider: ProveedorPago = {
+  metodo: "tarjeta",
+  obtenerInstrucciones() {
+    return {
+      titulo: "Pago con tarjeta",
+      pasos: ["Esta opción de pago estará disponible próximamente."],
+      requiereConfirmacionManual: false,
+    };
+  },
+};
+
 const clubProvider: ProveedorPago = {
   metodo: "club",
   obtenerInstrucciones() {
@@ -58,6 +84,8 @@ const clubProvider: ProveedorPago = {
 
 export const proveedoresPago: Record<MetodoPago, ProveedorPago> = {
   bizum: bizumProvider,
+  transferencia: transferenciaProvider,
+  tarjeta: tarjetaProvider,
   // stripe: se añadirá aquí implementando ProveedorPago sin tocar el resto del flujo.
   stripe: bizumProvider,
   club: clubProvider,
