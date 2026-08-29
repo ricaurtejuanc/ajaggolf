@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { AlertTriangle, Search, Users, Wand2, X } from "lucide-react";
 import { moverJugador, moverBloque, autocompletarPorHandicap } from "./actions";
 import { formarBloques } from "@/lib/salidas/generar";
@@ -36,6 +37,7 @@ export function GruposGrid({
   sinAsignar: JugadorEnGrupoVista[];
   nombresPorLicencia: Record<string, string>;
 }) {
+  const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [busqueda, setBusqueda] = useState("");
 
@@ -55,17 +57,24 @@ export function GruposGrid({
     .filter((j) => j.conflictoJuegaCon);
 
   function mover(inscripcionId: string, valor: string) {
-    startTransition(() =>
-      moverJugador(torneoId, inscripcionId, valor === "" ? null : valor),
-    );
+    startTransition(async () => {
+      await moverJugador(torneoId, inscripcionId, valor === "" ? null : valor);
+      router.refresh();
+    });
   }
 
   function moverBloqueCompleto(inscripcionIds: string[], valor: string) {
-    startTransition(() => moverBloque(torneoId, inscripcionIds, valor === "" ? null : valor));
+    startTransition(async () => {
+      await moverBloque(torneoId, inscripcionIds, valor === "" ? null : valor);
+      router.refresh();
+    });
   }
 
   function autocompletar() {
-    startTransition(() => autocompletarPorHandicap(torneoId));
+    startTransition(async () => {
+      await autocompletarPorHandicap(torneoId);
+      router.refresh();
+    });
   }
 
   return (
