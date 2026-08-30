@@ -2,6 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database, Jugador } from "@/types/database";
 import type { User } from "@supabase/supabase-js";
 import { obtenerOrganizadorIdActual } from "@/lib/data/organizador";
+import { conReintentos } from "@/lib/supabase/retry";
 
 /**
  * Devuelve el registro de `jugadores` ligado al usuario autenticado,
@@ -18,7 +19,7 @@ export async function asegurarJugadorParaUsuario(
   // ficha de Campos/Tees/Slopes que sí es compartida a nivel de plataforma.
   let query = supabase.from("jugadores").select("*").eq("user_id", user.id);
   query = organizadorId ? query.eq("organizador_id", organizadorId) : query.is("organizador_id", null);
-  const { data: existente } = await query.maybeSingle();
+  const { data: existente } = await conReintentos(() => query.maybeSingle());
 
   if (existente) return existente;
 
@@ -68,18 +69,24 @@ export async function asegurarJugadorParaUsuario(
   const apellidos = familyName ?? nombreCompleto.trim().split(/\s+/).slice(1).join(" ");
   const telefono = (user.user_metadata?.telefono as string | undefined) ?? null;
 
-  const { data: creado, error } = await supabase
-    .from("jugadores")
-    .insert({
-      user_id: user.id,
-      nombre,
-      apellidos,
-      email: user.email ?? null,
-      telefono,
-      organizador_id: organizadorId,
-    })
-    .select("*")
-    .single();
+  // Reintentar un insert es seguro aquí: si el primer intento en realidad
+  // sí llegó a escribir (y solo se perdió la respuesta por un timeout de
+  // PostgREST), el reintento choca con el unique (user_id, organizador_id)
+  // y cae al camino de "ya creado" de abajo en vez de duplicar nada.
+  const { data: creado, error } = await conReintentos(() =>
+    supabase
+      .from("jugadores")
+      .insert({
+        user_id: user.id,
+        nombre,
+        apellidos,
+        email: user.email ?? null,
+        telefono,
+        organizador_id: organizadorId,
+      })
+      .select("*")
+      .single(),
+  );
 
   if (error) {
     // Otra petición concurrente para el mismo usuario en el mismo
@@ -92,7 +99,7 @@ export async function asegurarJugadorParaUsuario(
       queryYaCreado = organizadorId
         ? queryYaCreado.eq("organizador_id", organizadorId)
         : queryYaCreado.is("organizador_id", null);
-      const { data: yaCreado } = await queryYaCreado.single();
+      const { data: yaCreado } = await conReintentos(() => queryYaCreado.single());
       if (yaCreado) return yaCreado;
     }
     throw error;

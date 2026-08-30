@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/server";
 import { asegurarJugadorParaUsuario } from "@/lib/data/jugadores";
 import { obtenerBizumNumero } from "@/lib/data/configuracion";
 import { obtenerOrganizadorIdActual } from "@/lib/data/organizador";
+import { conReintentos } from "@/lib/supabase/retry";
 import { SignOutButton } from "./sign-out-button";
 import { PedidosList } from "./pedidos-list";
 import { RondasList } from "./rondas-list";
@@ -34,11 +35,13 @@ export default async function CuentaPage({
   // que incluir los que se inscribieron como invitado antes de tener
   // cuenta (pedido sin user_id) y cuya ficha de jugador se reclamó luego:
   // si no, esas inscripciones desaparecen de "Mis inscripciones".
-  const { data: inscripcionesJugador } = await supabase
-    .from("inscripciones")
-    .select("pedido_pago_id")
-    .eq("jugador_id", jugador.id)
-    .not("pedido_pago_id", "is", null);
+  const { data: inscripcionesJugador } = await conReintentos(() =>
+    supabase
+      .from("inscripciones")
+      .select("pedido_pago_id")
+      .eq("jugador_id", jugador.id)
+      .not("pedido_pago_id", "is", null),
+  );
   const idsPedidosInvitado = [
     ...new Set((inscripcionesJugador ?? []).map((i) => i.pedido_pago_id).filter((id) => id)),
   ];
@@ -67,7 +70,7 @@ export default async function CuentaPage({
   }
 
   const [{ data: pedidos }, bizumNumero, rondas] = await Promise.all([
-    pedidosQuery.order("created_at", { ascending: false }),
+    conReintentos(() => pedidosQuery.order("created_at", { ascending: false })),
     obtenerBizumNumero(),
     listarMisRondas(),
   ]);
