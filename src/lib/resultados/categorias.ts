@@ -46,15 +46,13 @@ export function ordenCategoriaClasificacion(categoria: CategoriaClasificacionPdf
  * cargar filas en la tabla manual de resultados; el admin siempre puede
  * cambiarlo fila a fila.
  *
- * En la práctica el nombre de la categoría de premios casi nunca es
- * literalmente "Primera"/"Segunda"/etc. (suele ser "Categoría 1", "Hasta 12",
- * "Otros"...), así que primero se prueba por palabra clave en el nombre y,
- * si no hay ninguna, con exactamente dos tramos de hándicap se asume la
- * convención española habitual: el tramo de hándicap más bajo es "Primera"
- * y el más alto "Segunda". Sin tramos configurados, sin hándicap conocido, o
- * con una forma de premios que no encaja en ningún caso anterior, "unica" es
- * la opción segura: nunca deja a un jugador fuera de la clasificación
- * general por una categoría mal adivinada.
+ * Solo se adivina cuando el nombre de la categoría de premios lo dice
+ * explícitamente ("Damas", "Senior", "Scratch", "Primera", "Segunda"...). En
+ * la práctica el nombre casi nunca es literal (suele ser "Categoría 1",
+ * "Hasta 12"...), así que sin una palabra clave clara el resultado es
+ * "unica": es mejor dejarlo sin dividir y que el admin lo reparta a mano
+ * fila a fila que arriesgarse a adivinar mal qué tramo es Primera y cuál
+ * Segunda.
  */
 export function adivinarCategoriaPublicacion(
   handicap: number | null,
@@ -97,13 +95,6 @@ export function adivinarCategoriaPublicacion(
   if (nombre.includes("scratch")) return "scratch";
   if (nombre.includes("segunda")) return "segunda";
   if (nombre.includes("primera")) return "primera";
-
-  if (conRango.length === 2) {
-    const ordenadas = [...conRango].sort(
-      (a, b) => (a.handicapDesde ?? -Infinity) - (b.handicapDesde ?? -Infinity),
-    );
-    return categoria === ordenadas[0] ? "primera" : "segunda";
-  }
 
   return "unica";
 }
