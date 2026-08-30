@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { listarInscritosDetallados } from "@/lib/data/inscripciones";
 import { formatearPrecio } from "@/lib/format";
 import { ExportarXlsButton } from "./exportar-xls-button";
+import { CancelarInscripcionButton } from "./cancelar-button";
 
 export const metadata: Metadata = { title: "Inscritos · Admin" };
 
@@ -67,6 +68,7 @@ export default async function AdminInscritosPage({
                 <th className="px-4 py-3 font-medium">Precio</th>
                 <th className="px-4 py-3 font-medium">Estado</th>
                 <th className="px-4 py-3 font-medium">Email</th>
+                <th className="px-4 py-3 font-medium"></th>
               </tr>
             </thead>
             <tbody>
@@ -85,6 +87,11 @@ export default async function AdminInscritosPage({
                     </span>
                   </td>
                   <td className="px-4 py-3 text-ajag-gris-500">{i.email ?? "—"}</td>
+                  <td className="px-4 py-3 text-right">
+                    {i.estado !== "cancelada" ? (
+                      <CancelarInscripcionButton inscripcionId={i.inscripcionId} />
+                    ) : null}
+                  </td>
                 </tr>
               ))}
             </tbody>

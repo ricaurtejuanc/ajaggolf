@@ -27,7 +27,7 @@ export default async function AdminTorneosPage() {
   const { data: torneos } = await supabase
     .from("torneos")
     .select("*")
-    .order("fecha", { ascending: false });
+    .order("fecha", { ascending: true });
 
   return (
     <div>

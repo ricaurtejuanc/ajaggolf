@@ -44,9 +44,6 @@ export default async function AdminEconomiaTorneoPage({
         </h1>
         <p className="mt-0.5 text-sm text-ajag-gris-500">{formatearFechaCorta(torneo.fecha)}</p>
         <div className="mt-3 flex flex-wrap gap-2">
-          <Link href={`/admin/torneos/${torneo.id}/editar`} className={claseEnlace}>
-            Editar torneo
-          </Link>
           <Link href={`/admin/torneos/${torneo.id}/inscritos`} className={claseEnlace}>
             Inscritos
           </Link>
