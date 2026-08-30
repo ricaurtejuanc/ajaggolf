@@ -26,7 +26,7 @@ export function SalidasTabs({
               : "border border-ajag-gris-200 text-ajag-verde-900 hover:bg-ajag-verde-50"
           }`}
         >
-          <FileUp size={16} /> Subir PDF
+          <FileUp size={16} /> Subir PDF o foto
         </button>
         <button
           type="button"

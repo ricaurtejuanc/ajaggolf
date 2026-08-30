@@ -19,20 +19,25 @@ export function HorariosPdfUploader({
 
   async function handleFile(e: ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
+    // Se limpia siempre: si no, volver a elegir el mismo archivo (tras un
+    // error, o para reemplazar el actual) no dispara el change.
+    e.target.value = "";
     if (!file) return;
 
     setSubiendo(true);
     setError(null);
 
     const supabase = createClient();
-    const path = `${torneoId}/${crypto.randomUUID()}.pdf`;
+    const esPdf = file.type === "application/pdf";
+    const extension = esPdf ? "pdf" : (file.name.split(".").pop() ?? "jpg");
+    const path = `${torneoId}/${crypto.randomUUID()}.${extension}`;
 
     const { error: uploadError } = await supabase.storage
       .from("horarios")
-      .upload(path, file, { upsert: false, contentType: "application/pdf" });
+      .upload(path, file, { upsert: false, contentType: file.type || undefined });
 
     if (uploadError) {
-      setError("No se pudo subir el PDF.");
+      setError("No se pudo subir el archivo.");
       setSubiendo(false);
       return;
     }
@@ -62,11 +67,11 @@ export function HorariosPdfUploader({
   return (
     <div className="card-ajag p-5">
       <h2 className="mb-1 font-display text-base font-semibold text-ajag-verde-900">
-        Horarios en PDF
+        Horarios en PDF o foto
       </h2>
       <p className="mb-3 text-sm text-ajag-gris-500">
-        Si el club manda el cuadro de horarios en PDF en vez de generarlo aquí arriba, súbelo y
-        se mostrará en la ficha pública del torneo.
+        Si el club manda el cuadro de horarios en PDF o en una foto en vez de generarlo aquí
+        arriba, súbelo y se mostrará en la ficha pública del torneo.
       </p>
 
       <div className="flex flex-wrap items-center gap-3">
@@ -78,13 +83,13 @@ export function HorariosPdfUploader({
               rel="noopener noreferrer"
               className="flex items-center gap-1.5 rounded-xl border border-ajag-gris-200 px-4 py-2.5 text-sm font-medium text-ajag-verde-900 hover:bg-ajag-verde-50"
             >
-              <FileText size={16} /> Ver PDF actual
+              <FileText size={16} /> Ver archivo actual
             </a>
             <button
               type="button"
               onClick={quitar}
               disabled={pending}
-              aria-label="Quitar PDF"
+              aria-label="Quitar archivo"
               className="flex size-9 items-center justify-center rounded-xl text-ajag-rojo-600 hover:bg-ajag-rojo-50 disabled:opacity-50"
             >
               <X size={16} />
@@ -93,10 +98,10 @@ export function HorariosPdfUploader({
         ) : null}
         <label className="flex cursor-pointer items-center gap-2 rounded-xl border border-ajag-gris-200 px-4 py-2.5 text-sm font-medium text-ajag-verde-900 hover:bg-ajag-verde-50">
           <FileUp size={16} />
-          {subiendo || pending ? "Subiendo..." : pdfUrl ? "Cambiar PDF" : "Subir PDF"}
+          {subiendo || pending ? "Subiendo..." : pdfUrl ? "Cambiar PDF o foto" : "Subir PDF o foto"}
           <input
             type="file"
-            accept="application/pdf"
+            accept="application/pdf,image/*"
             className="hidden"
             disabled={subiendo || pending}
             onChange={handleFile}

@@ -26,9 +26,10 @@ export default async function SalidasPublicasPage({
   const torneo = await obtenerTorneoPorSlug(slug);
   if (!torneo) notFound();
 
-  // El PDF oficial del club manda si existe: se embebe fijo, igual que la
-  // clasificación, en lugar de mostrar el cuadro generado por la app.
+  // El PDF/foto oficial del club manda si existe: se embebe fijo, igual que
+  // la clasificación, en lugar de mostrar el cuadro generado por la app.
   if (torneo.horarios_pdf_url) {
+    const esPdf = torneo.horarios_pdf_url.toLowerCase().split("?")[0].endsWith(".pdf");
     return (
       <div className="mx-auto max-w-4xl px-4 py-10">
         <Link href="/horarios" className="text-sm text-ajag-gris-500 hover:underline">
@@ -41,7 +42,16 @@ export default async function SalidasPublicasPage({
           {torneo.nombre}
         </h1>
         <div className="mt-6">
-          <PdfPreview url={torneo.horarios_pdf_url} alt={`Horarios de ${torneo.nombre}`} />
+          {esPdf ? (
+            <PdfPreview url={torneo.horarios_pdf_url} alt={`Horarios de ${torneo.nombre}`} />
+          ) : (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={torneo.horarios_pdf_url}
+              alt={`Horarios de ${torneo.nombre}`}
+              className="w-full rounded-2xl border border-ajag-gris-100"
+            />
+          )}
         </div>
         <a
           href={torneo.horarios_pdf_url}
