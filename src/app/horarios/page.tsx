@@ -2,13 +2,17 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { CalendarDays } from "lucide-react";
 import { listarTorneosPublicos, obtenerIdsConSalidaPublicada } from "@/lib/data/torneos";
+import { obtenerOrganizadorActual } from "@/lib/data/organizador";
 import { formatearFecha } from "@/lib/format";
 import type { Torneo } from "@/types/database";
 
 export const metadata: Metadata = { title: "Horarios" };
 
 export default async function HorariosPage() {
-  const torneos = await listarTorneosPublicos();
+  const [torneos, organizador] = await Promise.all([
+    listarTorneosPublicos(),
+    obtenerOrganizadorActual(),
+  ]);
   const idsConSalida = await obtenerIdsConSalidaPublicada(torneos.map((t) => t.id));
 
   const activos = torneos.filter((t) => t.estado === "publicado" || t.estado === "cerrado");
@@ -22,7 +26,8 @@ export default async function HorariosPage() {
     <div className="mx-auto max-w-4xl px-4 py-10">
       <h1 className="font-display text-3xl font-semibold text-ajag-verde-900">Horarios</h1>
       <p className="mt-2 max-w-2xl text-ajag-gris-500">
-        Consulta los horarios y cuadros de salida de cada torneo de AJAG.
+        Consulta los horarios y cuadros de salida de cada torneo de{" "}
+        {organizador?.nombre ?? "tu club"}.
       </p>
 
       {torneos.length === 0 ? (

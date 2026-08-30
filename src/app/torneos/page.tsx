@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { listarTorneosPublicos, obtenerInscritosPorTorneo } from "@/lib/data/torneos";
+import { obtenerOrganizadorActual } from "@/lib/data/organizador";
 import { createClient } from "@/lib/supabase/server";
 import { TorneoCard } from "@/components/torneos/torneo-card";
 import type { Torneo } from "@/types/database";
@@ -27,7 +28,10 @@ function agruparPorMes(torneos: Torneo[]) {
 }
 
 export default async function TorneosPage() {
-  const torneos = await listarTorneosPublicos();
+  const [torneos, organizador] = await Promise.all([
+    listarTorneosPublicos(),
+    obtenerOrganizadorActual(),
+  ]);
   // "Completo" sigue en el calendario como si estuviera publicado (con su
   // lazo rojo); solo "Finalizado" baja a Torneos disputados.
   const proximos = torneos.filter((t) => t.estado === "publicado" || t.estado === "cerrado");
@@ -52,8 +56,8 @@ export default async function TorneosPage() {
         Calendario de torneos
       </h1>
       <p className="mt-2 max-w-2xl text-ajag-gris-500">
-        Consulta los próximos torneos de AJAG e inscríbete online. El pago se
-        confirma por Bizum en unas pocas horas.
+        Consulta los próximos torneos de {organizador?.nombre ?? "tu club"} e inscríbete
+        online. El pago se confirma por Bizum en unas pocas horas.
       </p>
 
       {torneos.length === 0 ? (

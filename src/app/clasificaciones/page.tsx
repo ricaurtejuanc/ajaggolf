@@ -1,12 +1,17 @@
 import type { Metadata } from "next";
 import { listarTorneosPublicos, obtenerEstadoClasificacionPorTorneos } from "@/lib/data/torneos";
 import { listarLigasActivas } from "@/lib/data/ligas";
+import { obtenerOrganizadorActual } from "@/lib/data/organizador";
 import { ClasificacionesTabs } from "./clasificaciones-tabs";
 
 export const metadata: Metadata = { title: "Clasificaciones" };
 
 export default async function LigasPage() {
-  const [torneos, ligas] = await Promise.all([listarTorneosPublicos(), listarLigasActivas()]);
+  const [torneos, ligas, organizador] = await Promise.all([
+    listarTorneosPublicos(),
+    listarLigasActivas(),
+    obtenerOrganizadorActual(),
+  ]);
   const estadoClasificacion = await obtenerEstadoClasificacionPorTorneos(torneos);
 
   return (
@@ -15,8 +20,8 @@ export default async function LigasPage() {
         Clasificaciones
       </h1>
       <p className="mt-2 max-w-2xl text-ajag-gris-500">
-        Consulta la clasificación de cada torneo y de cada liga de AJAG,
-        incluido el Ranking y el Pool oficiales.
+        Consulta la clasificación de cada torneo y de cada liga de{" "}
+        {organizador?.nombre ?? "tu club"}, incluido el Ranking y el Pool oficiales.
       </p>
 
       <ClasificacionesTabs
