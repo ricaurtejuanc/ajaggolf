@@ -6,6 +6,7 @@ import { guardarRonda, type EstadoGuardarRonda } from "./actions";
 import { MODALIDADES, handicapDeJuego, resultadoDeRonda } from "@/lib/handicap/calculo";
 import type { TeeCatalogo } from "@/lib/data/campos-tees";
 import { HoyosConGolpe } from "./hoyos-con-golpe";
+import { TarjetaModal } from "./tarjeta-modal";
 
 const claseCampo =
   "mt-1 w-full rounded-xl border border-ajag-gris-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-ajag-verde-600";
@@ -86,6 +87,7 @@ export function CalculadoraHandicap({
   const [teeId, setTeeId] = useState("");
   const [recorridoSel, setRecorridoSel] = useState("");
   const [verHoyos, setVerHoyos] = useState(false);
+  const [verTarjeta, setVerTarjeta] = useState(false);
 
   const [campo, setCampo] = useState("");
   const [recorrido, setRecorrido] = useState("");
@@ -94,11 +96,54 @@ export function CalculadoraHandicap({
   const [slope, setSlope] = useState("");
   const [par, setPar] = useState("72");
 
+  // Paso 1 del buscador: club elegido (o "" mientras se está buscando).
+  const [clubSel, setClubSel] = useState("");
+  const [busquedaClub, setBusquedaClub] = useState("");
+
+  const clubes = useMemo(() => {
+    const vistos = new Set<string>();
+    for (const t of catalogo) vistos.add(t.club);
+    return [...vistos].sort((a, b) => a.localeCompare(b, "es"));
+  }, [catalogo]);
+
+  const clubesFiltrados = useMemo(() => {
+    const texto = busquedaClub.trim().toLowerCase();
+    if (!texto) return [];
+    return clubes.filter((c) => c.toLowerCase().includes(texto)).slice(0, 8);
+  }, [clubes, busquedaClub]);
+
   const recorridos = useMemo(() => {
     const vistos = new Map<string, string>();
     for (const t of catalogo) vistos.set(`${t.club} · ${t.recorrido}`, t.recorrido);
     return [...vistos.keys()].sort((a, b) => a.localeCompare(b, "es"));
   }, [catalogo]);
+
+  // Paso 2: recorridos del club elegido (solo el nombre del recorrido, sin
+  // repetir el club delante — ya se sabe cuál es).
+  const recorridosDelClub = useMemo(() => {
+    const vistos = new Set<string>();
+    for (const t of catalogo) if (t.club === clubSel) vistos.add(t.recorrido);
+    return [...vistos].sort((a, b) => a.localeCompare(b, "es"));
+  }, [catalogo, clubSel]);
+
+  function elegirClub(club: string) {
+    setClubSel(club);
+    setBusquedaClub("");
+    setTeeId("");
+    // Con un solo recorrido no tiene sentido obligar a elegirlo: se
+    // preselecciona directamente al elegir el club.
+    const recorridosDeEsteClub = [
+      ...new Set(catalogo.filter((t) => t.club === club).map((t) => t.recorrido)),
+    ];
+    setRecorridoSel(recorridosDeEsteClub.length === 1 ? `${club} · ${recorridosDeEsteClub[0]}` : "");
+  }
+
+  function cambiarClub() {
+    setClubSel("");
+    setBusquedaClub("");
+    setRecorridoSel("");
+    setTeeId("");
+  }
 
   const barrasDelRecorrido = useMemo(
     () => catalogo.filter((t) => `${t.club} · ${t.recorrido}` === recorridoSel),
@@ -182,6 +227,7 @@ export function CalculadoraHandicap({
                 setManual((v) => !v);
                 setTeeId("");
                 setRecorridoSel("");
+                cambiarClub();
               }}
               className="text-sm font-medium text-ajag-verde-700 hover:underline"
             >
@@ -285,57 +331,130 @@ export function CalculadoraHandicap({
                 Valoraciones oficiales de la RFEG: {catalogo.length} barras de {recorridos.length}{" "}
                 recorridos en Madrid y Andalucía.
               </p>
-              <div className="mt-3 grid gap-4 sm:grid-cols-2">
-                <div>
-                  <label htmlFor="recorrido_sel" className={claseEtiqueta}>
-                    Campo y recorrido
-                  </label>
-                  <select
-                    id="recorrido_sel"
-                    value={recorridoSel}
-                    onChange={(e) => {
-                      setRecorridoSel(e.target.value);
-                      setTeeId("");
-                    }}
-                    className={claseCampo}
-                  >
-                    <option value="">Elige un campo…</option>
-                    {recorridos.map((r) => (
-                      <option key={r} value={r}>
-                        {r}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label htmlFor="tee_sel" className={claseEtiqueta}>
-                    Barras
-                  </label>
-                  <select
-                    id="tee_sel"
-                    value={teeId}
-                    onChange={(e) => elegirTee(e.target.value)}
-                    disabled={!recorridoSel}
-                    className={`${claseCampo} disabled:opacity-50`}
-                  >
-                    <option value="">
-                      {recorridoSel ? "Elige las barras…" : "Elige antes el campo"}
-                    </option>
-                    {barrasDelRecorrido.map((t) => (
-                      <option key={t.id} value={t.id}>
-                        {t.tee} · {t.genero === "H" ? "caballeros" : "damas"}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+
+              {/* Paso 1: buscador de campo. */}
+              <div className="mt-3">
+                <label htmlFor="buscar_club" className={claseEtiqueta}>
+                  Campo de golf
+                </label>
+                {clubSel ? (
+                  <div className="mt-1 flex items-center justify-between gap-3 rounded-xl border border-ajag-gris-200 bg-ajag-verde-50/40 px-4 py-2.5">
+                    <span className="text-sm font-medium text-ajag-verde-900">{clubSel}</span>
+                    <button
+                      type="button"
+                      onClick={cambiarClub}
+                      className="shrink-0 rounded-full border border-ajag-verde-700 px-3 py-1 text-xs font-medium text-ajag-verde-700 transition hover:bg-ajag-verde-50"
+                    >
+                      Cambiar
+                    </button>
+                  </div>
+                ) : (
+                  <div className="relative">
+                    <input
+                      id="buscar_club"
+                      value={busquedaClub}
+                      onChange={(e) => setBusquedaClub(e.target.value)}
+                      placeholder="Buscar campo o ubicación..."
+                      autoComplete="off"
+                      className={claseCampo}
+                    />
+                    {clubesFiltrados.length > 0 ? (
+                      <ul className="absolute z-10 mt-1 max-h-56 w-full overflow-y-auto rounded-xl border border-ajag-gris-200 bg-white py-1 shadow-lg">
+                        {clubesFiltrados.map((c) => (
+                          <li key={c}>
+                            <button
+                              type="button"
+                              onClick={() => elegirClub(c)}
+                              className="w-full px-4 py-2 text-left text-sm text-ajag-verde-900 hover:bg-ajag-verde-50"
+                            >
+                              {c}
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : null}
+                  </div>
+                )}
               </div>
 
-              {teeCompleto ? (
-                <p className="mt-3 rounded-xl bg-ajag-verde-50 px-4 py-2.5 text-sm text-ajag-verde-900">
-                  CR <span className="font-medium">{cr}</span> · Slope{" "}
-                  <span className="font-medium">{slope}</span> · Par{" "}
-                  <span className="font-medium">{par}</span>
-                </p>
+              {/* Paso 2: recorrido del campo elegido. */}
+              {clubSel ? (
+                <div className="mt-4">
+                  <label className={claseEtiqueta}>Recorrido</label>
+                  <div className="mt-1 flex flex-wrap gap-2">
+                    {recorridosDelClub.map((r) => {
+                      const clave = `${clubSel} · ${r}`;
+                      const activo = recorridoSel === clave;
+                      return (
+                        <button
+                          key={r}
+                          type="button"
+                          onClick={() => {
+                            setRecorridoSel(clave);
+                            setTeeId("");
+                          }}
+                          className={`rounded-xl px-4 py-2.5 text-sm font-medium transition ${
+                            activo
+                              ? "bg-ajag-verde-700 text-white"
+                              : "border border-ajag-gris-200 text-ajag-verde-900 hover:bg-ajag-verde-50"
+                          }`}
+                        >
+                          {r}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              ) : null}
+
+              {/* Paso 3: barra de salida del recorrido elegido. */}
+              {recorridoSel ? (
+                <div className="mt-4">
+                  <label className={claseEtiqueta}>Tee de salida</label>
+                  <div className="mt-1 grid gap-2 sm:grid-cols-2">
+                    {barrasDelRecorrido.map((t) => {
+                      const activo = teeId === t.id;
+                      return (
+                        <button
+                          key={t.id}
+                          type="button"
+                          onClick={() => elegirTee(t.id)}
+                          className={`rounded-xl px-4 py-2.5 text-left text-sm transition ${
+                            activo
+                              ? "bg-ajag-verde-700 text-white"
+                              : "border border-ajag-gris-200 text-ajag-verde-900 hover:bg-ajag-verde-50"
+                          }`}
+                        >
+                          <span className="font-medium">
+                            {t.tee} ({t.genero === "H" ? "caballeros" : "damas"})
+                          </span>
+                          <span className={`block text-xs ${activo ? "text-white/80" : "text-ajag-gris-500"}`}>
+                            CR {t.cr} · Slope {t.slope} · Par {t.par}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              ) : null}
+
+              {/* Paso 4: ver la tarjeta del recorrido elegido. */}
+              {teeId ? (
+                <button
+                  type="button"
+                  onClick={() => setVerTarjeta(true)}
+                  className="mt-4 rounded-xl border border-ajag-verde-700 px-4 py-2 text-sm font-medium text-ajag-verde-700 transition hover:bg-ajag-verde-50"
+                >
+                  Ver tarjeta
+                </button>
+              ) : null}
+
+              {verTarjeta && teeId ? (
+                <TarjetaModal
+                  titulo={`${campo} — ${recorrido} — ${tee}`}
+                  teeId={teeId}
+                  onClose={() => setVerTarjeta(false)}
+                />
               ) : null}
 
               {/* El cálculo usa el estado; al guardar la ronda se mandan los

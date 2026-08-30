@@ -48,9 +48,14 @@ export function CamposList({ clubes, esOwner }: { clubes: Club[]; esOwner: boole
   return (
     <div className="flex flex-col gap-6">
       <form action={dispatchAlta} className="card-ajag flex flex-col gap-4 p-5">
-        <h2 className="font-display text-base font-semibold text-ajag-verde-900">
-          Añadir campo/recorrido
-        </h2>
+        <div>
+          <h2 className="font-display text-base font-semibold text-ajag-verde-900">
+            Añadir campo/recorrido
+          </h2>
+          <p className="mt-0.5 text-xs text-ajag-gris-500">
+            Se usa para sugerir campo y recorrido al crear un torneo.
+          </p>
+        </div>
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
             <label htmlFor="nombre" className="text-sm font-medium text-ajag-verde-900">
@@ -93,20 +98,30 @@ export function CamposList({ clubes, esOwner }: { clubes: Club[]; esOwner: boole
         </button>
       </form>
 
-      <input
-        type="text"
-        value={busqueda}
-        onChange={(e) => setBusqueda(e.target.value)}
-        placeholder="Buscar club o recorrido..."
-        className="w-full rounded-xl border border-ajag-gris-200 px-4 py-2.5 text-sm outline-none focus:border-ajag-verde-600"
-      />
+      <div className="border-t border-ajag-gris-100 pt-6">
+        <h2 className="font-display text-lg font-semibold text-ajag-verde-900">Slope de Campos</h2>
+        <p className="mt-0.5 mb-4 text-sm text-ajag-gris-500">
+          Valoraciones (Course Rating, Slope y par) de cada barra por recorrido: es lo que
+          alimenta la calculadora de hándicap. Busca un club o recorrido y edita sus barras.
+        </p>
 
-      <div className="flex flex-col gap-3">
-        {clubesFiltrados.length === 0 ? (
-          <p className="text-sm text-ajag-gris-500">Sin resultados.</p>
-        ) : (
-          clubesFiltrados.map((club) => <ClubCard key={club.nombre} club={club} esOwner={esOwner} />)
-        )}
+        <input
+          type="text"
+          value={busqueda}
+          onChange={(e) => setBusqueda(e.target.value)}
+          placeholder="Buscar club o recorrido..."
+          className="w-full rounded-xl border border-ajag-gris-200 px-4 py-2.5 text-sm outline-none focus:border-ajag-verde-600"
+        />
+
+        <div className="mt-4 flex flex-col gap-3">
+          {clubesFiltrados.length === 0 ? (
+            <p className="text-sm text-ajag-gris-500">Sin resultados.</p>
+          ) : (
+            clubesFiltrados.map((club) => (
+              <ClubCard key={club.nombre} club={club} esOwner={esOwner} />
+            ))
+          )}
+        </div>
       </div>
     </div>
   );
