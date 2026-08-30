@@ -15,6 +15,7 @@ import {
   PiggyBank,
 } from "lucide-react";
 import { getUsuarioAdmin } from "@/lib/auth";
+import { obtenerOrganizadorActual } from "@/lib/data/organizador";
 
 const adminLinks = [
   { href: "/admin", label: "Resumen", icon: LayoutDashboard },
@@ -34,12 +35,21 @@ export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
   const admin = await getUsuarioAdmin();
   if (!admin) redirect("/login?next=/admin");
 
+  // La cabecera del panel llevaba el logo de AJAG fijo, así que un admin de
+  // cualquier otro organizador gestionaba su club bajo una marca ajena.
+  const organizador = await obtenerOrganizadorActual();
+
   return (
     <div className="mx-auto flex max-w-6xl gap-6 px-4 py-8">
       <aside className="hidden w-56 shrink-0 md:block print:hidden">
         <div className="sticky top-24 flex flex-col gap-1">
           <div className="mb-3 flex items-center gap-2 px-2">
-            <Image src="/Logo_AJAG.svg" alt="AJAG" width={28} height={28} />
+            <Image
+              src={organizador?.logo_url || "/Logo_AJAG.svg"}
+              alt={organizador?.nombre ?? "AJAG Golf"}
+              width={28}
+              height={28}
+            />
             <span className="font-display text-sm font-semibold text-ajag-verde-900">
               Panel admin
             </span>

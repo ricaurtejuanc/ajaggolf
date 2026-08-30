@@ -21,12 +21,29 @@ const fraunces = Fraunces({
   weight: ["500", "600", "700"],
 });
 
+// Icono de la plataforma, para el dominio paraguas y como respaldo de un
+// organizador que todavía no haya subido logo. Antes el favicon era
+// `src/app/icon.png` (convención de fichero de Next), y eso hacía que TODOS
+// los organizadores enseñaran el logo de AJAG en la pestaña del navegador:
+// los iconos por fichero tienen prioridad sobre `generateMetadata`, así que
+// no había forma de personalizarlos por tenant sin retirar ese fichero.
+// AJAG usa ahora su logo como cualquier otro organizador.
+const ICONO_PLATAFORMA = "/icon-aftergolf.png";
+
 export async function generateMetadata(): Promise<Metadata> {
-  const organizador = await obtenerOrganizadorActual();
+  const cabeceras = await headers();
+  // El dominio de la plataforma (y /god) no es el sitio de ningún
+  // organizador: lleva el icono de AfterGolf, no el de quien resuelva por
+  // dominio como respaldo.
+  const esPlataforma = cabeceras.get("x-show-landing") === "1";
+
+  const organizador = esPlataforma ? null : await obtenerOrganizadorActual();
   const nombre = organizador?.nombre ?? "AJAG Golf";
+
   return {
     title: { default: nombre, template: `%s · ${nombre}` },
     description: `Calendario de torneos, inscripciones, salidas y clasificaciones de ${nombre}.`,
+    icons: { icon: organizador?.logo_url ?? ICONO_PLATAFORMA },
   };
 }
 
