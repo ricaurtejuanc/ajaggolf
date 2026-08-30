@@ -5,6 +5,7 @@ import Link from "next/link";
 import { guardarRonda, type EstadoGuardarRonda } from "./actions";
 import { MODALIDADES, handicapDeJuego, resultadoDeRonda } from "@/lib/handicap/calculo";
 import type { TeeCatalogo } from "@/lib/data/campos-tees";
+import { HoyosConGolpe } from "./hoyos-con-golpe";
 
 const claseCampo =
   "mt-1 w-full rounded-xl border border-ajag-gris-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-ajag-verde-600";
@@ -84,6 +85,7 @@ export function CalculadoraHandicap({
   const [manual, setManual] = useState(false);
   const [teeId, setTeeId] = useState("");
   const [recorridoSel, setRecorridoSel] = useState("");
+  const [verHoyos, setVerHoyos] = useState(false);
 
   const [campo, setCampo] = useState("");
   const [recorrido, setRecorrido] = useState("");
@@ -445,9 +447,10 @@ export function CalculadoraHandicap({
 
         {pestana === "antes" ? (
           hcp ? (
-            <div className="grid gap-4 sm:grid-cols-2">
-              <Resultado
-                label="Hándicap de juego"
+            <>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <Resultado
+                  label="Hándicap de juego"
                 valor={String(hcp.handicapJuego)}
                 nota={`Valor exacto ${hcp.exacto.toFixed(2)}`}
                 destacado
@@ -463,7 +466,24 @@ export function CalculadoraHandicap({
                 }
                 nota="Según el índice de hándicap de cada hoyo en la tarjeta."
               />
-            </div>
+              </div>
+
+              {/* La tarjeta hoyo a hoyo solo existe para los campos del catálogo. */}
+              {teeId && !manual ? (
+                <div className="card-ajag p-5">
+                  <button
+                    type="button"
+                    onClick={() => setVerHoyos((v) => !v)}
+                    className="text-sm font-medium text-ajag-verde-700 hover:underline"
+                  >
+                    {verHoyos ? "Ocultar la tarjeta" : "Ver hoyos con golpe"}
+                  </button>
+                  {verHoyos ? (
+                    <HoyosConGolpe teeId={teeId} handicapJuego={hcp.handicapJuego} />
+                  ) : null}
+                </div>
+              ) : null}
+            </>
           ) : (
             <div className="card-ajag p-6 text-center text-sm text-ajag-gris-500">
               Rellena tu hándicap y los datos del tee para ver tus golpes de ventaja.
