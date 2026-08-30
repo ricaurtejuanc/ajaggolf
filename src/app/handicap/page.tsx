@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { getUsuarioActual } from "@/lib/auth";
+import { listarTeesCatalogo } from "@/lib/data/campos-tees";
 import { CalculadoraHandicap } from "./calculadora";
 
 export const metadata: Metadata = {
@@ -9,7 +10,7 @@ export const metadata: Metadata = {
 };
 
 export default async function HandicapPage() {
-  const user = await getUsuarioActual();
+  const [user, tees] = await Promise.all([getUsuarioActual(), listarTeesCatalogo()]);
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-10">
@@ -22,7 +23,7 @@ export default async function HandicapPage() {
       </p>
 
       <div className="mt-6">
-        <CalculadoraHandicap haySesion={Boolean(user)} />
+        <CalculadoraHandicap haySesion={Boolean(user)} catalogo={tees} />
       </div>
     </div>
   );

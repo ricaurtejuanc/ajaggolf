@@ -353,6 +353,33 @@ export type Ronda = {
   created_at: string;
 };
 
+/**
+ * Valoración oficial (RFEG) de una barra de un recorrido: es de donde salen
+ * el CR, el slope y el par que usa la calculadora de hándicap.
+ */
+export type CampoTee = {
+  id: string;
+  federacion: string;
+  club_code: string;
+  club_nombre: string;
+  recorrido: string;
+  tee: string;
+  genero: "H" | "M";
+  cr: number;
+  slope: number;
+  par: number;
+  created_at: string;
+};
+
+/** Tarjeta hoyo a hoyo de una barra: metros, par e índice de hándicap. */
+export type CampoHoyo = {
+  campo_tee_id: string;
+  hoyo: number;
+  metros: number;
+  par: number;
+  hcp: number;
+};
+
 export type TipoMovimiento = "ingreso" | "gasto";
 
 /**
@@ -446,6 +473,8 @@ export type Database = {
       patrocinadores: TableDef<Patrocinador>;
       movimientos_economicos: TableDef<MovimientoEconomico>;
       rondas: TableDef<Ronda>;
+      campo_tees: TableDef<CampoTee>;
+      campo_hoyos: TableDef<CampoHoyo>;
     };
     Views: {
       salidas_publicadas: ViewDef<SalidaPublicada>;

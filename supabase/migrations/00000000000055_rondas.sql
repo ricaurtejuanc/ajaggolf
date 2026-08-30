@@ -18,7 +18,7 @@ create table rondas (
   tee text,
 
   course_rating numeric(4,1) not null,
-  slope_rating integer not null check (slope_rating between 55 and 155),
+  slope_rating integer not null check (slope_rating between 50 and 155),
   par integer not null,
 
   handicap_index numeric(4,1) not null,

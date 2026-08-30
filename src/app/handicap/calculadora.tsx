@@ -1,9 +1,10 @@
 "use client";
 
-import { useActionState, useState, useSyncExternalStore } from "react";
+import { useActionState, useMemo, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { guardarRonda, type EstadoGuardarRonda } from "./actions";
 import { MODALIDADES, handicapDeJuego, resultadoDeRonda } from "@/lib/handicap/calculo";
+import type { TeeCatalogo } from "@/lib/data/campos-tees";
 
 const claseCampo =
   "mt-1 w-full rounded-xl border border-ajag-gris-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-ajag-verde-600";
@@ -55,7 +56,13 @@ function Resultado({
   );
 }
 
-export function CalculadoraHandicap({ haySesion }: { haySesion: boolean }) {
+export function CalculadoraHandicap({
+  haySesion,
+  catalogo,
+}: {
+  haySesion: boolean;
+  catalogo: TeeCatalogo[];
+}) {
   const [pestana, setPestana] = useState<"antes" | "despues">("antes");
 
   const hiGuardado = useSyncExternalStore(sinSuscripcion, leerHiGuardado, () => "");
@@ -72,12 +79,43 @@ export function CalculadoraHandicap({ haySesion }: { haySesion: boolean }) {
   }
 
   const [modalidad, setModalidad] = useState(1);
+  // El catálogo de la federación cubre Madrid y Andalucía; para cualquier
+  // otro campo se sigue pudiendo teclear la valoración a mano.
+  const [manual, setManual] = useState(false);
+  const [teeId, setTeeId] = useState("");
+  const [recorridoSel, setRecorridoSel] = useState("");
+
   const [campo, setCampo] = useState("");
   const [recorrido, setRecorrido] = useState("");
   const [tee, setTee] = useState("");
   const [cr, setCr] = useState("");
   const [slope, setSlope] = useState("");
   const [par, setPar] = useState("72");
+
+  const recorridos = useMemo(() => {
+    const vistos = new Map<string, string>();
+    for (const t of catalogo) vistos.set(`${t.club} · ${t.recorrido}`, t.recorrido);
+    return [...vistos.keys()].sort((a, b) => a.localeCompare(b, "es"));
+  }, [catalogo]);
+
+  const barrasDelRecorrido = useMemo(
+    () => catalogo.filter((t) => `${t.club} · ${t.recorrido}` === recorridoSel),
+    [catalogo, recorridoSel],
+  );
+
+  // Elegir barra rellena CR/slope/par: son los valores que van al cálculo y
+  // los que se copian en la ronda al guardarla.
+  function elegirTee(id: string) {
+    setTeeId(id);
+    const t = catalogo.find((x) => x.id === id);
+    if (!t) return;
+    setCampo(t.club);
+    setRecorrido(t.recorrido);
+    setTee(`${t.tee} (${t.genero === "H" ? "caballeros" : "damas"})`);
+    setCr(String(t.cr));
+    setSlope(String(t.slope));
+    setPar(String(t.par));
+  }
   const [bruto, setBruto] = useState("");
   const [pcc, setPcc] = useState("0");
   const [fecha, setFecha] = useState(() => new Date().toISOString().slice(0, 10));
@@ -132,97 +170,182 @@ export function CalculadoraHandicap({ haySesion }: { haySesion: boolean }) {
 
       <form action={accionGuardar} className="mt-4 flex flex-col gap-4">
         <div className="card-ajag p-5">
-          <h2 className="font-display text-base font-semibold text-ajag-verde-900">
-            El campo que juegas
-          </h2>
-          <p className="mt-0.5 text-sm text-ajag-gris-500">
-            El Course Rating, el Slope y el par vienen en la tarjeta del campo, junto al color
-            de cada barra.
-          </p>
-
-          <div className="mt-3 grid gap-4 sm:grid-cols-2">
-            <div>
-              <label htmlFor="campo" className={claseEtiqueta}>
-                Campo
-              </label>
-              <input
-                id="campo"
-                name="campo"
-                value={campo}
-                onChange={(e) => setCampo(e.target.value)}
-                placeholder="Ej. Real Club de Campo"
-                className={claseCampo}
-              />
-            </div>
-            <div>
-              <label htmlFor="recorrido" className={claseEtiqueta}>
-                Recorrido (opcional)
-              </label>
-              <input
-                id="recorrido"
-                name="recorrido"
-                value={recorrido}
-                onChange={(e) => setRecorrido(e.target.value)}
-                className={claseCampo}
-              />
-            </div>
-            <div>
-              <label htmlFor="tee" className={claseEtiqueta}>
-                Barras (opcional)
-              </label>
-              <input
-                id="tee"
-                name="tee"
-                value={tee}
-                onChange={(e) => setTee(e.target.value)}
-                placeholder="Amarillas, rojas…"
-                className={claseCampo}
-              />
-            </div>
-            <div className="grid grid-cols-3 gap-3">
-              <div>
-                <label htmlFor="course_rating" className={claseEtiqueta}>
-                  CR
-                </label>
-                <input
-                  id="course_rating"
-                  name="course_rating"
-                  inputMode="decimal"
-                  value={cr}
-                  onChange={(e) => setCr(e.target.value)}
-                  placeholder="71,4"
-                  className={claseCampo}
-                />
-              </div>
-              <div>
-                <label htmlFor="slope_rating" className={claseEtiqueta}>
-                  Slope
-                </label>
-                <input
-                  id="slope_rating"
-                  name="slope_rating"
-                  inputMode="numeric"
-                  value={slope}
-                  onChange={(e) => setSlope(e.target.value)}
-                  placeholder="128"
-                  className={claseCampo}
-                />
-              </div>
-              <div>
-                <label htmlFor="par" className={claseEtiqueta}>
-                  Par
-                </label>
-                <input
-                  id="par"
-                  name="par"
-                  inputMode="numeric"
-                  value={par}
-                  onChange={(e) => setPar(e.target.value)}
-                  className={claseCampo}
-                />
-              </div>
-            </div>
+          <div className="flex flex-wrap items-baseline justify-between gap-2">
+            <h2 className="font-display text-base font-semibold text-ajag-verde-900">
+              El campo que juegas
+            </h2>
+            <button
+              type="button"
+              onClick={() => {
+                setManual((v) => !v);
+                setTeeId("");
+                setRecorridoSel("");
+              }}
+              className="text-sm font-medium text-ajag-verde-700 hover:underline"
+            >
+              {manual ? "Buscar en el catálogo" : "Mi campo no está en la lista"}
+            </button>
           </div>
+
+          {manual ? (
+            <>
+              <p className="mt-0.5 text-sm text-ajag-gris-500">
+                El Course Rating, el Slope y el par vienen en la tarjeta del campo, junto al
+                color de cada barra.
+              </p>
+              <div className="mt-3 grid gap-4 sm:grid-cols-2">
+                <div>
+                  <label htmlFor="campo" className={claseEtiqueta}>
+                    Campo
+                  </label>
+                  <input
+                    id="campo"
+                    name="campo"
+                    value={campo}
+                    onChange={(e) => setCampo(e.target.value)}
+                    placeholder="Ej. Real Club de Campo"
+                    className={claseCampo}
+                  />
+                </div>
+                <div>
+                  <label htmlFor="recorrido" className={claseEtiqueta}>
+                    Recorrido (opcional)
+                  </label>
+                  <input
+                    id="recorrido"
+                    name="recorrido"
+                    value={recorrido}
+                    onChange={(e) => setRecorrido(e.target.value)}
+                    className={claseCampo}
+                  />
+                </div>
+                <div>
+                  <label htmlFor="tee" className={claseEtiqueta}>
+                    Barras (opcional)
+                  </label>
+                  <input
+                    id="tee"
+                    name="tee"
+                    value={tee}
+                    onChange={(e) => setTee(e.target.value)}
+                    placeholder="Amarillas, rojas…"
+                    className={claseCampo}
+                  />
+                </div>
+                <div className="grid grid-cols-3 gap-3">
+                  <div>
+                    <label htmlFor="course_rating" className={claseEtiqueta}>
+                      CR
+                    </label>
+                    <input
+                      id="course_rating"
+                      name="course_rating"
+                      inputMode="decimal"
+                      value={cr}
+                      onChange={(e) => setCr(e.target.value)}
+                      placeholder="71,4"
+                      className={claseCampo}
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="slope_rating" className={claseEtiqueta}>
+                      Slope
+                    </label>
+                    <input
+                      id="slope_rating"
+                      name="slope_rating"
+                      inputMode="numeric"
+                      value={slope}
+                      onChange={(e) => setSlope(e.target.value)}
+                      placeholder="128"
+                      className={claseCampo}
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="par" className={claseEtiqueta}>
+                      Par
+                    </label>
+                    <input
+                      id="par"
+                      name="par"
+                      inputMode="numeric"
+                      value={par}
+                      onChange={(e) => setPar(e.target.value)}
+                      className={claseCampo}
+                    />
+                  </div>
+                </div>
+              </div>
+            </>
+          ) : (
+            <>
+              <p className="mt-0.5 text-sm text-ajag-gris-500">
+                Valoraciones oficiales de la RFEG: {catalogo.length} barras de {recorridos.length}{" "}
+                recorridos en Madrid y Andalucía.
+              </p>
+              <div className="mt-3 grid gap-4 sm:grid-cols-2">
+                <div>
+                  <label htmlFor="recorrido_sel" className={claseEtiqueta}>
+                    Campo y recorrido
+                  </label>
+                  <select
+                    id="recorrido_sel"
+                    value={recorridoSel}
+                    onChange={(e) => {
+                      setRecorridoSel(e.target.value);
+                      setTeeId("");
+                    }}
+                    className={claseCampo}
+                  >
+                    <option value="">Elige un campo…</option>
+                    {recorridos.map((r) => (
+                      <option key={r} value={r}>
+                        {r}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label htmlFor="tee_sel" className={claseEtiqueta}>
+                    Barras
+                  </label>
+                  <select
+                    id="tee_sel"
+                    value={teeId}
+                    onChange={(e) => elegirTee(e.target.value)}
+                    disabled={!recorridoSel}
+                    className={`${claseCampo} disabled:opacity-50`}
+                  >
+                    <option value="">
+                      {recorridoSel ? "Elige las barras…" : "Elige antes el campo"}
+                    </option>
+                    {barrasDelRecorrido.map((t) => (
+                      <option key={t.id} value={t.id}>
+                        {t.tee} · {t.genero === "H" ? "caballeros" : "damas"}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {teeCompleto ? (
+                <p className="mt-3 rounded-xl bg-ajag-verde-50 px-4 py-2.5 text-sm text-ajag-verde-900">
+                  CR <span className="font-medium">{cr}</span> · Slope{" "}
+                  <span className="font-medium">{slope}</span> · Par{" "}
+                  <span className="font-medium">{par}</span>
+                </p>
+              ) : null}
+
+              {/* El cálculo usa el estado; al guardar la ronda se mandan los
+                  valores ya resueltos del tee elegido. */}
+              <input type="hidden" name="campo" value={campo} />
+              <input type="hidden" name="recorrido" value={recorrido} />
+              <input type="hidden" name="tee" value={tee} />
+              <input type="hidden" name="course_rating" value={cr} />
+              <input type="hidden" name="slope_rating" value={slope} />
+              <input type="hidden" name="par" value={par} />
+            </>
+          )}
         </div>
 
         <div className="card-ajag p-5">

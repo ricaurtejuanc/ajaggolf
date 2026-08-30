@@ -39,7 +39,7 @@ export async function guardarRonda(
   if (![cr, slope, par, handicapIndex, bruto].every(Number.isFinite)) {
     return { ok: false, error: "Revisa los datos: hay algún número mal." };
   }
-  if (slope < 55 || slope > 155) return { ok: false, error: "El slope va de 55 a 155." };
+  if (slope < 50 || slope > 155) return { ok: false, error: "El slope no es válido." };
   if (par < 27 || par > 90) return { ok: false, error: "El par no parece válido." };
 
   const tee = { cr, slope, par };
