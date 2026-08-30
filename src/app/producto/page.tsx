@@ -6,13 +6,14 @@ import {
   Wallet,
   Flag,
   Handshake,
+  PiggyBank,
   Settings,
 } from "lucide-react";
 
 export const metadata: Metadata = {
   title: "AfterGolf Torneos — software de torneos para clubes y asociaciones",
   description:
-    "Calendario, inscripciones, pagos, salidas, clasificaciones y patrocinadores, todo gestionado desde una única plataforma y con la identidad de tu organización.",
+    "Calendario, inscripciones, pagos, salidas, clasificaciones, patrocinadores y control económico, todo gestionado desde una única plataforma y con la identidad de tu organización.",
 };
 
 const caracteristicas = [
@@ -47,6 +48,12 @@ const caracteristicas = [
       "Da visibilidad a las empresas que apoyan tus torneos con un espacio propio para mostrar sus logos, información y presencia durante la competición.",
   },
   {
+    icon: PiggyBank,
+    titulo: "Economía y rentabilidad",
+    texto:
+      "Controla ingresos, gastos y beneficio, del club entero y torneo a torneo: lo que entra por inscripciones se calcula solo, y tú añades el pago al campo, los regalos, el catering o los patrocinios para ver el margen real de cada prueba.",
+  },
+  {
     icon: Settings,
     titulo: "Panel de administración",
     texto:
@@ -77,8 +84,9 @@ export default function ProductoLandingPage() {
         </h1>
         <div className="mx-auto mt-5 h-px w-16 bg-aftergolf-oro-500" />
         <p className="mx-auto mt-5 max-w-xl text-aftergolf-verde-800/80">
-          Calendario, inscripciones, pagos, salidas, clasificaciones y patrocinadores, todo
-          gestionado desde una única plataforma y con la identidad de tu organización.
+          Calendario, inscripciones, pagos, salidas, clasificaciones, patrocinadores y control
+          económico, todo gestionado desde una única plataforma y con la identidad de tu
+          organización.
         </p>
         <p className="mx-auto mt-4 max-w-xl font-serif text-lg font-semibold text-aftergolf-verde-900">
           Tu espacio. Tu marca. Tus torneos.
@@ -128,9 +136,12 @@ export default function ProductoLandingPage() {
         <h2 className="mx-auto max-w-2xl text-center font-serif text-2xl font-bold text-aftergolf-verde-900">
           Todo lo que necesitas para organizar tus torneos
         </h2>
-        <div className="mx-auto mt-8 grid max-w-5xl gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mx-auto mt-8 flex max-w-5xl flex-wrap justify-center gap-6">
           {caracteristicas.map((c) => (
-            <div key={c.titulo} className="card-aftergolf p-5">
+            <div
+              key={c.titulo}
+              className="card-aftergolf w-full p-5 sm:w-[calc(50%-0.75rem)] lg:w-[calc(33.333%-1rem)]"
+            >
               <c.icon size={22} className="text-aftergolf-verde-700" />
               <p className="mt-3 font-serif text-base font-bold text-aftergolf-verde-900">
                 {c.titulo}
