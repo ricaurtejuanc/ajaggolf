@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { obtenerEconomiaTorneo } from "@/lib/data/economia";
+import { economiaActiva } from "@/lib/data/configuracion";
+import { getUsuarioAdmin } from "@/lib/auth";
 import { formatearPrecio, formatearFechaCorta } from "@/lib/format";
 import { KpisEconomia, Dato, DesgloseCategorias } from "../componentes";
 import { TablaMovimientos } from "../tabla-movimientos";
@@ -18,6 +20,14 @@ export default async function AdminEconomiaTorneoPage({
   params: Promise<{ torneoId: string }>;
 }) {
   const { torneoId } = await params;
+
+  // Con la economía apagada esta ficha no existe para el club: se manda al
+  // resumen, que es donde está el interruptor para volver a encenderla.
+  const admin = await getUsuarioAdmin();
+  if (admin?.organizador_id && !(await economiaActiva(admin.organizador_id))) {
+    redirect("/admin/economia");
+  }
+
   const datos = await obtenerEconomiaTorneo(torneoId);
   if (!datos) notFound();
 

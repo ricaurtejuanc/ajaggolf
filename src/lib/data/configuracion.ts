@@ -45,3 +45,21 @@ export async function obtenerCategoriasExtras(): Promise<CategoriaExtra[]> {
 
   return Array.isArray(data?.valor) ? (data.valor as CategoriaExtra[]) : [];
 }
+
+/**
+ * Si este organizador lleva o no la economía (ingresos/gastos) en la
+ * plataforma. Por defecto sí: la sección ya existía cuando se añadió el
+ * interruptor, así que un club que no haya tocado nada la sigue viendo igual;
+ * quien no quiera llevarla la apaga desde /admin/economia.
+ */
+export async function economiaActiva(organizadorId: string): Promise<boolean> {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("configuracion")
+    .select("valor")
+    .eq("clave", "economia_activa")
+    .eq("organizador_id", organizadorId)
+    .maybeSingle();
+
+  return typeof data?.valor === "boolean" ? data.valor : true;
+}

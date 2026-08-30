@@ -149,3 +149,30 @@ export async function actualizarMovimiento(
   if (previo?.torneo_id) revalidatePath(`/admin/economia/${previo.torneo_id}`);
   return { ok: true, error: null };
 }
+
+/**
+ * Enciende o apaga la sección de economía para este organizador. Apagarla no
+ * borra nada: los movimientos ya registrados se quedan donde están y vuelven
+ * a verse en cuanto se reactiva. Solo deja de ofrecerse en el menú y en la
+ * ficha de cada torneo.
+ */
+export async function alternarEconomia(activa: boolean) {
+  const admin = await getUsuarioAdmin();
+  if (!admin?.organizador_id) return;
+
+  const supabase = await createClient();
+  await supabase.from("configuracion").upsert(
+    {
+      clave: "economia_activa",
+      organizador_id: admin.organizador_id,
+      valor: activa,
+      actualizado_por: admin.id,
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: "organizador_id,clave" },
+  );
+
+  // El interruptor cambia el menú lateral (layout de /admin) y los botones de
+  // cada torneo, no solo esta página.
+  revalidatePath("/admin", "layout");
+}

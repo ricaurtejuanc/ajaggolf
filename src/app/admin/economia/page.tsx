@@ -1,11 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { obtenerResumenEconomia } from "@/lib/data/economia";
+import { economiaActiva } from "@/lib/data/configuracion";
+import { getUsuarioAdmin } from "@/lib/auth";
 import { formatearPrecio, formatearFechaCorta } from "@/lib/format";
 import { KpisEconomia } from "./componentes";
 import { TablaMovimientos } from "./tabla-movimientos";
 import { MovimientoForm } from "./movimiento-form";
 import { FiltroAnio } from "./filtro-anio";
+import { ToggleEconomia } from "./toggle-economia";
 
 export const metadata: Metadata = { title: "Economía · Admin" };
 
@@ -16,6 +19,22 @@ export default async function AdminEconomiaPage({
 }) {
   const { anio: anioParam } = await searchParams;
   const anio = anioParam && anioParam !== "todos" ? Number(anioParam) : undefined;
+
+  // Con la economía apagada la página sigue siendo accesible, pero solo
+  // enseña el interruptor: es el único sitio desde el que volver a encenderla.
+  const admin = await getUsuarioAdmin();
+  const activa = admin?.organizador_id ? await economiaActiva(admin.organizador_id) : true;
+  if (!activa) {
+    return (
+      <div>
+        <h1 className="font-display text-2xl font-semibold text-ajag-verde-900">Economía</h1>
+        <p className="mt-0.5 mb-6 text-sm text-ajag-gris-500">
+          Ahora mismo no estás llevando la economía del club en la plataforma.
+        </p>
+        <ToggleEconomia activa={false} />
+      </div>
+    );
+  }
 
   const resumen = await obtenerResumenEconomia(Number.isNaN(anio) ? undefined : anio);
   if (!resumen) {
@@ -123,6 +142,11 @@ export default async function AdminEconomiaPage({
           vacio="Todavía no hay movimientos generales."
         />
         <MovimientoForm fechaSugerida={hoy} />
+      </div>
+
+      <h2 className="mt-8 font-display text-lg font-semibold text-ajag-verde-900">Ajustes</h2>
+      <div className="mt-3">
+        <ToggleEconomia activa />
       </div>
     </div>
   );

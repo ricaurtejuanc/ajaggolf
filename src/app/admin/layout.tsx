@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { getUsuarioAdmin } from "@/lib/auth";
 import { obtenerOrganizadorActual } from "@/lib/data/organizador";
+import { economiaActiva } from "@/lib/data/configuracion";
 
 const adminLinks = [
   { href: "/admin", label: "Resumen", icon: LayoutDashboard },
@@ -39,6 +40,13 @@ export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
   // cualquier otro organizador gestionaba su club bajo una marca ajena.
   const organizador = await obtenerOrganizadorActual();
 
+  // La economía es opcional por organizador (se enciende y apaga en
+  // /admin/economia): si está apagada, ni siquiera se ofrece en el menú.
+  const conEconomia = admin.organizador_id ? await economiaActiva(admin.organizador_id) : false;
+  const enlaces = conEconomia
+    ? adminLinks
+    : adminLinks.filter((l) => l.href !== "/admin/economia");
+
   return (
     <div className="mx-auto flex max-w-6xl gap-6 px-4 py-8">
       <aside className="hidden w-56 shrink-0 md:block print:hidden">
@@ -54,7 +62,7 @@ export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
               Panel admin
             </span>
           </div>
-          {adminLinks.map((link) => (
+          {enlaces.map((link) => (
             <Link
               key={link.href}
               href={link.href}
@@ -72,7 +80,7 @@ export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
 
       <div className="min-w-0 flex-1">
         <nav className="mb-4 grid grid-cols-2 gap-2 sm:grid-cols-3 md:hidden print:hidden">
-          {adminLinks.map((link) => (
+          {enlaces.map((link) => (
             <Link
               key={link.href}
               href={link.href}

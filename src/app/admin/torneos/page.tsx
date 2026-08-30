@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import { getUsuarioAdmin } from "@/lib/auth";
+import { economiaActiva } from "@/lib/data/configuracion";
 import { formatearFechaCorta, formatearPrecio } from "@/lib/format";
 import { EliminarTorneoButton } from "./eliminar-button";
 
@@ -18,6 +20,9 @@ const claseBoton =
   "rounded-full border border-ajag-verde-700 px-4 py-2 text-sm font-medium text-ajag-verde-700 transition hover:bg-ajag-verde-50";
 
 export default async function AdminTorneosPage() {
+  const admin = await getUsuarioAdmin();
+  const conEconomia = admin?.organizador_id ? await economiaActiva(admin.organizador_id) : false;
+
   const supabase = await createClient();
   const { data: torneos } = await supabase
     .from("torneos")
@@ -69,9 +74,11 @@ export default async function AdminTorneosPage() {
               <Link href={`/admin/torneos/${torneo.id}/resultados`} className={claseBoton}>
                 Calificaciones
               </Link>
-              <Link href={`/admin/economia/${torneo.id}`} className={claseBoton}>
-                Economía
-              </Link>
+              {conEconomia ? (
+                <Link href={`/admin/economia/${torneo.id}`} className={claseBoton}>
+                  Economía
+                </Link>
+              ) : null}
               <div className="ml-auto">
                 <EliminarTorneoButton torneoId={torneo.id} />
               </div>
