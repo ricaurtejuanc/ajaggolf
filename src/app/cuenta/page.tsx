@@ -9,6 +9,8 @@ import { obtenerBizumNumero } from "@/lib/data/configuracion";
 import { PerfilForm } from "./perfil-form";
 import { SignOutButton } from "./sign-out-button";
 import { PedidosList } from "./pedidos-list";
+import { RondasList } from "./rondas-list";
+import { listarMisRondas, mediaDifferentials, RONDAS_PARA_MEDIA } from "@/lib/data/rondas";
 
 export const metadata: Metadata = { title: "Mi cuenta" };
 
@@ -44,14 +46,17 @@ export default async function CuentaPage({
       ? `user_id.eq.${user.id},id.in.(${idsPedidosInvitado.join(",")})`
       : `user_id.eq.${user.id}`;
 
-  const [{ data: pedidos }, bizumNumero] = await Promise.all([
+  const [{ data: pedidos }, bizumNumero, rondas] = await Promise.all([
     supabase
       .from("pedidos_pago")
       .select("*, inscripciones(*, torneos(nombre, slug, fecha))")
       .or(filtro)
       .order("created_at", { ascending: false }),
     obtenerBizumNumero(),
+    listarMisRondas(),
   ]);
+
+  const media = mediaDifferentials(rondas);
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-10">
@@ -94,6 +99,30 @@ export default async function CuentaPage({
             Todavía no te has inscrito en ningún torneo.{" "}
             <Link href="/torneos" className="font-medium text-ajag-verde-700 underline">
               Ver calendario
+            </Link>
+          </div>
+        )}
+      </section>
+
+      <section className="mt-10">
+        <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
+          <h2 className="font-display text-lg font-semibold text-ajag-verde-900">
+            Mis rondas
+          </h2>
+          {media !== null ? (
+            <p className="text-sm text-ajag-gris-500">
+              Media de los {RONDAS_PARA_MEDIA} mejores differentials:{" "}
+              <span className="font-medium text-ajag-verde-900">{media.toFixed(1)}</span>
+            </p>
+          ) : null}
+        </div>
+        {rondas.length > 0 ? (
+          <RondasList rondas={rondas} />
+        ) : (
+          <div className="card-ajag p-6 text-sm text-ajag-gris-500">
+            Todavía no has guardado ninguna ronda.{" "}
+            <Link href="/handicap" className="font-medium text-ajag-verde-700 underline">
+              Calcular mi hándicap
             </Link>
           </div>
         )}

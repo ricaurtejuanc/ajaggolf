@@ -325,6 +325,34 @@ export type ConsultaContacto = {
   created_at: string;
 };
 
+/**
+ * Ronda guardada por un jugador desde la calculadora de hándicap. Los datos
+ * del campo y del tee van copiados, no referenciados: la ronda es un hecho
+ * histórico y debe leerse igual aunque el campo se remida o se borre.
+ */
+export type Ronda = {
+  id: string;
+  user_id: string;
+  organizador_id: string | null;
+  fecha: string;
+  campo: string;
+  recorrido: string | null;
+  tee: string | null;
+  course_rating: number;
+  slope_rating: number;
+  par: number;
+  handicap_index: number;
+  modalidad: number;
+  handicap_juego: number;
+  bruto: number;
+  pcc: number;
+  golpes_recibidos: number;
+  neto: number;
+  puntos_stableford: number;
+  differential: number;
+  created_at: string;
+};
+
 export type TipoMovimiento = "ingreso" | "gasto";
 
 /**
@@ -417,6 +445,7 @@ export type Database = {
       campos_golf: TableDef<CampoGolf>;
       patrocinadores: TableDef<Patrocinador>;
       movimientos_economicos: TableDef<MovimientoEconomico>;
+      rondas: TableDef<Ronda>;
     };
     Views: {
       salidas_publicadas: ViewDef<SalidaPublicada>;
