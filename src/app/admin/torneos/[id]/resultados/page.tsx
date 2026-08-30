@@ -14,7 +14,11 @@ import { DocumentoActual } from "./documento-actual";
 import { GanadoresPremiosForm } from "./ganadores-premios-form";
 import { PosicionesLigaForm } from "./posiciones-liga-form";
 import { ClasificacionGeneralToggle } from "./clasificacion-general-toggle";
-import { ordenCategoriaClasificacion } from "@/lib/resultados/categorias";
+import {
+  adivinarCategoriaClasificacion,
+  categoriaPremiosPorHandicap,
+  ordenCategoriaClasificacion,
+} from "@/lib/resultados/categorias";
 import type { FormatoPuntuacion, Resultado } from "@/types/database";
 
 export const metadata: Metadata = { title: "Resultados · Admin" };
@@ -236,6 +240,7 @@ function TablaResultados({
         puntos: r.puntos != null ? String(r.puntos) : "",
         golpes: r.golpes != null ? String(r.golpes) : "",
         estadoJuego: (r.estado_juego as "retirado" | "no_presentado" | null) ?? "",
+        categoria: r.categoria,
       }),
     );
   } else {
@@ -246,6 +251,7 @@ function TablaResultados({
 
     filasIniciales = confirmados.map((c) => {
       const sugerencia = sugerencias.get(c.inscripcionId);
+      const categoriaPremios = categoriaPremiosPorHandicap(c.handicap, categorias);
       return filaVacia({
         inscripcionId: c.inscripcionId,
         nombreMostrado: c.nombreCompleto,
@@ -254,6 +260,7 @@ function TablaResultados({
         posicion: sugerencia ? String(sugerencia.posicion) : "",
         puntos: sugerencia && formatoPuntuacion === "stableford" ? String(sugerencia.valor) : "",
         golpes: sugerencia && formatoPuntuacion === "medal_play" ? String(sugerencia.valor) : "",
+        categoria: categoriaPremios ? adivinarCategoriaClasificacion(categoriaPremios) : "unica",
       });
     });
   }
@@ -263,7 +270,6 @@ function TablaResultados({
       torneoId={torneoId}
       formatoPuntuacion={formatoPuntuacion}
       filasIniciales={filasIniciales}
-      categorias={categorias}
     />
   );
 }

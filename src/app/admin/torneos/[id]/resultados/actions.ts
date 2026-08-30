@@ -80,6 +80,7 @@ export async function guardarResultados(
   const puntos = formData.getAll("puntos").map((v) => String(v).trim());
   const golpes = formData.getAll("golpes").map((v) => String(v).trim());
   const estadosJuego = formData.getAll("estado_juego").map((v) => String(v).trim() || null);
+  const categorias = formData.getAll("categoria").map((v) => String(v).trim());
 
   const supabase = await createClient();
 
@@ -107,6 +108,7 @@ export async function guardarResultados(
       // la clasificación general publicada del torneo (a diferencia de los
       // puestos generados solo para puntuar la liga).
       es_clasificacion_general: true,
+      categoria: esCategoriaClasificacion(categorias[i]) ? categorias[i] : "unica",
     }))
     .filter((f) => f.nombre_mostrado);
 

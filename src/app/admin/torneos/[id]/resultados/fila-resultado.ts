@@ -1,3 +1,5 @@
+import type { CategoriaClasificacionPdf } from "@/types/database";
+
 export type EstadoJuego = "" | "retirado" | "no_presentado";
 
 export interface FilaResultado {
@@ -10,6 +12,7 @@ export interface FilaResultado {
   puntos: string;
   golpes: string;
   estadoJuego: EstadoJuego;
+  categoria: CategoriaClasificacionPdf;
 }
 
 let contador = 0;
@@ -24,6 +27,7 @@ export function filaVacia(base: Partial<FilaResultado> = {}): FilaResultado {
     puntos: "",
     golpes: "",
     estadoJuego: "",
+    categoria: "unica",
     ...base,
   };
 }

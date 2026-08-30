@@ -13,6 +13,7 @@ import {
 } from "@/lib/resultados/categorias";
 import { ClasificacionTabs } from "./clasificacion-tabs";
 import { DocumentosCategoria, type DocumentoCategoria } from "./documentos-categoria";
+import { ClasificacionManual, type GrupoClasificacionManual } from "./clasificacion-manual";
 
 export async function generateMetadata({
   params,
@@ -95,44 +96,23 @@ export default async function ClasificacionPage({
     general = <DocumentosCategoria documentos={documentos} nombreTorneo={torneo.nombre} />;
   } else if (resultados && resultados.length > 0) {
     const columnaPrincipal = torneo.formato_puntuacion === "stableford" ? "puntos" : "golpes";
-    general = (
-      <div className="overflow-x-auto rounded-2xl border border-ajag-gris-100 bg-white">
-        <table className="w-full text-left text-xs sm:text-sm">
-          <thead className="border-b border-ajag-gris-100 text-[0.65rem] uppercase text-ajag-gris-500 sm:text-xs">
-            <tr>
-              <th className="px-2 py-2 sm:px-4 sm:py-3">Pos.</th>
-              <th className="px-2 py-2 sm:px-4 sm:py-3">Jugador</th>
-              <th className="px-2 py-2 sm:px-4 sm:py-3">Hcp</th>
-              <th className="px-2 py-2 sm:px-4 sm:py-3">
-                {columnaPrincipal === "puntos" ? "Puntos" : "Golpes"}
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {resultados.map((r) => (
-              <tr key={r.id} className="border-b border-ajag-gris-100 last:border-0">
-                <td className="px-2 py-2 font-medium text-ajag-verde-900 sm:px-4 sm:py-3">
-                  {r.posicion ?? "—"}
-                </td>
-                <td className="px-2 py-2 text-ajag-verde-900 sm:px-4 sm:py-3">
-                  {r.nombre_mostrado}
-                </td>
-                <td className="px-2 py-2 text-ajag-gris-500 sm:px-4 sm:py-3">
-                  {r.handicap ?? "—"}
-                </td>
-                <td className="px-2 py-2 text-ajag-gris-500 sm:px-4 sm:py-3">
-                  {r.estado_juego === "retirado"
-                    ? "Retirado"
-                    : r.estado_juego === "no_presentado"
-                      ? "No presentado"
-                      : ((columnaPrincipal === "puntos" ? r.puntos : r.golpes) ?? "—")}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+
+    const gruposPorCategoria = new Map<string, GrupoClasificacionManual>();
+    for (const r of resultados) {
+      const existente = gruposPorCategoria.get(r.categoria);
+      if (existente) existente.resultados.push(r);
+      else
+        gruposPorCategoria.set(r.categoria, {
+          categoria: r.categoria,
+          etiqueta: etiquetaCategoriaClasificacion[r.categoria],
+          resultados: [r],
+        });
+    }
+    const grupos = Array.from(gruposPorCategoria.values()).sort(
+      (a, b) => ordenCategoriaClasificacion(a.categoria) - ordenCategoriaClasificacion(b.categoria),
     );
+
+    general = <ClasificacionManual grupos={grupos} columnaPrincipal={columnaPrincipal} />;
   }
 
   return (

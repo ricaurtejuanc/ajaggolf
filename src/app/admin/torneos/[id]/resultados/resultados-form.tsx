@@ -4,7 +4,13 @@ import { useActionState, useRef, useState } from "react";
 import { Download, Plus, Upload, X } from "lucide-react";
 import { guardarResultados } from "./actions";
 import { filaVacia, type EstadoJuego, type FilaResultado } from "./fila-resultado";
-import type { FormatoPuntuacion } from "@/types/database";
+import {
+  CATEGORIAS_CLASIFICACION_PDF,
+  esCategoriaClasificacion,
+  etiquetaCategoriaClasificacion,
+  ordenCategoriaClasificacion,
+} from "@/lib/resultados/categorias";
+import type { CategoriaClasificacionPdf, FormatoPuntuacion } from "@/types/database";
 
 const ETIQUETA_ESTADO: Record<EstadoJuego, string> = {
   "": "Normal",
@@ -19,6 +25,19 @@ function estadoDesdeTexto(texto: string): EstadoJuego {
   return "";
 }
 
+const ETIQUETA_A_CATEGORIA = new Map<string, CategoriaClasificacionPdf>(
+  CATEGORIAS_CLASIFICACION_PDF.map((c) => [etiquetaCategoriaClasificacion[c].toLowerCase(), c]),
+);
+
+// Acepta tanto la etiqueta mostrada ("Primera Categoría") como la clave
+// interna ("primera") al releer un XLS, por si se ha editado a mano.
+function categoriaDesdeTexto(texto: string): CategoriaClasificacionPdf | null {
+  const normalizado = texto.trim().toLowerCase();
+  if (!normalizado) return null;
+  if (esCategoriaClasificacion(normalizado)) return normalizado;
+  return ETIQUETA_A_CATEGORIA.get(normalizado) ?? null;
+}
+
 export interface CategoriaClasificacion {
   nombre: string;
   handicapDesde: number | null;
@@ -29,12 +48,10 @@ export function ResultadosForm({
   torneoId,
   formatoPuntuacion,
   filasIniciales,
-  categorias = [],
 }: {
   torneoId: string;
   formatoPuntuacion: FormatoPuntuacion;
   filasIniciales: FilaResultado[];
-  categorias?: CategoriaClasificacion[];
 }) {
   const [filas, setFilas] = useState<FilaResultado[]>(
     filasIniciales.length > 0 ? filasIniciales : [filaVacia()],
@@ -54,30 +71,36 @@ export function ResultadosForm({
     { ok: false, error: null },
   );
 
-  function actualizarFila(key: number, campo: keyof FilaResultado, valor: string) {
+  function actualizarFila(
+    key: number,
+    campo: "posicion" | "nombreMostrado" | "licenciaFederativa" | "handicap" | "puntos" | "golpes",
+    valor: string,
+  ) {
     setFilas((prev) => prev.map((f) => (f.key === key ? { ...f, [campo]: valor } : f)));
+  }
+
+  function actualizarCategoria(key: number, categoria: CategoriaClasificacionPdf) {
+    setFilas((prev) => prev.map((f) => (f.key === key ? { ...f, categoria } : f)));
   }
 
   const columnaPrincipal = formatoPuntuacion === "stableford" ? "puntos" : "golpes";
   const nombreColumnaXls = columnaPrincipal === "puntos" ? "puntos Stableford" : "golpes";
 
-  // Calcula la posición de cada jugador dentro de su categoría (si hay
-  // categorías configuradas; si no, de todos juntos) a partir de su
-  // puntuación: más puntos stableford primero, menos golpes primero en el
-  // resto de formatos. En caso de empate en puntuación decide el hándicap:
-  // el más bajo gana en stableford, el más alto gana en el resto de
-  // formatos. Solo un empate exacto (misma puntuación y mismo hándicap)
-  // comparte posición. Retirados, no presentados o sin puntuación todavía
-  // se quedan sin posición.
+  // Calcula la posición de cada jugador dentro de su categoría de
+  // publicación a partir de su puntuación: más puntos stableford primero,
+  // menos golpes primero en el resto de formatos. En caso de empate en
+  // puntuación decide el hándicap: el más bajo gana en stableford, el más
+  // alto gana en el resto de formatos. Solo un empate exacto (misma
+  // puntuación y mismo hándicap) comparte posición. Retirados, no
+  // presentados o sin puntuación todavía se quedan sin posición.
   function generarClasificacion() {
     const stableford = columnaPrincipal === "puntos";
 
     const grupos = new Map<string, FilaResultado[]>();
     for (const f of filas) {
-      const nombreGrupo = categorias.length > 0 ? categoriaDeFila(f) : "";
-      const grupo = grupos.get(nombreGrupo);
+      const grupo = grupos.get(f.categoria);
       if (grupo) grupo.push(f);
-      else grupos.set(nombreGrupo, [f]);
+      else grupos.set(f.categoria, [f]);
     }
 
     const posicionPorKey = new Map<number, number>();
@@ -126,38 +149,6 @@ export function ResultadosForm({
     );
   }
 
-  function categoriaDeFila(fila: FilaResultado): string {
-    const hcp = parseFloat(fila.handicap.replace(",", "."));
-    if (Number.isNaN(hcp)) return "Sin categoría asignada";
-
-    const conRango = categorias.filter((c) => c.handicapDesde != null || c.handicapHasta != null);
-    if (conRango.length === 0) return "Sin categoría asignada";
-
-    const exacta = conRango.find(
-      (c) =>
-        (c.handicapDesde == null || hcp >= c.handicapDesde) &&
-        (c.handicapHasta == null || hcp <= c.handicapHasta),
-    );
-    if (exacta) return exacta.nombre;
-
-    // Ningún tramo cubre este hándicap (hueco entre categorías, o por
-    // encima/debajo de todas): en vez de dejar al jugador sin categoría, se
-    // asigna a la más cercana. Un mal ajuste de rangos en el torneo no debe
-    // dejar a nadie fuera de la tabla.
-    let masCercana = conRango[0];
-    let distanciaMinima = Infinity;
-    for (const c of conRango) {
-      const distDesde = c.handicapDesde != null ? Math.abs(hcp - c.handicapDesde) : Infinity;
-      const distHasta = c.handicapHasta != null ? Math.abs(hcp - c.handicapHasta) : Infinity;
-      const distancia = Math.min(distDesde, distHasta);
-      if (distancia < distanciaMinima) {
-        distanciaMinima = distancia;
-        masCercana = c;
-      }
-    }
-    return masCercana.nombre;
-  }
-
   // Exporta la tabla actual a un XLS para rellenarlo fuera de la app (ej.
   // en el campo, sin buena conexión) y volver a subirlo con "Subir XLS".
   async function descargarXls() {
@@ -165,7 +156,7 @@ export function ResultadosForm({
     const datos = filas.map((fila) => ({
       id_torneo: torneoId,
       posición: fila.posicion,
-      categoría: categorias.length > 0 ? categoriaDeFila(fila) : "Categoría única",
+      categoría: etiquetaCategoriaClasificacion[fila.categoria],
       nombre: fila.nombreMostrado,
       licencia: fila.licenciaFederativa,
       handicap: fila.handicap,
@@ -216,6 +207,8 @@ export function ResultadosForm({
           const puntos = leerTexto(filaXls, nombreColumnaXls);
           const posicion = leerTexto(filaXls, "posición", "posicion");
           const estadoTexto = leerTexto(filaXls, "estado");
+          const categoriaTexto = leerTexto(filaXls, "categoría", "categoria");
+          const categoria = categoriaDesdeTexto(categoriaTexto);
           if (!licencia && !nombre) continue;
 
           const indiceExistente = licencia
@@ -234,6 +227,7 @@ export function ResultadosForm({
               estadoJuego: estadoTexto
                 ? estadoDesdeTexto(estadoTexto)
                 : siguiente[indiceExistente].estadoJuego,
+              categoria: categoria ?? siguiente[indiceExistente].categoria,
             };
             actualizadas++;
           } else {
@@ -245,6 +239,7 @@ export function ResultadosForm({
                 [columnaPrincipal]: puntos,
                 posicion,
                 estadoJuego: estadoDesdeTexto(estadoTexto),
+                categoria: categoria ?? "unica",
               }),
             );
             anadidas++;
@@ -275,25 +270,22 @@ export function ResultadosForm({
     }
   }
 
-  // Si el torneo tiene categorías reales por hándicap, se reparten las
-  // filas en una tabla por categoría (más fácil de rellenar y de leer que
-  // una lista plana con todos los inscritos); si no, va todo en una tabla.
-  const grupos: { nombre: string; filas: FilaResultado[] }[] =
-    categorias.length === 0
-      ? [{ nombre: "", filas }]
-      : Object.entries(
-          filas.reduce<Record<string, FilaResultado[]>>((acc, fila) => {
-            const nombre = categoriaDeFila(fila);
-            (acc[nombre] ??= []).push(fila);
-            return acc;
-          }, {}),
-        )
-          .map(([nombre, filasGrupo]) => ({ nombre, filas: filasGrupo }))
-          .sort((a, b) => {
-            const ia = categorias.findIndex((c) => c.nombre === a.nombre);
-            const ib = categorias.findIndex((c) => c.nombre === b.nombre);
-            return (ia === -1 ? 999 : ia) - (ib === -1 ? 999 : ib);
-          });
+  // Las filas se reparten en una tabla por categoría de publicación (más
+  // fácil de rellenar y de leer que una lista plana con todos los
+  // inscritos). El encabezado de cada tabla solo se muestra si hay más de
+  // una categoría en uso: con todo en "Categoría única" no aporta nada.
+  const grupos: { categoria: CategoriaClasificacionPdf; filas: FilaResultado[] }[] = Object.entries(
+    filas.reduce<Partial<Record<CategoriaClasificacionPdf, FilaResultado[]>>>((acc, fila) => {
+      (acc[fila.categoria] ??= []).push(fila);
+      return acc;
+    }, {}),
+  )
+    .map(([categoria, filasGrupo]) => ({
+      categoria: categoria as CategoriaClasificacionPdf,
+      filas: filasGrupo ?? [],
+    }))
+    .sort((a, b) => ordenCategoriaClasificacion(a.categoria) - ordenCategoriaClasificacion(b.categoria));
+  const hayVariasCategorias = grupos.length > 1;
 
   return (
     <form className="card-ajag flex flex-col gap-5 p-5">
@@ -325,18 +317,24 @@ export function ResultadosForm({
         />
       </div>
       <p className="-mt-3 text-xs text-ajag-gris-500">
-        &quot;Descargar XLS&quot; exporta la tabla actual (id_torneo, posición, categoría —
-        &quot;Categoría única&quot; si el torneo no tiene tramos de hándicap —, nombre, licencia,
-        handicap, {nombreColumnaXls}, estado) para rellenarla fuera de la app; &quot;Subir
-        XLS&quot; vuelve a leerla y actualiza cada fila por licencia (añade las que no
-        existan todavía). Deja una celda en blanco para no tocar ese dato al subirlo.
+        &quot;Descargar XLS&quot; exporta la tabla actual (id_torneo, posición, categoría,
+        nombre, licencia, handicap, {nombreColumnaXls}, estado) para rellenarla fuera de la
+        app; &quot;Subir XLS&quot; vuelve a leerla y actualiza cada fila por licencia (añade
+        las que no existan todavía). Deja una celda en blanco para no tocar ese dato al
+        subirlo.
+      </p>
+      <p className="-mt-3 text-xs text-ajag-gris-500">
+        La categoría de cada jugador decide en qué pestaña se ve su puesto en la
+        clasificación pública, igual que al subir un PDF o foto por categoría.
       </p>
       {mensajeXls ? <p className="-mt-3 text-xs text-ajag-verde-700">{mensajeXls}</p> : null}
 
       {grupos.map((grupo) => (
-        <div key={grupo.nombre || "todos"}>
-          {grupo.nombre ? (
-            <p className="mb-2 text-sm font-medium text-ajag-verde-900">{grupo.nombre}</p>
+        <div key={grupo.categoria}>
+          {hayVariasCategorias ? (
+            <p className="mb-2 text-sm font-medium text-ajag-verde-900">
+              {etiquetaCategoriaClasificacion[grupo.categoria]}
+            </p>
           ) : null}
           <div className="overflow-x-auto">
             <table className="w-full min-w-[720px] text-left text-sm">
@@ -346,6 +344,7 @@ export function ResultadosForm({
                   <th className="py-2 pr-2">Jugador</th>
                   <th className="py-2 pr-2">Licencia</th>
                   <th className="py-2 pr-2">Hcp</th>
+                  <th className="py-2 pr-2">Categoría</th>
                   <th className="py-2 pr-2">
                     {columnaPrincipal === "puntos" ? "Puntos" : "Golpes"}
                   </th>
@@ -401,6 +400,22 @@ export function ResultadosForm({
                         onChange={(e) => actualizarFila(fila.key, "handicap", e.target.value)}
                         className="w-16 rounded-lg border border-ajag-gris-200 px-2 py-1.5 text-sm outline-none focus:border-ajag-verde-600"
                       />
+                    </td>
+                    <td className="py-1.5 pr-2">
+                      <select
+                        name="categoria"
+                        value={fila.categoria}
+                        onChange={(e) =>
+                          actualizarCategoria(fila.key, e.target.value as CategoriaClasificacionPdf)
+                        }
+                        className="rounded-lg border border-ajag-gris-200 bg-white px-2 py-1.5 text-xs outline-none focus:border-ajag-verde-600"
+                      >
+                        {CATEGORIAS_CLASIFICACION_PDF.map((c) => (
+                          <option key={c} value={c}>
+                            {etiquetaCategoriaClasificacion[c]}
+                          </option>
+                        ))}
+                      </select>
                     </td>
                     <td className="py-1.5 pr-2">
                       <input

@@ -287,6 +287,7 @@ export type Resultado = {
   estado_juego: "retirado" | "no_presentado" | null;
   estado: EstadoResultado;
   es_clasificacion_general: boolean;
+  categoria: CategoriaClasificacionPdf;
   pdf_origen_id: string | null;
   created_at: string;
   updated_at: string;
