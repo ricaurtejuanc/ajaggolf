@@ -196,6 +196,7 @@ export type Torneo = {
 export type PedidoPago = {
   id: string;
   user_id: string | null;
+  torneo_id: string | null;
   metodo_pago: MetodoPago;
   estado: EstadoPedidoPago;
   total_cents: number;
