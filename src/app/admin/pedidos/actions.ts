@@ -2,9 +2,34 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { getUsuarioAdmin } from "@/lib/auth";
 import { enviarEmailInscripcionConfirmada } from "@/lib/email";
 import { obtenerOrganizadorPorId, obtenerOrganizadorIdActual } from "@/lib/data/organizador";
+
+// Borra el pedido y las inscripciones que llevaba (un pedido rechazado o
+// eliminado no debe dejar rastro: ni ocupar cupo ni quedar como
+// "Rechazado" en el historial — el admin quiere que desaparezca, igual
+// que al eliminar).
+//
+// Se borra el pedido antes que sus inscripciones (la FK `on delete set
+// null` en inscripciones.pedido_pago_id limpia esa columna sin pasar por
+// RLS) y solo entonces se borran las inscripciones por id: si se hiciera
+// al revés, un pedido cuya única vía de organizador fueran esas
+// inscripciones se quedaría sin forma de autorizar su propio delete.
+async function borrarPedidoYInscripciones(supabase: SupabaseClient, pedidoId: string) {
+  const { data: inscripciones } = await supabase
+    .from("inscripciones")
+    .select("id")
+    .eq("pedido_pago_id", pedidoId);
+
+  await supabase.from("pedidos_pago").delete().eq("id", pedidoId);
+
+  const ids = (inscripciones ?? []).map((i) => i.id);
+  if (ids.length > 0) {
+    await supabase.from("inscripciones").delete().in("id", ids);
+  }
+}
 
 // pedidos_pago puede llevar su organizador de dos formas: por su propio
 // torneo_id (pedidos nuevos, desde "pagos por torneo"), o por el torneo de
@@ -113,28 +138,12 @@ export async function rechazarPago(pedidoId: string) {
     return;
   }
 
-  await supabase
-    .from("pedidos_pago")
-    .update({ estado: "rechazado", confirmado_por: admin.id })
-    .eq("id", pedidoId);
-
-  await supabase
-    .from("inscripciones")
-    .update({ estado: "cancelada" })
-    .eq("pedido_pago_id", pedidoId);
+  await borrarPedidoYInscripciones(supabase, pedidoId);
 
   revalidatePath("/admin/pedidos");
 }
 
-// Borra el pedido y las inscripciones que llevaba (un pedido sin
-// inscripciones no tiene sentido guardarlo, y dejarlas huérfanas ocuparía
-// cupo sin un pago detrás) — para limpiar pedidos duplicados o de prueba.
-//
-// Se borra el pedido antes que sus inscripciones (la FK `on delete set
-// null` en inscripciones.pedido_pago_id limpia esa columna sin pasar por
-// RLS) y solo entonces se borran las inscripciones por id: si se hiciera
-// al revés, un pedido cuya única vía de organizador fueran esas
-// inscripciones se quedaría sin forma de autorizar su propio delete.
+// Para limpiar pedidos duplicados o de prueba desde el historial.
 export async function eliminarPedido(pedidoId: string) {
   const admin = await getUsuarioAdmin();
   if (!admin) return;
@@ -157,17 +166,7 @@ export async function eliminarPedido(pedidoId: string) {
     return;
   }
 
-  const { data: inscripciones } = await supabase
-    .from("inscripciones")
-    .select("id")
-    .eq("pedido_pago_id", pedidoId);
-
-  await supabase.from("pedidos_pago").delete().eq("id", pedidoId);
-
-  const ids = (inscripciones ?? []).map((i) => i.id);
-  if (ids.length > 0) {
-    await supabase.from("inscripciones").delete().in("id", ids);
-  }
+  await borrarPedidoYInscripciones(supabase, pedidoId);
 
   revalidatePath("/admin/pedidos");
 }

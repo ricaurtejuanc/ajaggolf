@@ -81,7 +81,11 @@ export function PedidoRow({ pedido }: { pedido: Pedido }) {
               <button
                 type="button"
                 disabled={pending}
-                onClick={() => startTransition(() => rechazarPago(pedido.id))}
+                onClick={() => {
+                  if (confirm("¿Rechazar este pedido? Se borrará junto a sus inscripciones. No se puede deshacer.")) {
+                    startTransition(() => rechazarPago(pedido.id));
+                  }
+                }}
                 className="rounded-lg border border-ajag-rojo-600 px-2.5 py-1 text-xs font-medium text-ajag-rojo-600 transition hover:bg-ajag-rojo-600/10 disabled:opacity-50"
               >
                 Rechazar
