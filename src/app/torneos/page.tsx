@@ -56,8 +56,7 @@ export default async function TorneosPage() {
         Calendario de torneos
       </h1>
       <p className="mt-2 max-w-2xl text-ajag-gris-500">
-        Consulta los próximos torneos de {organizador?.nombre ?? "tu club"} e inscríbete
-        online. El pago se confirma por Bizum en unas pocas horas.
+        Consulta los próximos torneos de {organizador?.nombre ?? "tu club"} e inscríbete online.
       </p>
 
       {torneos.length === 0 ? (
