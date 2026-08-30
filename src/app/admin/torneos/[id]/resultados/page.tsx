@@ -14,6 +14,7 @@ import { DocumentoActual } from "./documento-actual";
 import { GanadoresPremiosForm } from "./ganadores-premios-form";
 import { PosicionesLigaForm } from "./posiciones-liga-form";
 import { ClasificacionGeneralToggle } from "./clasificacion-general-toggle";
+import { ordenCategoriaClasificacion } from "@/lib/resultados/categorias";
 import type { FormatoPuntuacion, Resultado } from "@/types/database";
 
 export const metadata: Metadata = { title: "Resultados · Admin" };
@@ -35,14 +36,12 @@ export default async function AdminResultadosPage({
     .maybeSingle();
   if (!torneo) notFound();
 
-  const [{ data: documento }, confirmados, { data: resultados }] = await Promise.all([
+  const [{ data: documentos }, confirmados, { data: resultados }] = await Promise.all([
     supabase
       .from("resultados_pdf_uploads")
       .select("*")
       .eq("torneo_id", id)
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle(),
+      .order("created_at", { ascending: false }),
     obtenerInscritosConfirmadosParaResultados(id),
     supabase
       .from("resultados")
@@ -51,8 +50,19 @@ export default async function AdminResultadosPage({
       .order("posicion", { ascending: true, nullsFirst: false }),
   ]);
 
+  // Un torneo puede tener un documento por categoría; para autocompletar
+  // cuadro de honor y puestos de liga usamos el más reciente que traiga
+  // filas legibles (los ordenamos de más nuevo a más viejo).
+  const documentosOrdenados = (documentos ?? [])
+    .slice()
+    .sort(
+      (a, b) =>
+        ordenCategoriaClasificacion(a.categoria) - ordenCategoriaClasificacion(b.categoria),
+    );
   const documentoFilasExtraidas =
-    (documento?.filas_extraidas as { filas?: FilaExtraidaPdf[] } | null)?.filas ?? [];
+    (documentos ?? [])
+      .map((d) => (d.filas_extraidas as { filas?: FilaExtraidaPdf[] } | null)?.filas ?? [])
+      .find((filas) => filas.length > 0) ?? [];
   // Coincidencias del PDF/foto subido por nombre con los inscritos confirmados:
   // se usan para autocompletar tanto el cuadro de honor como los puestos de
   // la liga, así el admin solo tiene que revisar en vez de rellenar a mano.
@@ -86,11 +96,16 @@ export default async function AdminResultadosPage({
       </div>
 
       <ClasificacionGeneralToggle
-        hayDocumento={Boolean(documento)}
+        hayDocumento={documentosOrdenados.length > 0}
         documentoUploader={
           <div className="flex flex-col gap-4">
-            <DocumentoUploader torneoId={id} />
-            {documento ? <DocumentoActual torneoId={id} documento={documento} /> : null}
+            <DocumentoUploader
+              torneoId={id}
+              categoriasSubidas={documentosOrdenados.map((d) => d.categoria)}
+            />
+            {documentosOrdenados.map((documento) => (
+              <DocumentoActual key={documento.id} torneoId={id} documento={documento} />
+            ))}
           </div>
         }
         tablaManual={

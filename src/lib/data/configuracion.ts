@@ -17,6 +17,20 @@ export async function obtenerBizumNumero(): Promise<string> {
   return typeof data?.valor === "string" ? data.valor : "633 88 10 27 4";
 }
 
+export async function obtenerDatosPago() {
+  const organizadorId = await obtenerOrganizadorIdActual();
+  if (!organizadorId) return null;
+
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("organizadores")
+    .select("bizum_numero, bizum_nombre, transferencia_numero, transferencia_nombre")
+    .eq("id", organizadorId)
+    .maybeSingle();
+
+  return data ?? null;
+}
+
 export async function obtenerCategoriasExtras(): Promise<CategoriaExtra[]> {
   const organizadorId = await obtenerOrganizadorIdActual();
   if (!organizadorId) return [];

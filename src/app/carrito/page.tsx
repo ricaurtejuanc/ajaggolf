@@ -5,7 +5,9 @@ import { CheckCircle2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { obtenerCarrito } from "@/lib/data/carrito";
 import { formatearPrecio } from "@/lib/format";
+import { obtenerDatosPago } from "@/lib/data/configuracion";
 import { ItemCarritoRow } from "./item-carrito";
+import { OpcionesPago } from "./opciones-pago";
 import { finalizarPedido } from "./actions";
 
 export const metadata: Metadata = { title: "Mi carrito" };
@@ -30,6 +32,7 @@ export default async function CarritoPage({
 
   const items = jugador ? await obtenerCarrito(jugador.id) : [];
   const total = items.reduce((acc, item) => acc + item.precio_cents, 0);
+  const datosPago = await obtenerDatosPago();
 
   return (
     <div className="mx-auto max-w-xl px-4 py-10">
@@ -65,14 +68,7 @@ export default async function CarritoPage({
             </span>
           </div>
 
-          <form action={finalizarPedido}>
-            <button
-              type="submit"
-              className="mt-4 w-full rounded-xl bg-ajag-verde-700 px-5 py-3 text-sm font-medium text-white transition hover:bg-ajag-verde-600"
-            >
-              Finalizar pedido
-            </button>
-          </form>
+          {datosPago && <OpcionesPago datosPago={datosPago} />}
         </div>
       )}
     </div>

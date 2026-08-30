@@ -21,7 +21,7 @@ export type ModoSalida = "consecutivo" | "shotgun" | "shotgun_silencioso";
 export type ModoAsignacionSalida = "handicap" | "manual" | "mixto";
 export type EstadoTorneo = "borrador" | "publicado" | "cerrado" | "finalizado" | "cancelado";
 export type EstadoInscripcion = "carrito" | "pendiente_pago" | "confirmada" | "cancelada";
-export type MetodoPago = "bizum" | "stripe" | "club";
+export type MetodoPago = "bizum" | "transferencia" | "tarjeta" | "stripe" | "club";
 export type ModoPagoTorneo = "organizador" | "club";
 export type EstadoPedidoPago =
   | "pendiente_confirmacion"
@@ -32,6 +32,13 @@ export type EstadoPedidoPago =
 export type EstadoSalida = "borrador" | "publicado";
 export type EstadoResultado = "preview" | "publicado";
 export type EstadoPdfResultados = "preview" | "publicado" | "descartado";
+export type CategoriaClasificacionPdf =
+  | "primera"
+  | "segunda"
+  | "senior"
+  | "damas"
+  | "scratch"
+  | "unica";
 export type RolAdmin = "owner" | "admin";
 
 export type Organizador = {
@@ -43,6 +50,10 @@ export type Organizador = {
   dominio: string | null;
   email_contacto: string | null;
   activo: boolean;
+  bizum_numero: string | null;
+  bizum_nombre: string | null;
+  transferencia_numero: string | null;
+  transferencia_nombre: string | null;
   created_at: string;
 };
 
@@ -256,6 +267,7 @@ export type ResultadoPdfUpload = {
   mapeo_columnas: Record<string, string>;
   filas_extraidas: unknown;
   estado: EstadoPdfResultados;
+  categoria: CategoriaClasificacionPdf;
   subido_por: string | null;
   created_at: string;
   publicado_at: string | null;

@@ -205,13 +205,15 @@ async function recalcularConflictos(salidaId: string) {
   }
 }
 
+export type EstadoMoverJugador = { ok: boolean };
+
 export async function moverJugador(
   torneoId: string,
   inscripcionId: string,
   nuevoGrupoSalidaId: string | null,
-) {
+): Promise<EstadoMoverJugador> {
   const admin = await getUsuarioAdmin();
-  if (!admin) return;
+  if (!admin) return { ok: false };
 
   const supabase = await createClient();
 
@@ -232,6 +234,7 @@ export async function moverJugador(
   if (salida) await recalcularConflictos(salida.id);
 
   revalidatePath(`/admin/torneos/${torneoId}/salidas`);
+  return { ok: true };
 }
 
 /**
@@ -243,10 +246,10 @@ export async function moverBloque(
   torneoId: string,
   inscripcionIds: string[],
   nuevoGrupoSalidaId: string | null,
-) {
+): Promise<EstadoMoverJugador> {
   const admin = await getUsuarioAdmin();
-  if (!admin) return;
-  if (inscripcionIds.length === 0) return;
+  if (!admin) return { ok: false };
+  if (inscripcionIds.length === 0) return { ok: false };
 
   const supabase = await createClient();
 
@@ -271,6 +274,7 @@ export async function moverBloque(
   if (salida) await recalcularConflictos(salida.id);
 
   revalidatePath(`/admin/torneos/${torneoId}/salidas`);
+  return { ok: true };
 }
 
 /**
@@ -280,9 +284,9 @@ export async function moverBloque(
  * y jugadores ya asignados: solo ocupa los huecos que falten en cada grupo
  * hasta su tamaño objetivo (3-4), en orden de hándicap ascendente.
  */
-export async function autocompletarPorHandicap(torneoId: string) {
+export async function autocompletarPorHandicap(torneoId: string): Promise<EstadoMoverJugador> {
   const admin = await getUsuarioAdmin();
-  if (!admin) return;
+  if (!admin) return { ok: false };
 
   const supabase = await createClient();
 
@@ -291,7 +295,7 @@ export async function autocompletarPorHandicap(torneoId: string) {
     .select("id, grupos_salida(id, numero_grupo, grupo_salida_jugadores(inscripcion_id, orden))")
     .eq("torneo_id", torneoId)
     .maybeSingle();
-  if (!salidaRaw) return;
+  if (!salidaRaw) return { ok: false };
 
   const salida = salidaRaw as unknown as {
     id: string;
@@ -302,7 +306,7 @@ export async function autocompletarPorHandicap(torneoId: string) {
     }[];
   };
   const grupos = salida.grupos_salida.slice().sort((a, b) => a.numero_grupo - b.numero_grupo);
-  if (grupos.length === 0) return;
+  if (grupos.length === 0) return { ok: false };
 
   const idsAsignados = new Set(
     grupos.flatMap((g) => g.grupo_salida_jugadores.map((gj) => gj.inscripcion_id)),
@@ -311,7 +315,7 @@ export async function autocompletarPorHandicap(torneoId: string) {
   const sinAsignar = ordenarPorHandicap(
     confirmados.filter((j) => !idsAsignados.has(j.inscripcionId)),
   );
-  if (sinAsignar.length === 0) return;
+  if (sinAsignar.length === 0) return { ok: false };
 
   const tamanos = calcularTamanosGrupos(confirmados.length);
   let cursor = 0;
@@ -337,11 +341,12 @@ export async function autocompletarPorHandicap(torneoId: string) {
       orden: siguienteOrden++,
     }));
     const { error } = await supabase.from("grupo_salida_jugadores").insert(filas);
-    if (error) return;
+    if (error) return { ok: false };
   }
 
   await recalcularConflictos(salida.id);
   revalidatePath(`/admin/torneos/${torneoId}/salidas`);
+  return { ok: true };
 }
 
 export async function publicarSalidas(torneoId: string, salidaId: string) {

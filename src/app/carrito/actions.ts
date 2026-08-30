@@ -22,12 +22,20 @@ export async function quitarDelCarrito(inscripcionId: string) {
   revalidatePath("/carrito");
 }
 
-export async function finalizarPedido() {
+export async function finalizarPedido(
+  _prevState: unknown,
+  formData: FormData,
+) {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) redirect("/login?next=/carrito");
+
+  const metodoPago = String(formData.get("metodo_pago") ?? "bizum").trim();
+  if (!["bizum", "transferencia"].includes(metodoPago)) {
+    return { ok: false, error: "Método de pago inválido." };
+  }
 
   const { data: jugador } = await supabase
     .from("jugadores")
@@ -54,7 +62,7 @@ export async function finalizarPedido() {
 
   const { data: pedido, error } = await supabase
     .from("pedidos_pago")
-    .insert({ user_id: user.id, metodo_pago: "bizum", total_cents })
+    .insert({ user_id: user.id, metodo_pago: metodoPago as "bizum" | "transferencia", total_cents })
     .select("id")
     .single();
 

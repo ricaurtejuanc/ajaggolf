@@ -35,6 +35,36 @@ export async function actualizarBizumNumero(
   return { ok: true, error: null };
 }
 
+export async function actualizarDatosPago(
+  _prevState: EstadoConfiguracion,
+  formData: FormData,
+): Promise<EstadoConfiguracion> {
+  const admin = await getUsuarioAdmin();
+  if (!admin?.organizador_id) return { ok: false, error: "No autorizado." };
+
+  const bizumNumero = String(formData.get("bizum_numero") ?? "").trim();
+  const bizumNombre = String(formData.get("bizum_nombre") ?? "").trim();
+  const transferenciaNumero = String(formData.get("transferencia_numero") ?? "").trim();
+  const transferenciaNombre = String(formData.get("transferencia_nombre") ?? "").trim();
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("organizadores")
+    .update({
+      bizum_numero: bizumNumero || null,
+      bizum_nombre: bizumNombre || null,
+      transferencia_numero: transferenciaNumero || null,
+      transferencia_nombre: transferenciaNombre || null,
+    })
+    .eq("id", admin.organizador_id);
+
+  if (error) return { ok: false, error: error.message };
+
+  revalidatePath("/admin/configuracion");
+  revalidatePath("/carrito");
+  return { ok: true, error: null };
+}
+
 export async function actualizarCategoriasExtras(
   _prevState: EstadoConfiguracion,
   formData: FormData,
