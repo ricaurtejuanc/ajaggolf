@@ -22,14 +22,26 @@ export default async function AdminPedidosPage() {
   const supabase = await createClient();
   const organizadorIdActual = await obtenerOrganizadorIdActual();
 
+  let torneoIds: string[] = [];
+  if (organizadorIdActual) {
+    const { data: torneos } = await supabase
+      .from("torneos")
+      .select("id")
+      .eq("organizador_id", organizadorIdActual);
+    torneoIds = torneos?.map((t) => t.id) ?? [];
+  }
+
   let query = supabase
     .from("pedidos_pago")
     .select(
       "*, torneos(id, nombre), inscripciones(id, es_socio, precio_cents, jugadores(nombre, apellidos, email))",
     );
 
-  if (organizadorIdActual) {
-    query = query.eq("torneos.organizador_id", organizadorIdActual);
+  if (organizadorIdActual && torneoIds.length > 0) {
+    query = query.in("torneo_id", torneoIds);
+  } else if (organizadorIdActual && torneoIds.length === 0) {
+    // Si el organizador no tiene torneos, no mostrar pagos
+    query = query.eq("torneo_id", "no-existe");
   }
 
   const { data } = await query.order("created_at", { ascending: false });
