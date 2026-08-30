@@ -1,9 +1,12 @@
 import Link from "next/link";
+import type { ComponentProps } from "react";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { obtenerOrganizadorIdActual } from "@/lib/data/organizador";
 import { PedidoRow } from "@/app/admin/pedidos/pedido-row";
 import type { PedidoPago } from "@/types/database";
+
+type PedidoRowProp = ComponentProps<typeof PedidoRow>["pedido"];
 
 interface Inscripcion {
   id: string;
@@ -67,7 +70,7 @@ export default async function AdminTorneoPagosPage({
           </h2>
           <div className="flex flex-col gap-4">
             {pendientes.map((pedido) => (
-              <PedidoRow key={pedido.id} pedido={pedido as any} />
+              <PedidoRow key={pedido.id} pedido={pedido as unknown as PedidoRowProp} />
             ))}
           </div>
         </div>
@@ -80,7 +83,7 @@ export default async function AdminTorneoPagosPage({
           </h2>
           <div className="flex flex-col gap-4">
             {resueltos.map((pedido) => (
-              <PedidoRow key={pedido.id} pedido={pedido as any} />
+              <PedidoRow key={pedido.id} pedido={pedido as unknown as PedidoRowProp} />
             ))}
           </div>
         </div>

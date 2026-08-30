@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { obtenerCarrito } from "@/lib/data/carrito";
 import { formatearPrecio } from "@/lib/format";
 import { obtenerDatosPago } from "@/lib/data/configuracion";
+import { obtenerOrganizadorIdActual } from "@/lib/data/organizador";
 import { ItemCarritoRow } from "./item-carrito";
 import { OpcionesPago } from "./opciones-pago";
 import { finalizarPedido } from "./actions";
@@ -24,11 +25,12 @@ export default async function CarritoPage({
   } = await supabase.auth.getUser();
   if (!user) redirect("/login?next=/carrito");
 
-  const { data: jugador } = await supabase
-    .from("jugadores")
-    .select("id")
-    .eq("user_id", user.id)
-    .maybeSingle();
+  const organizadorIdActual = await obtenerOrganizadorIdActual();
+  let jugadorQuery = supabase.from("jugadores").select("id").eq("user_id", user.id);
+  jugadorQuery = organizadorIdActual
+    ? jugadorQuery.eq("organizador_id", organizadorIdActual)
+    : jugadorQuery.is("organizador_id", null);
+  const { data: jugador } = await jugadorQuery.maybeSingle();
 
   const items = jugador ? await obtenerCarrito(jugador.id) : [];
   const total = items.reduce((acc, item) => acc + item.precio_cents, 0);

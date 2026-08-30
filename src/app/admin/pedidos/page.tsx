@@ -1,8 +1,11 @@
 import type { Metadata } from "next";
+import type { ComponentProps } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { obtenerOrganizadorIdActual } from "@/lib/data/organizador";
 import { PedidoRow } from "./pedido-row";
 import type { PedidoPago } from "@/types/database";
+
+type PedidoRowProp = ComponentProps<typeof PedidoRow>["pedido"];
 
 export const metadata: Metadata = { title: "Pagos · Admin" };
 
@@ -71,7 +74,7 @@ export default async function AdminPedidosPage() {
               </h2>
               <div className="flex flex-col gap-4">
                 {pendientes.map((pedido) => (
-                  <PedidoRow key={pedido.id} pedido={pedido as any} />
+                  <PedidoRow key={pedido.id} pedido={pedido as unknown as PedidoRowProp} />
                 ))}
               </div>
             </div>
@@ -84,7 +87,7 @@ export default async function AdminPedidosPage() {
               </h2>
               <div className="flex flex-col gap-4">
                 {resueltos.map((pedido) => (
-                  <PedidoRow key={pedido.id} pedido={pedido as any} />
+                  <PedidoRow key={pedido.id} pedido={pedido as unknown as PedidoRowProp} />
                 ))}
               </div>
             </div>

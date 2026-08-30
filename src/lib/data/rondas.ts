@@ -1,22 +1,29 @@
 import "server-only";
 import { createClient } from "@/lib/supabase/server";
+import { obtenerOrganizadorIdActual } from "@/lib/data/organizador";
 import type { Ronda } from "@/types/database";
 
 /** Cuántas rondas recientes promedia la federación para el hándicap. */
 export const RONDAS_PARA_MEDIA = 8;
 
 /**
- * Rondas guardadas del usuario autenticado, de la más reciente a la más
- * antigua. La RLS ya limita a las suyas; no hace falta filtrar por user_id.
+ * Rondas guardadas del usuario autenticado en el organizador actual, de la
+ * más reciente a la más antigua. La RLS ya limita a las suyas por
+ * user_id; el filtro por organizador_id lo añade esta consulta, porque
+ * cada organizador es independiente (las rondas de un club no deben verse
+ * al entrar por el sitio de otro).
  */
 export async function listarMisRondas(): Promise<Ronda[]> {
   try {
     const supabase = await createClient();
-    const { data, error } = await supabase
+    const organizadorId = await obtenerOrganizadorIdActual();
+    let query = supabase
       .from("rondas")
       .select("*")
       .order("fecha", { ascending: false })
       .order("created_at", { ascending: false });
+    if (organizadorId) query = query.eq("organizador_id", organizadorId);
+    const { data, error } = await query;
 
     if (error) {
       console.error("Error al listar rondas:", error);

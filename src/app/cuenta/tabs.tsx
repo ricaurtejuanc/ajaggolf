@@ -7,10 +7,10 @@ type Tab = "datos" | "inscripciones" | "rondas";
 interface TabsProps {
   activeTab: Tab;
   onTabChange: (tab: Tab) => void;
-  children: Record<Tab, React.ReactNode>;
+  paneles: Record<Tab, React.ReactNode>;
 }
 
-export function CuentaTabs({ activeTab, onTabChange, children }: TabsProps) {
+export function CuentaTabs({ activeTab, onTabChange, paneles }: TabsProps) {
   const tabs: Array<{ id: Tab; label: string; icon: React.ReactNode }> = [
     { id: "datos", label: "Mis Datos", icon: <User size={18} /> },
     { id: "inscripciones", label: "Mis Inscripciones", icon: <FileCheck size={18} /> },
@@ -36,7 +36,7 @@ export function CuentaTabs({ activeTab, onTabChange, children }: TabsProps) {
         ))}
       </div>
 
-      <div>{children[activeTab]}</div>
+      <div>{paneles[activeTab]}</div>
     </div>
   );
 }

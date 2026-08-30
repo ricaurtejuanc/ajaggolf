@@ -198,20 +198,23 @@ export async function inscribirse(
       }
     }
 
-    // La licencia federativa es única en `jugadores`. Un invitado que ya
-    // jugó antes (como invitado o con cuenta) reutiliza esa fila en vez de
-    // chocar con la restricción; si es una cuenta real (user_id no nulo)
-    // no se le pisan sus datos guardados con lo que ha escrito el invitado.
-    // Sin licencia real que buscar, se empareja por email (mismo criterio
-    // que asegurarJugadorParaUsuario usa para reclamar un invitado): si
-    // no, la misma persona sin licencia acababa con una ficha nueva y un
-    // AJAG###### distinto cada vez que se inscribía a otro torneo.
+    // La licencia federativa es única en `jugadores` POR ORGANIZADOR (cada
+    // club lleva su propia ficha de cada jugador). Un invitado que ya jugó
+    // antes en ESTE organizador (como invitado o con cuenta) reutiliza esa
+    // fila en vez de chocar con la restricción; si es una cuenta real
+    // (user_id no nulo) no se le pisan sus datos guardados con lo que ha
+    // escrito el invitado. Sin licencia real que buscar, se empareja por
+    // email (mismo criterio que asegurarJugadorParaUsuario usa para
+    // reclamar un invitado): si no, la misma persona sin licencia acababa
+    // con una ficha nueva y un código distinto cada vez que se inscribía a
+    // otro torneo de ese club.
     const { data: jugadorExistente } = sinLicencia
       ? await admin
           .from("jugadores")
           .select("id, user_id, licencia_federativa")
           .is("user_id", null)
           .eq("email", email)
+          .eq("organizador_id", torneo.organizador_id ?? "")
           .order("created_at", { ascending: true })
           .limit(1)
           .maybeSingle()
@@ -219,6 +222,7 @@ export async function inscribirse(
           .from("jugadores")
           .select("id, user_id, licencia_federativa")
           .eq("licencia_federativa", licenciaEscrita)
+          .eq("organizador_id", torneo.organizador_id ?? "")
           .maybeSingle();
 
     let jugadorId: string;

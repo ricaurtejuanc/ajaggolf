@@ -34,6 +34,7 @@ async function resolverJugadorPorLicencia(
     .from("jugadores")
     .select("id")
     .eq("licencia_federativa", licencia)
+    .eq("organizador_id", organizadorId)
     .maybeSingle();
 
   if (existente) {

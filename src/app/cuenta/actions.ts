@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { obtenerOrganizadorIdActual } from "@/lib/data/organizador";
 
 export async function cerrarSesion() {
   const supabase = await createClient();
@@ -53,10 +54,19 @@ export async function actualizarPerfil(
     return { ok: false, error: "El hándicap debe ser un número." };
   }
 
-  const { error } = await supabase
+  // Cada organizador es independiente: sin este filtro, .update() modifica
+  // TODAS las fichas de este usuario en TODOS los clubes en los que tenga
+  // una (jugadores ya no es único solo por user_id, sino por
+  // user_id+organizador_id).
+  const organizadorIdActual = await obtenerOrganizadorIdActual();
+  let queryUpdate = supabase
     .from("jugadores")
     .update({ nombre, apellidos, email, licencia_federativa, telefono, sexo, handicap })
     .eq("user_id", user.id);
+  queryUpdate = organizadorIdActual
+    ? queryUpdate.eq("organizador_id", organizadorIdActual)
+    : queryUpdate.is("organizador_id", null);
+  const { error } = await queryUpdate;
 
   if (error) {
     if (error.code === "23505" && error.message.includes("licencia_federativa")) {

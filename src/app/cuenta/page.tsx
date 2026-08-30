@@ -6,6 +6,7 @@ import { CheckCircle2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { asegurarJugadorParaUsuario } from "@/lib/data/jugadores";
 import { obtenerBizumNumero } from "@/lib/data/configuracion";
+import { obtenerOrganizadorIdActual } from "@/lib/data/organizador";
 import { SignOutButton } from "./sign-out-button";
 import { PedidosList } from "./pedidos-list";
 import { RondasList } from "./rondas-list";
@@ -47,12 +48,26 @@ export default async function CuentaPage({
       ? `user_id.eq.${user.id},id.in.(${idsPedidosInvitado.join(",")})`
       : `user_id.eq.${user.id}`;
 
+  // Cada organizador es independiente: "Mis inscripciones" en el sitio de
+  // un club no debe mezclar pedidos de pago de otro. pedidos_pago no
+  // guarda organizador_id directamente, así que se filtra por los torneos
+  // del organizador actual.
+  const organizadorIdActual = await obtenerOrganizadorIdActual();
+  let pedidosQuery = supabase
+    .from("pedidos_pago")
+    .select("*, inscripciones(*, torneos(nombre, slug, fecha))")
+    .or(filtro);
+  if (organizadorIdActual) {
+    const { data: torneosOrganizador } = await supabase
+      .from("torneos")
+      .select("id")
+      .eq("organizador_id", organizadorIdActual);
+    const torneoIds = (torneosOrganizador ?? []).map((t) => t.id);
+    pedidosQuery = pedidosQuery.in("torneo_id", torneoIds.length > 0 ? torneoIds : ["-"]);
+  }
+
   const [{ data: pedidos }, bizumNumero, rondas] = await Promise.all([
-    supabase
-      .from("pedidos_pago")
-      .select("*, inscripciones(*, torneos(nombre, slug, fecha))")
-      .or(filtro)
-      .order("created_at", { ascending: false }),
+    pedidosQuery.order("created_at", { ascending: false }),
     obtenerBizumNumero(),
     listarMisRondas(),
   ]);
@@ -83,7 +98,7 @@ export default async function CuentaPage({
         <CuentaTabs
           activeTab={inscrito ? "inscripciones" : "datos"}
           onTabChange={() => {}}
-          children={{
+          paneles={{
             datos: <PerfilEditor jugador={jugador} />,
             inscripciones: (
               <section>
