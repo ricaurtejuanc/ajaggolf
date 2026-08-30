@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { PedidoRow } from "../../pedidos/pedido-row";
+import { PedidoRow } from "@/app/admin/pedidos/pedido-row";
 import type { PedidoPago } from "@/types/database";
 
 interface Inscripcion {

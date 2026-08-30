@@ -32,13 +32,13 @@ export default async function AdminPedidosPage() {
   // Agrupar por torneo
   const pedidosPorTorneo = new Map<
     string,
-    { torneo: { id: string; nombre: string; slug: string }; pedidos: PedidoConTorneo[] }
+    { torneo: { id: string; nombre: string }; pedidos: PedidoConTorneo[] }
   >();
   for (const pedido of pedidos) {
     const torneoKey = pedido.torneo_id ?? "sin_torneo";
     if (!pedidosPorTorneo.has(torneoKey)) {
       pedidosPorTorneo.set(torneoKey, {
-        torneo: pedido.torneos || { id: "unknown", nombre: "Torneo desconocido", slug: "" },
+        torneo: pedido.torneos || { id: "unknown", nombre: "Torneo desconocido" },
         pedidos: [],
       });
     }
