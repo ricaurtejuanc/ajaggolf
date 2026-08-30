@@ -12,6 +12,7 @@ import {
   Users,
   UserRound,
   Flag,
+  PiggyBank,
 } from "lucide-react";
 import { getUsuarioAdmin } from "@/lib/auth";
 
@@ -22,6 +23,7 @@ const adminLinks = [
   { href: "/admin/campos", label: "Campos de golf", icon: Flag },
   { href: "/admin/patrocinadores", label: "Patrocinadores", icon: Handshake },
   { href: "/admin/pedidos", label: "Pagos", icon: Wallet },
+  { href: "/admin/economia", label: "Economía", icon: PiggyBank },
   { href: "/admin/consultas", label: "Consultas", icon: MessageSquare },
   { href: "/admin/usuarios", label: "Usuarios", icon: UserRound },
   { href: "/admin/administradores", label: "Administradores", icon: Users },

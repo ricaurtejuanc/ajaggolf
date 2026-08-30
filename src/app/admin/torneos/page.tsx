@@ -69,6 +69,9 @@ export default async function AdminTorneosPage() {
               <Link href={`/admin/torneos/${torneo.id}/resultados`} className={claseBoton}>
                 Calificaciones
               </Link>
+              <Link href={`/admin/economia/${torneo.id}`} className={claseBoton}>
+                Economía
+              </Link>
               <div className="ml-auto">
                 <EliminarTorneoButton torneoId={torneo.id} />
               </div>

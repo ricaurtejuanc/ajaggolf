@@ -313,6 +313,29 @@ export type ConsultaContacto = {
   created_at: string;
 };
 
+export type TipoMovimiento = "ingreso" | "gasto";
+
+/**
+ * Movimiento económico manual. El ingreso por inscripciones no se guarda
+ * aquí: se calcula sumando las inscripciones confirmadas del torneo (ver
+ * `src/lib/data/economia.ts`).
+ */
+export type MovimientoEconomico = {
+  id: string;
+  organizador_id: string;
+  /** null = movimiento general del organizador, no imputable a un torneo. */
+  torneo_id: string | null;
+  tipo: TipoMovimiento;
+  categoria: string;
+  concepto: string;
+  importe_cents: number;
+  fecha: string;
+  notas: string | null;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
 // Insert/Update se dejan totalmente opcionales (Partial<Row>): las columnas
 // obligatorias reales las exige Postgres al insertar, no el tipo TS. Es una
 // simplificación deliberada frente a un `gen types` real, que sí distingue
@@ -381,6 +404,7 @@ export type Database = {
       consultas_contacto: TableDef<ConsultaContacto>;
       campos_golf: TableDef<CampoGolf>;
       patrocinadores: TableDef<Patrocinador>;
+      movimientos_economicos: TableDef<MovimientoEconomico>;
     };
     Views: {
       salidas_publicadas: ViewDef<SalidaPublicada>;
