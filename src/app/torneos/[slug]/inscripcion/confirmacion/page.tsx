@@ -38,7 +38,6 @@ export default async function ConfirmacionInscripcionPage({
       .from("pedidos_pago")
       .select("id, estado, metodo_pago, total_cents, inscripciones(torneo_id)")
       .eq("id", pedidoId)
-      .is("user_id", null)
       .maybeSingle(),
     obtenerBizumNumero(),
   ]);
