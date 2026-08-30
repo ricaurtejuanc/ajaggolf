@@ -132,9 +132,11 @@ export default async function LigaDetallePage({
         </div>
       ) : null}
 
-      <p className="mt-6 text-xs font-medium uppercase tracking-wide text-ajag-oro-600">
-        {liga.temporada ?? "Liga AJAG"}
-      </p>
+      {liga.temporada ? (
+        <p className="mt-6 text-xs font-medium uppercase tracking-wide text-ajag-oro-600">
+          {liga.temporada}
+        </p>
+      ) : null}
       <h1 className="font-display text-3xl font-semibold text-ajag-verde-900">
         {liga.nombre}
       </h1>
