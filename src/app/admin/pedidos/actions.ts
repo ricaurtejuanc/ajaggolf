@@ -105,6 +105,15 @@ export async function rechazarPago(pedidoId: string) {
 // Borra el pedido y las inscripciones que llevaba (un pedido sin
 // inscripciones no tiene sentido guardarlo, y dejarlas huérfanas ocuparía
 // cupo sin un pago detrás) — para limpiar pedidos duplicados o de prueba.
+//
+// Orden importante: la policy de DELETE en pedidos_pago comprueba el
+// organizador vía las inscripciones ligadas (join a torneos). Si se
+// borraran las inscripciones primero, esa comprobación ya no encontraría
+// ninguna y el delete del pedido quedaría bloqueado por RLS sin dar
+// error — el pedido se quedaba huérfano en vez de desaparecer. Por eso se
+// capturan antes los ids de las inscripciones, se borra el pedido (la FK
+// `on delete set null` limpia pedido_pago_id sin pasar por RLS) y solo
+// entonces se borran las inscripciones por id.
 export async function eliminarPedido(pedidoId: string) {
   const admin = await getUsuarioAdmin();
   if (!admin) return;
@@ -126,8 +135,17 @@ export async function eliminarPedido(pedidoId: string) {
     return;
   }
 
-  await supabase.from("inscripciones").delete().eq("pedido_pago_id", pedidoId);
+  const { data: inscripciones } = await supabase
+    .from("inscripciones")
+    .select("id")
+    .eq("pedido_pago_id", pedidoId);
+
   await supabase.from("pedidos_pago").delete().eq("id", pedidoId);
+
+  const ids = (inscripciones ?? []).map((i) => i.id);
+  if (ids.length > 0) {
+    await supabase.from("inscripciones").delete().in("id", ids);
+  }
 
   revalidatePath("/admin/pedidos");
 }
