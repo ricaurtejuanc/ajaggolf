@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { obtenerOrganizadorIdActual } from "@/lib/data/organizador";
 import { PedidoRow } from "@/app/admin/pedidos/pedido-row";
 import type { PedidoPago } from "@/types/database";
 
@@ -22,11 +23,12 @@ export default async function AdminTorneoPagosPage({
 }) {
   const { id: torneoId } = await params;
   const supabase = await createClient();
+  const organizadorIdActual = await obtenerOrganizadorIdActual();
 
   const [{ data: torneo }, { data: pedidos }] = await Promise.all([
     supabase
       .from("torneos")
-      .select("id, nombre")
+      .select("id, nombre, organizador_id")
       .eq("id", torneoId)
       .maybeSingle(),
     supabase
@@ -36,7 +38,8 @@ export default async function AdminTorneoPagosPage({
       .order("created_at", { ascending: false }),
   ]);
 
-  if (!torneo) notFound();
+  if (!torneo || (organizadorIdActual && torneo.organizador_id !== organizadorIdActual))
+    notFound();
 
   const pedidosData = (pedidos ?? []) as unknown as PedidoConDetalle[];
   const pendientes = pedidosData.filter(

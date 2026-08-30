@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import { obtenerOrganizadorIdActual } from "@/lib/data/organizador";
 import { PedidoRow } from "./pedido-row";
 import type { PedidoPago } from "@/types/database";
 
@@ -20,12 +21,19 @@ interface PedidoConTorneo extends PedidoPago {
 
 export default async function AdminPedidosPage() {
   const supabase = await createClient();
-  const { data } = await supabase
+  const organizadorIdActual = await obtenerOrganizadorIdActual();
+
+  let query = supabase
     .from("pedidos_pago")
     .select(
       "*, torneos(id, nombre), inscripciones(id, es_socio, precio_cents, jugadores(nombre, apellidos, email))",
-    )
-    .order("created_at", { ascending: false });
+    );
+
+  if (organizadorIdActual) {
+    query = query.eq("torneos.organizador_id", organizadorIdActual);
+  }
+
+  const { data } = await query.order("created_at", { ascending: false });
 
   const pedidos = (data ?? []) as unknown as PedidoConTorneo[];
 

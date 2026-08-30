@@ -1,15 +1,28 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import { obtenerOrganizadorIdActual } from "@/lib/data/organizador";
 
 export const metadata: Metadata = { title: "Panel admin" };
 
 export default async function AdminDashboardPage() {
   const supabase = await createClient();
+  const organizadorIdActual = await obtenerOrganizadorIdActual();
   // Server Component: Date.now() se evalúa una vez por request, no en un
   // re-render de cliente, así que la regla de pureza no aplica aquí.
   // eslint-disable-next-line react-hooks/purity
   const hace7dias = new Date(Date.now() - 7 * 86400000).toISOString();
+
+  let queryTorneos = supabase.from("torneos").select("id", { count: "exact", head: true });
+  let queryPagos = supabase
+    .from("pedidos_pago")
+    .select("id", { count: "exact", head: true })
+    .in("estado", ["pendiente_confirmacion", "marcado_pagado"]);
+
+  if (organizadorIdActual) {
+    queryTorneos = queryTorneos.eq("organizador_id", organizadorIdActual);
+    queryPagos = queryPagos.eq("torneos.organizador_id", organizadorIdActual);
+  }
 
   const [
     { count: torneosTotal },
@@ -17,11 +30,8 @@ export default async function AdminDashboardPage() {
     { count: consultasSinLeer },
     { count: visitas7dias },
   ] = await Promise.all([
-    supabase.from("torneos").select("id", { count: "exact", head: true }),
-    supabase
-      .from("pedidos_pago")
-      .select("id", { count: "exact", head: true })
-      .in("estado", ["pendiente_confirmacion", "marcado_pagado"]),
+    queryTorneos,
+    queryPagos,
     supabase
       .from("consultas_contacto")
       .select("id", { count: "exact", head: true })
