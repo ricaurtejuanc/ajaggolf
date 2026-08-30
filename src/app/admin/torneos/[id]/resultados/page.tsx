@@ -14,11 +14,7 @@ import { DocumentoActual } from "./documento-actual";
 import { GanadoresPremiosForm } from "./ganadores-premios-form";
 import { PosicionesLigaForm } from "./posiciones-liga-form";
 import { ClasificacionGeneralToggle } from "./clasificacion-general-toggle";
-import {
-  adivinarCategoriaClasificacion,
-  categoriaPremiosPorHandicap,
-  ordenCategoriaClasificacion,
-} from "@/lib/resultados/categorias";
+import { adivinarCategoriaPublicacion, ordenCategoriaClasificacion } from "@/lib/resultados/categorias";
 import type { FormatoPuntuacion, Resultado } from "@/types/database";
 
 export const metadata: Metadata = { title: "Resultados · Admin" };
@@ -240,7 +236,14 @@ function TablaResultados({
         puntos: r.puntos != null ? String(r.puntos) : "",
         golpes: r.golpes != null ? String(r.golpes) : "",
         estadoJuego: (r.estado_juego as "retirado" | "no_presentado" | null) ?? "",
-        categoria: r.categoria,
+        // "unica" en una fila ya guardada puede ser una elección real del
+        // admin, o solo el valor por defecto de una fila que nunca se llegó
+        // a categorizar (todo lo guardado antes de que existiera esta
+        // columna cayó ahí). Para no dejar la tabla mezclada sin motivo, se
+        // reintenta adivinar por hándicap en ese caso; una categoría ya
+        // explícita nunca se pisa.
+        categoria:
+          r.categoria !== "unica" ? r.categoria : adivinarCategoriaPublicacion(r.handicap, categorias),
       }),
     );
   } else {
@@ -251,7 +254,6 @@ function TablaResultados({
 
     filasIniciales = confirmados.map((c) => {
       const sugerencia = sugerencias.get(c.inscripcionId);
-      const categoriaPremios = categoriaPremiosPorHandicap(c.handicap, categorias);
       return filaVacia({
         inscripcionId: c.inscripcionId,
         nombreMostrado: c.nombreCompleto,
@@ -260,7 +262,7 @@ function TablaResultados({
         posicion: sugerencia ? String(sugerencia.posicion) : "",
         puntos: sugerencia && formatoPuntuacion === "stableford" ? String(sugerencia.valor) : "",
         golpes: sugerencia && formatoPuntuacion === "medal_play" ? String(sugerencia.valor) : "",
-        categoria: categoriaPremios ? adivinarCategoriaClasificacion(categoriaPremios) : "unica",
+        categoria: adivinarCategoriaPublicacion(c.handicap, categorias),
       });
     });
   }

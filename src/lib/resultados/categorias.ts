@@ -40,58 +40,70 @@ export function ordenCategoriaClasificacion(categoria: CategoriaClasificacionPdf
 }
 
 /**
- * Adivina la categoría de publicación (la lista fija de arriba) a partir del
- * nombre de una categoría de premios del torneo (libre, definida por el
- * admin: "Caballeros hasta 12", "Damas", "Scratch"...). Solo se usa como
- * valor de partida al crear filas nuevas en la tabla manual de resultados;
- * el admin siempre puede cambiarlo fila a fila. Sin ninguna coincidencia de
- * palabra clave, "unica" es la opción segura: nunca deja a un jugador fuera
- * de la clasificación general por una categoría mal adivinada.
+ * Adivina la categoría de publicación (la lista fija de arriba) para un
+ * hándicap dado, a partir de los tramos de premios del torneo (libres,
+ * definidos por el admin). Solo se usa como valor de partida al crear o
+ * cargar filas en la tabla manual de resultados; el admin siempre puede
+ * cambiarlo fila a fila.
+ *
+ * En la práctica el nombre de la categoría de premios casi nunca es
+ * literalmente "Primera"/"Segunda"/etc. (suele ser "Categoría 1", "Hasta 12",
+ * "Otros"...), así que primero se prueba por palabra clave en el nombre y,
+ * si no hay ninguna, con exactamente dos tramos de hándicap se asume la
+ * convención española habitual: el tramo de hándicap más bajo es "Primera"
+ * y el más alto "Segunda". Sin tramos configurados, sin hándicap conocido, o
+ * con una forma de premios que no encaja en ningún caso anterior, "unica" es
+ * la opción segura: nunca deja a un jugador fuera de la clasificación
+ * general por una categoría mal adivinada.
  */
-/**
- * Categoría de premios del torneo (nombre libre, definido por el admin) a la
- * que pertenece un hándicap dado, por rango. Sin tramos configurados o sin
- * hándicap conocido, devuelve null (no hay premios por categoría en este
- * torneo, o el jugador aún no tiene hándicap). Sin ningún tramo que cubra el
- * hándicap exactamente, se asigna al tramo más cercano: un hueco entre
- * categorías, o un valor fuera de todas, no debe dejar a nadie sin adivinar.
- */
-export function categoriaPremiosPorHandicap(
+export function adivinarCategoriaPublicacion(
   handicap: number | null,
-  categorias: { nombre: string; handicapDesde: number | null; handicapHasta: number | null }[],
-): string | null {
-  if (handicap == null || Number.isNaN(handicap)) return null;
-  const conRango = categorias.filter((c) => c.handicapDesde != null || c.handicapHasta != null);
-  if (conRango.length === 0) return null;
+  categoriasPremios: { nombre: string; handicapDesde: number | null; handicapHasta: number | null }[],
+): CategoriaClasificacionPdf {
+  if (handicap == null || Number.isNaN(handicap)) return "unica";
+  const conRango = categoriasPremios.filter(
+    (c) => c.handicapDesde != null || c.handicapHasta != null,
+  );
+  if (conRango.length === 0) return "unica";
 
   const exacta = conRango.find(
     (c) =>
       (c.handicapDesde == null || handicap >= c.handicapDesde) &&
       (c.handicapHasta == null || handicap <= c.handicapHasta),
   );
-  if (exacta) return exacta.nombre;
 
-  let masCercana = conRango[0];
-  let distanciaMinima = Infinity;
-  for (const c of conRango) {
-    const distDesde = c.handicapDesde != null ? Math.abs(handicap - c.handicapDesde) : Infinity;
-    const distHasta = c.handicapHasta != null ? Math.abs(handicap - c.handicapHasta) : Infinity;
-    const distancia = Math.min(distDesde, distHasta);
-    if (distancia < distanciaMinima) {
-      distanciaMinima = distancia;
-      masCercana = c;
+  let categoria = exacta;
+  if (!categoria) {
+    // Ningún tramo cubre este hándicap (hueco entre categorías, o por
+    // encima/debajo de todas): se asigna al más cercano en vez de dejarlo
+    // sin adivinar.
+    let distanciaMinima = Infinity;
+    for (const c of conRango) {
+      const distDesde = c.handicapDesde != null ? Math.abs(handicap - c.handicapDesde) : Infinity;
+      const distHasta = c.handicapHasta != null ? Math.abs(handicap - c.handicapHasta) : Infinity;
+      const distancia = Math.min(distDesde, distHasta);
+      if (distancia < distanciaMinima) {
+        distanciaMinima = distancia;
+        categoria = c;
+      }
     }
   }
-  return masCercana.nombre;
-}
+  if (!categoria) return "unica";
 
-export function adivinarCategoriaClasificacion(nombreCategoriaPremios: string): CategoriaClasificacionPdf {
-  const nombre = nombreCategoriaPremios.toLowerCase();
+  const nombre = categoria.nombre.toLowerCase();
   if (nombre.includes("dama")) return "damas";
   if (nombre.includes("senior") || nombre.includes("sénior") || nombre.includes("veterano"))
     return "senior";
   if (nombre.includes("scratch")) return "scratch";
   if (nombre.includes("segunda")) return "segunda";
   if (nombre.includes("primera")) return "primera";
+
+  if (conRango.length === 2) {
+    const ordenadas = [...conRango].sort(
+      (a, b) => (a.handicapDesde ?? -Infinity) - (b.handicapDesde ?? -Infinity),
+    );
+    return categoria === ordenadas[0] ? "primera" : "segunda";
+  }
+
   return "unica";
 }
