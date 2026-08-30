@@ -45,7 +45,15 @@ export function HoyosConGolpe({
   if (hoyos === null) {
     return <p className="mt-3 text-sm text-ajag-gris-500">Cargando la tarjeta…</p>;
   }
-  if (hoyos.length === 0) return null;
+  // Los tees genéricos de campos sin valorar no traen tarjeta hoyo a hoyo.
+  if (hoyos.length === 0) {
+    return (
+      <p className="mt-3 text-sm text-ajag-gris-500">
+        Este recorrido todavía no tiene cargada su tarjeta hoyo a hoyo, así que no se puede
+        decir en qué hoyos recibes golpe.
+      </p>
+    );
+  }
 
   const totalMetros = hoyos.reduce((s, h) => s + h.metros, 0);
 
