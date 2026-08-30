@@ -4,15 +4,28 @@ import { useActionState, useMemo, useState, useTransition } from "react";
 import { Pencil, Plus, Trash2, X, Check } from "lucide-react";
 import {
   actualizarRecorrido,
+  actualizarTee,
   crearCampo,
+  crearTee,
   eliminarRecorrido,
+  eliminarTee,
   renombrarClub,
   type EstadoCampo,
 } from "./actions";
 
+/** Valoración de una barra: lo que necesita la calculadora de hándicap. */
+export interface TeeVista {
+  id: string;
+  tee: string;
+  genero: "H" | "M";
+  cr: number;
+  slope: number;
+  par: number;
+}
+
 interface Club {
   nombre: string;
-  recorridos: { id: string; recorrido: string }[];
+  recorridos: { id: string; recorrido: string; tees: TeeVista[] }[];
 }
 
 export function CamposList({ clubes, esOwner }: { clubes: Club[]; esOwner: boolean }) {
@@ -172,15 +185,35 @@ function ClubCard({ club, esOwner }: { club: Club; esOwner: boolean }) {
 
       <ul className="flex flex-col gap-1.5">
         {club.recorridos.map((r) => (
-          <RecorridoRow key={r.id} id={r.id} recorrido={r.recorrido} esOwner={esOwner} />
+          <RecorridoRow
+            key={r.id}
+            id={r.id}
+            club={club.nombre}
+            recorrido={r.recorrido}
+            tees={r.tees}
+            esOwner={esOwner}
+          />
         ))}
       </ul>
     </div>
   );
 }
 
-function RecorridoRow({ id, recorrido, esOwner }: { id: string; recorrido: string; esOwner: boolean }) {
+function RecorridoRow({
+  id,
+  club,
+  recorrido,
+  tees,
+  esOwner,
+}: {
+  id: string;
+  club: string;
+  recorrido: string;
+  tees: TeeVista[];
+  esOwner: boolean;
+}) {
   const [editando, setEditando] = useState(false);
+  const [verTees, setVerTees] = useState(false);
   const [valor, setValor] = useState(recorrido);
   const [pendiente, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -240,7 +273,22 @@ function RecorridoRow({ id, recorrido, esOwner }: { id: string; recorrido: strin
           </div>
         ) : (
           <>
-            <span className="text-sm text-ajag-gris-500">{recorrido}</span>
+            <button
+              type="button"
+              onClick={() => setVerTees((v) => !v)}
+              className="flex min-w-0 flex-1 items-center gap-2 text-left text-sm text-ajag-gris-500 hover:text-ajag-verde-900"
+            >
+              <span className="truncate">{recorrido}</span>
+              <span
+                className={`shrink-0 rounded-full px-2 py-0.5 text-xs ${
+                  tees.length > 0
+                    ? "bg-ajag-verde-50 text-ajag-verde-700"
+                    : "bg-ajag-gris-100 text-ajag-gris-500"
+                }`}
+              >
+                {tees.length > 0 ? `${tees.length} barras` : "sin valorar"}
+              </span>
+            </button>
             <div className="flex shrink-0 items-center gap-2">
               <button
                 type="button"
@@ -266,6 +314,144 @@ function RecorridoRow({ id, recorrido, esOwner }: { id: string; recorrido: strin
         )}
       </div>
       {error ? <p className="text-xs text-ajag-rojo-600">{error}</p> : null}
+      {verTees ? <TeesRecorrido club={club} recorrido={recorrido} tees={tees} /> : null}
+    </li>
+  );
+}
+
+const claseCelda =
+  "w-full rounded-lg border border-ajag-gris-200 px-2 py-1 text-sm outline-none focus:border-ajag-verde-600";
+
+/** Alta, edición y borrado de las barras valoradas de un recorrido. */
+function TeesRecorrido({
+  club,
+  recorrido,
+  tees,
+}: {
+  club: string;
+  recorrido: string;
+  tees: TeeVista[];
+}) {
+  const alta = crearTee.bind(null, club, recorrido);
+  const [estado, dispatch, pendiente] = useActionState<EstadoCampo, FormData>(alta, {
+    ok: false,
+    error: null,
+  });
+
+  return (
+    <div className="mt-2 rounded-xl bg-ajag-verde-50/50 p-3">
+      {tees.length === 0 ? (
+        <p className="text-xs text-ajag-gris-500">
+          Este recorrido no tiene valoración, así que no aparece en la calculadora de hándicap.
+          Añade sus barras con el CR y el slope de la tarjeta.
+        </p>
+      ) : (
+        <ul className="flex flex-col gap-1">
+          {tees.map((t) => (
+            <TeeRow key={t.id} tee={t} />
+          ))}
+        </ul>
+      )}
+
+      <form action={dispatch} className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-6">
+        <input name="tee" placeholder="Barra" aria-label="Barra" className={claseCelda} />
+        <select name="genero" aria-label="Género" defaultValue="H" className={claseCelda}>
+          <option value="H">Caballeros</option>
+          <option value="M">Damas</option>
+        </select>
+        <input name="cr" inputMode="decimal" placeholder="CR" aria-label="CR" className={claseCelda} />
+        <input name="slope" inputMode="numeric" placeholder="Slope" aria-label="Slope" className={claseCelda} />
+        <input name="par" inputMode="numeric" placeholder="Par" aria-label="Par" className={claseCelda} />
+        <button
+          type="submit"
+          disabled={pendiente}
+          className="rounded-lg bg-ajag-verde-700 px-3 py-1 text-sm font-medium text-white transition hover:bg-ajag-verde-600 disabled:opacity-60"
+        >
+          {pendiente ? "..." : "Añadir"}
+        </button>
+      </form>
+      {estado.error ? <p className="mt-1 text-xs text-ajag-rojo-600">{estado.error}</p> : null}
+    </div>
+  );
+}
+
+function TeeRow({ tee }: { tee: TeeVista }) {
+  const [editando, setEditando] = useState(false);
+  const [pendiente, startTransition] = useTransition();
+  const guardar = actualizarTee.bind(null, tee.id);
+  const [estado, dispatch, guardando] = useActionState<EstadoCampo, FormData>(guardar, {
+    ok: false,
+    error: null,
+  });
+
+  if (editando) {
+    return (
+      <li>
+        <form action={dispatch} className="grid grid-cols-2 gap-2 sm:grid-cols-6">
+          <input name="tee" defaultValue={tee.tee} aria-label="Barra" className={claseCelda} />
+          <select name="genero" defaultValue={tee.genero} aria-label="Género" className={claseCelda}>
+            <option value="H">Caballeros</option>
+            <option value="M">Damas</option>
+          </select>
+          <input name="cr" defaultValue={tee.cr} inputMode="decimal" aria-label="CR" className={claseCelda} />
+          <input name="slope" defaultValue={tee.slope} inputMode="numeric" aria-label="Slope" className={claseCelda} />
+          <input name="par" defaultValue={tee.par} inputMode="numeric" aria-label="Par" className={claseCelda} />
+          <div className="flex items-center gap-2">
+            <button
+              type="submit"
+              disabled={guardando}
+              className="text-ajag-verde-700 hover:text-ajag-verde-900 disabled:opacity-50"
+              aria-label="Guardar barra"
+            >
+              <Check size={15} />
+            </button>
+            <button
+              type="button"
+              onClick={() => setEditando(false)}
+              className="text-ajag-gris-500 hover:text-ajag-rojo-600"
+              aria-label="Cancelar"
+            >
+              <X size={15} />
+            </button>
+          </div>
+        </form>
+        {estado.error ? <p className="mt-1 text-xs text-ajag-rojo-600">{estado.error}</p> : null}
+      </li>
+    );
+  }
+
+  return (
+    <li className="flex items-center justify-between gap-2 text-xs text-ajag-gris-500">
+      <span className="min-w-0 truncate">
+        <span className="font-medium text-ajag-verde-900">{tee.tee}</span>{" "}
+        {tee.genero === "H" ? "caballeros" : "damas"} · CR {tee.cr} · Slope {tee.slope} · Par{" "}
+        {tee.par}
+      </span>
+      <span className="flex shrink-0 items-center gap-2">
+        <button
+          type="button"
+          onClick={() => setEditando(true)}
+          className="text-ajag-gris-500 hover:text-ajag-verde-700"
+          aria-label={`Editar barra ${tee.tee}`}
+        >
+          <Pencil size={12} />
+        </button>
+        <button
+          type="button"
+          disabled={pendiente}
+          onClick={() => {
+            if (confirm(`¿Quitar la barra ${tee.tee}? También borra su tarjeta hoyo a hoyo.`)) {
+              startTransition(() => {
+                void eliminarTee(tee.id);
+              });
+            }
+          }}
+          className="text-ajag-gris-500 hover:text-ajag-rojo-600 disabled:opacity-50"
+          aria-label={`Eliminar barra ${tee.tee}`}
+        >
+          <Trash2 size={12} />
+        </button>
+      </span>
     </li>
   );
 }
