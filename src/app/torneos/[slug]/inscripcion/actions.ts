@@ -9,6 +9,26 @@ import { obtenerOrganizadorPorId, obtenerOrganizadorIdActual } from "@/lib/data/
 
 export type EstadoInscripcionForm = { ok: boolean; error: string | null };
 
+// El proyecto de Supabase recibe tráfico de bots/crawlers que satura
+// puntualmente PostgREST (timeouts intermitentes, "Thread killed by
+// timeout manager"). Perder por eso la escritura de `inscripciones` deja
+// un pedido_pago huérfano (creado, pero sin inscripción) que rompe la
+// página de confirmación con un 404. Un par de reintentos con pequeño
+// backoff absorbe esos picos sin duplicar nada (son upserts/inserts
+// idempotentes por torneo_id+jugador_id).
+async function conReintentos<T extends { error: { message: string } | null }>(
+  intento: () => PromiseLike<T>,
+  maxIntentos = 3,
+): Promise<T> {
+  let ultimo: T;
+  for (let i = 0; i < maxIntentos; i++) {
+    ultimo = await intento();
+    if (!ultimo.error) return ultimo;
+    if (i < maxIntentos - 1) await new Promise((r) => setTimeout(r, 400 * (i + 1)));
+  }
+  return ultimo!;
+}
+
 export async function inscribirse(
   torneoSlug: string,
   _prevState: EstadoInscripcionForm,
@@ -116,20 +136,22 @@ export async function inscribirse(
       return { ok: false, error: "No se ha podido guardar la inscripción. Inténtalo de nuevo." };
     }
 
-    const { error } = await supabase.from("inscripciones").upsert(
-      {
-        torneo_id: torneo.id,
-        jugador_id: jugador.id,
-        sexo,
-        licencia_federativa,
-        handicap_snapshot: handicap,
-        juega_con_licencias: juegaConLicencias,
-        es_socio: esSocio,
-        precio_cents: precioAplicable,
-        estado: pagaEnClub ? "confirmada" : "pendiente_pago",
-        pedido_pago_id: pedido.id,
-      },
-      { onConflict: "torneo_id,jugador_id" },
+    const { error } = await conReintentos(() =>
+      supabase.from("inscripciones").upsert(
+        {
+          torneo_id: torneo.id,
+          jugador_id: jugador.id,
+          sexo,
+          licencia_federativa,
+          handicap_snapshot: handicap,
+          juega_con_licencias: juegaConLicencias,
+          es_socio: esSocio,
+          precio_cents: precioAplicable,
+          estado: pagaEnClub ? "confirmada" : "pendiente_pago",
+          pedido_pago_id: pedido.id,
+        },
+        { onConflict: "torneo_id,jugador_id" },
+      ),
     );
     if (error) return { ok: false, error: error.message };
 
@@ -262,18 +284,20 @@ export async function inscribirse(
       return { ok: false, error: "No se ha podido guardar la inscripción. Inténtalo de nuevo." };
     }
 
-    const { error: errorInscripcion } = await admin.from("inscripciones").insert({
-      torneo_id: torneo.id,
-      jugador_id: jugadorId,
-      sexo,
-      licencia_federativa,
-      handicap_snapshot: handicap,
-      juega_con_licencias: juegaConLicencias,
-      es_socio: esSocio,
-      precio_cents: precioAplicable,
-      estado: pagaEnClub ? "confirmada" : "pendiente_pago",
-      pedido_pago_id: pedido.id,
-    });
+    const { error: errorInscripcion } = await conReintentos(() =>
+      admin.from("inscripciones").insert({
+        torneo_id: torneo.id,
+        jugador_id: jugadorId,
+        sexo,
+        licencia_federativa,
+        handicap_snapshot: handicap,
+        juega_con_licencias: juegaConLicencias,
+        es_socio: esSocio,
+        precio_cents: precioAplicable,
+        estado: pagaEnClub ? "confirmada" : "pendiente_pago",
+        pedido_pago_id: pedido.id,
+      }),
+    );
     if (errorInscripcion) {
       console.error("Error creando inscripción de invitado:", errorInscripcion);
       return { ok: false, error: "No se ha podido guardar la inscripción. Inténtalo de nuevo." };
