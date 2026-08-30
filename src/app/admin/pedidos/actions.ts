@@ -4,13 +4,14 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { getUsuarioAdmin } from "@/lib/auth";
 import { enviarEmailInscripcionConfirmada } from "@/lib/email";
-import { obtenerOrganizadorPorId } from "@/lib/data/organizador";
+import { obtenerOrganizadorPorId, obtenerOrganizadorIdActual } from "@/lib/data/organizador";
 
 export async function confirmarPago(pedidoId: string) {
   const admin = await getUsuarioAdmin();
   if (!admin) return;
 
   const supabase = await createClient();
+  const organizadorIdActual = await obtenerOrganizadorIdActual();
 
   const { data: pedidoDataRaw } = await supabase
     .from("pedidos_pago")
@@ -26,6 +27,10 @@ export async function confirmarPago(pedidoId: string) {
       jugadores: { nombre: string; email: string | null } | null;
     }[];
   } | null;
+
+  if (!pedidoData?.inscripciones?.[0] || (organizadorIdActual && pedidoData.inscripciones[0].torneos?.organizador_id !== organizadorIdActual)) {
+    return;
+  }
 
   await supabase
     .from("pedidos_pago")
@@ -68,6 +73,22 @@ export async function rechazarPago(pedidoId: string) {
   if (!admin) return;
 
   const supabase = await createClient();
+  const organizadorIdActual = await obtenerOrganizadorIdActual();
+
+  // Validar que el pedido pertenece al organizador actual
+  const { data: pedidoRaw } = await supabase
+    .from("pedidos_pago")
+    .select("torneos(organizador_id)")
+    .eq("id", pedidoId)
+    .maybeSingle();
+  const pedido = pedidoRaw as unknown as {
+    torneos: { organizador_id: string | null } | null;
+  } | null;
+
+  if (!pedido || (organizadorIdActual && pedido.torneos?.organizador_id !== organizadorIdActual)) {
+    return;
+  }
+
   await supabase
     .from("pedidos_pago")
     .update({ estado: "rechazado", confirmado_por: admin.id })
@@ -89,6 +110,22 @@ export async function eliminarPedido(pedidoId: string) {
   if (!admin) return;
 
   const supabase = await createClient();
+  const organizadorIdActual = await obtenerOrganizadorIdActual();
+
+  // Validar que el pedido pertenece al organizador actual
+  const { data: pedidoRaw } = await supabase
+    .from("pedidos_pago")
+    .select("torneos(organizador_id)")
+    .eq("id", pedidoId)
+    .maybeSingle();
+  const pedido = pedidoRaw as unknown as {
+    torneos: { organizador_id: string | null } | null;
+  } | null;
+
+  if (!pedido || (organizadorIdActual && pedido.torneos?.organizador_id !== organizadorIdActual)) {
+    return;
+  }
+
   await supabase.from("inscripciones").delete().eq("pedido_pago_id", pedidoId);
   await supabase.from("pedidos_pago").delete().eq("id", pedidoId);
 
