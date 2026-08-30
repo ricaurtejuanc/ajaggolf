@@ -99,8 +99,7 @@ export default async function CuentaPage({
 
       <div className="mt-8">
         <CuentaTabs
-          activeTab={inscrito ? "inscripciones" : "datos"}
-          onTabChange={() => {}}
+          defaultTab={inscrito ? "inscripciones" : "datos"}
           paneles={{
             datos: <PerfilEditor jugador={jugador} />,
             inscripciones: (
