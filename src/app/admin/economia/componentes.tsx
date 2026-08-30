@@ -1,7 +1,5 @@
-import { formatearPrecio, formatearFechaCorta } from "@/lib/format";
-import { etiquetaCategoria } from "@/lib/economia/categorias";
-import { EliminarMovimientoButton } from "./eliminar-movimiento-button";
-import type { MovimientoEconomico } from "@/types/database";
+import { formatearPrecio } from "@/lib/format";
+import type { DesgloseCategoria } from "@/lib/data/economia";
 
 /** Fila de indicadores: ingresos, gastos, beneficio y margen. */
 export function KpisEconomia({
@@ -49,59 +47,55 @@ export function KpisEconomia({
   );
 }
 
-/** Tabla de movimientos manuales, con su borrado. */
-export function TablaMovimientos({
-  movimientos,
-  vacio,
+/** Dato suelto (etiqueta + valor) dentro de un bloque de estadísticas. */
+export function Dato({ label, valor, nota }: { label: string; valor: string; nota?: string }) {
+  return (
+    <div>
+      <p className="font-display text-lg font-semibold text-ajag-verde-900">{valor}</p>
+      <p className="text-xs text-ajag-gris-500">{label}</p>
+      {nota ? <p className="text-xs text-ajag-gris-500">{nota}</p> : null}
+    </div>
+  );
+}
+
+/**
+ * Reparto de ingresos o gastos por categoría, con barra proporcional. Se
+ * prefiere una barra apilada simple a un gráfico de tarta: con 3-5 categorías
+ * se lee igual de rápido, se imprime bien y no arrastra ninguna dependencia.
+ */
+export function DesgloseCategorias({
+  titulo,
+  filas,
+  variante,
 }: {
-  movimientos: MovimientoEconomico[];
-  vacio: string;
+  titulo: string;
+  filas: DesgloseCategoria[];
+  variante: "ingreso" | "gasto";
 }) {
-  if (movimientos.length === 0) {
-    return <div className="card-ajag p-6 text-center text-sm text-ajag-gris-500">{vacio}</div>;
-  }
+  const colorBarra = variante === "ingreso" ? "bg-ajag-verde-600" : "bg-ajag-rojo-600";
 
   return (
-    <div className="card-ajag overflow-x-auto">
-      <table className="w-full min-w-[640px] text-left text-sm">
-        <thead>
-          <tr className="border-b border-ajag-gris-100 text-xs uppercase tracking-wide text-ajag-gris-500">
-            <th className="px-4 py-3 font-medium">Fecha</th>
-            <th className="px-4 py-3 font-medium">Concepto</th>
-            <th className="px-4 py-3 font-medium">Categoría</th>
-            <th className="px-4 py-3 text-right font-medium">Importe</th>
-            <th className="px-4 py-3" />
-          </tr>
-        </thead>
-        <tbody>
-          {movimientos.map((m) => (
-            <tr key={m.id} className="border-b border-ajag-gris-100 last:border-0">
-              <td className="px-4 py-3 whitespace-nowrap text-ajag-gris-500">
-                {formatearFechaCorta(m.fecha)}
-              </td>
-              <td className="px-4 py-3 font-medium text-ajag-verde-900">
-                {m.concepto}
-                {m.notas ? (
-                  <span className="block text-xs font-normal text-ajag-gris-500">{m.notas}</span>
-                ) : null}
-              </td>
-              <td className="px-4 py-3 text-ajag-gris-500">
-                {etiquetaCategoria(m.tipo, m.categoria)}
-              </td>
-              <td
-                className={`px-4 py-3 text-right font-medium whitespace-nowrap ${
-                  m.tipo === "ingreso" ? "text-ajag-verde-700" : "text-ajag-rojo-600"
-                }`}
-              >
-                {m.tipo === "ingreso" ? "+" : "−"} {formatearPrecio(m.importe_cents)}
-              </td>
-              <td className="px-4 py-3 text-right">
-                <EliminarMovimientoButton movimientoId={m.id} />
-              </td>
-            </tr>
+    <div className="card-ajag p-5">
+      <h3 className="font-display text-base font-semibold text-ajag-verde-900">{titulo}</h3>
+      {filas.length === 0 ? (
+        <p className="mt-2 text-sm text-ajag-gris-500">Todavía no hay nada registrado.</p>
+      ) : (
+        <ul className="mt-3 flex flex-col gap-3">
+          {filas.map((f) => (
+            <li key={f.categoria}>
+              <div className="flex items-baseline justify-between gap-3 text-sm">
+                <span className="text-ajag-verde-900">{f.etiqueta}</span>
+                <span className="whitespace-nowrap text-ajag-gris-500">
+                  {formatearPrecio(f.importe)} · {f.pct} %
+                </span>
+              </div>
+              <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-ajag-gris-100">
+                <div className={`h-full ${colorBarra}`} style={{ width: `${f.pct}%` }} />
+              </div>
+            </li>
           ))}
-        </tbody>
-      </table>
+        </ul>
+      )}
     </div>
   );
 }

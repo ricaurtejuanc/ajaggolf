@@ -1,6 +1,7 @@
 import "server-only";
 import { createClient } from "@/lib/supabase/server";
 import { getUsuarioAdmin } from "@/lib/auth";
+import { etiquetaCategoria } from "@/lib/economia/categorias";
 import type { EstadoTorneo, MovimientoEconomico } from "@/types/database";
 
 export type EconomiaTorneo = {
@@ -172,13 +173,58 @@ export async function obtenerResumenEconomia(anio?: number): Promise<EconomiaRes
   };
 }
 
+export type DesgloseCategoria = {
+  categoria: string;
+  etiqueta: string;
+  importe: number;
+  /** Porcentaje sobre el total de su bloque (ingresos o gastos). */
+  pct: number;
+};
+
+export type EstadisticasTorneo = {
+  cupoMaximo: number | null;
+  /** Ocupación sobre el cupo; null si el torneo no tiene cupo definido. */
+  ocupacionPct: number | null;
+  confirmados: number;
+  pendientes: number;
+  canceladas: number;
+  socios: number;
+  noSocios: number;
+  /** Medias por inscrito confirmado (0 si aún no hay ninguno). */
+  ingresoPorJugador: number;
+  gastoPorJugador: number;
+  beneficioPorJugador: number;
+  ingresosPorCategoria: DesgloseCategoria[];
+  gastosPorCategoria: DesgloseCategoria[];
+};
+
 export type EconomiaDetalleTorneo = {
   torneo: { id: string; nombre: string; slug: string; fecha: string };
   resumen: EconomiaTorneo;
+  estadisticas: EstadisticasTorneo;
   movimientos: MovimientoEconomico[];
 };
 
-/** Detalle económico de un torneo: sus cifras más la lista de movimientos. */
+function desglosar(
+  filas: { categoria: string; etiqueta: string; importe: number }[],
+  total: number,
+): DesgloseCategoria[] {
+  // Se agrupa por categoría y se ordena de mayor a menor: lo que primero
+  // quiere ver quien revisa un torneo es en qué se fue el dinero.
+  const porCategoria = new Map<string, DesgloseCategoria>();
+  for (const f of filas) {
+    const previo = porCategoria.get(f.categoria);
+    if (previo) previo.importe += f.importe;
+    else porCategoria.set(f.categoria, { ...f, pct: 0 });
+  }
+  const lista = [...porCategoria.values()].sort((a, b) => b.importe - a.importe);
+  for (const fila of lista) {
+    fila.pct = total > 0 ? Math.round((fila.importe / total) * 100) : 0;
+  }
+  return lista;
+}
+
+/** Detalle económico de un torneo: cifras, estadísticas y sus movimientos. */
 export async function obtenerEconomiaTorneo(
   torneoId: string,
 ): Promise<EconomiaDetalleTorneo | null> {
@@ -188,14 +234,17 @@ export async function obtenerEconomiaTorneo(
   const supabase = await createClient();
   const { data: torneo } = await supabase
     .from("torneos")
-    .select("id, nombre, slug, fecha, estado")
+    .select("id, nombre, slug, fecha, estado, cupo_maximo")
     .eq("id", torneoId)
     .eq("organizador_id", admin.organizador_id)
     .maybeSingle();
   if (!torneo) return null;
 
   const [{ data: inscripciones }, { data: movimientos }] = await Promise.all([
-    supabase.from("inscripciones").select("precio_cents, estado").eq("torneo_id", torneoId),
+    supabase
+      .from("inscripciones")
+      .select("precio_cents, estado, es_socio")
+      .eq("torneo_id", torneoId),
     supabase
       .from("movimientos_economicos")
       .select("*")
@@ -218,13 +267,23 @@ export async function obtenerEconomiaTorneo(
     beneficio: 0,
   };
 
+  let canceladas = 0;
+  let socios = 0;
+  let noSocios = 0;
+
   for (const i of inscripciones ?? []) {
     if (i.estado === "confirmada") {
       resumen.inscritosConfirmados += 1;
       resumen.ingresosInscripciones += i.precio_cents;
+      // El reparto socio/no socio solo se cuenta sobre las confirmadas:
+      // mezclarlo con carritos abandonados daría una foto engañosa.
+      if (i.es_socio) socios += 1;
+      else noSocios += 1;
     } else if (i.estado === "pendiente_pago") {
       resumen.inscritosPendientes += 1;
       resumen.pendienteCobro += i.precio_cents;
+    } else if (i.estado === "cancelada") {
+      canceladas += 1;
     }
   }
 
@@ -236,5 +295,57 @@ export async function obtenerEconomiaTorneo(
   resumen.ingresosTotales = resumen.ingresosInscripciones + resumen.ingresosManuales;
   resumen.beneficio = resumen.ingresosTotales - resumen.gastos;
 
-  return { torneo, resumen, movimientos: movimientos ?? [] };
+  const confirmados = resumen.inscritosConfirmados;
+  const porJugador = (total: number) => (confirmados > 0 ? Math.round(total / confirmados) : 0);
+
+  const estadisticas: EstadisticasTorneo = {
+    cupoMaximo: torneo.cupo_maximo,
+    ocupacionPct: torneo.cupo_maximo
+      ? Math.round((confirmados / torneo.cupo_maximo) * 100)
+      : null,
+    confirmados,
+    pendientes: resumen.inscritosPendientes,
+    canceladas,
+    socios,
+    noSocios,
+    ingresoPorJugador: porJugador(resumen.ingresosTotales),
+    gastoPorJugador: porJugador(resumen.gastos),
+    beneficioPorJugador: porJugador(resumen.beneficio),
+    ingresosPorCategoria: desglosar(
+      [
+        // La línea de inscripciones es sintética: no existe como movimiento,
+        // se calcula, pero en el desglose tiene que aparecer o el reparto de
+        // ingresos no cuadraría con el total.
+        ...(resumen.ingresosInscripciones > 0
+          ? [
+              {
+                categoria: "inscripciones",
+                etiqueta: "Inscripciones",
+                importe: resumen.ingresosInscripciones,
+              },
+            ]
+          : []),
+        ...(movimientos ?? [])
+          .filter((m) => m.tipo === "ingreso")
+          .map((m) => ({
+            categoria: m.categoria,
+            etiqueta: etiquetaCategoria("ingreso", m.categoria),
+            importe: m.importe_cents,
+          })),
+      ],
+      resumen.ingresosTotales,
+    ),
+    gastosPorCategoria: desglosar(
+      (movimientos ?? [])
+        .filter((m) => m.tipo === "gasto")
+        .map((m) => ({
+          categoria: m.categoria,
+          etiqueta: etiquetaCategoria("gasto", m.categoria),
+          importe: m.importe_cents,
+        })),
+      resumen.gastos,
+    ),
+  };
+
+  return { torneo, resumen, estadisticas, movimientos: movimientos ?? [] };
 }

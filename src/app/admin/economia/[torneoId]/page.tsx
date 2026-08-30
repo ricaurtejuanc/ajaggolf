@@ -3,10 +3,14 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { obtenerEconomiaTorneo } from "@/lib/data/economia";
 import { formatearPrecio, formatearFechaCorta } from "@/lib/format";
-import { KpisEconomia, TablaMovimientos } from "../componentes";
+import { KpisEconomia, Dato, DesgloseCategorias } from "../componentes";
+import { TablaMovimientos } from "../tabla-movimientos";
 import { MovimientoForm } from "../movimiento-form";
 
 export const metadata: Metadata = { title: "Economía del torneo · Admin" };
+
+const claseEnlace =
+  "rounded-full border border-ajag-verde-700 px-4 py-2 text-sm font-medium text-ajag-verde-700 transition hover:bg-ajag-verde-50";
 
 export default async function AdminEconomiaTorneoPage({
   params,
@@ -17,7 +21,7 @@ export default async function AdminEconomiaTorneoPage({
   const datos = await obtenerEconomiaTorneo(torneoId);
   if (!datos) notFound();
 
-  const { torneo, resumen, movimientos } = datos;
+  const { torneo, resumen, estadisticas: est, movimientos } = datos;
 
   return (
     <div>
@@ -28,12 +32,15 @@ export default async function AdminEconomiaTorneoPage({
         <h1 className="font-display text-2xl font-semibold text-ajag-verde-900">
           {torneo.nombre}
         </h1>
-        <p className="mt-0.5 text-sm text-ajag-gris-500">
-          {formatearFechaCorta(torneo.fecha)} ·{" "}
-          <Link href={`/admin/torneos/${torneo.id}/inscritos`} className="hover:underline">
-            {resumen.inscritosConfirmados} inscritos confirmados
+        <p className="mt-0.5 text-sm text-ajag-gris-500">{formatearFechaCorta(torneo.fecha)}</p>
+        <div className="mt-3 flex flex-wrap gap-2">
+          <Link href={`/admin/torneos/${torneo.id}/editar`} className={claseEnlace}>
+            Editar torneo
           </Link>
-        </p>
+          <Link href={`/admin/torneos/${torneo.id}/inscritos`} className={claseEnlace}>
+            Inscritos
+          </Link>
+        </div>
       </div>
 
       <KpisEconomia
@@ -46,21 +53,71 @@ export default async function AdminEconomiaTorneoPage({
         }
       />
 
-      <div className="card-ajag mt-4 flex flex-wrap items-center justify-between gap-2 p-4">
-        <div>
-          <p className="text-sm font-medium text-ajag-verde-900">
-            Inscripciones confirmadas ({resumen.inscritosConfirmados})
-          </p>
-          <p className="text-xs text-ajag-gris-500">
-            Se calcula solo desde las inscripciones, no se puede editar a mano.
-          </p>
+      <h2 className="mt-8 font-display text-lg font-semibold text-ajag-verde-900">
+        Estadísticas del torneo
+      </h2>
+
+      <div className="mt-3 grid gap-4 sm:grid-cols-2">
+        <div className="card-ajag p-5">
+          <h3 className="font-display text-base font-semibold text-ajag-verde-900">
+            Participación
+          </h3>
+          <div className="mt-3 grid grid-cols-2 gap-4">
+            <Dato
+              label="Inscritos confirmados"
+              valor={String(est.confirmados)}
+              nota={
+                est.cupoMaximo
+                  ? `${est.ocupacionPct} % del cupo (${est.cupoMaximo} plazas)`
+                  : "Sin cupo máximo definido"
+              }
+            />
+            <Dato label="Pendientes de pago" valor={String(est.pendientes)} />
+            <Dato
+              label="Socios"
+              valor={String(est.socios)}
+              nota={`${est.noSocios} no socios`}
+            />
+            <Dato label="Canceladas" valor={String(est.canceladas)} />
+          </div>
         </div>
-        <p className="font-display text-lg font-semibold text-ajag-verde-700">
-          {formatearPrecio(resumen.ingresosInscripciones)}
-        </p>
+
+        <div className="card-ajag p-5">
+          <h3 className="font-display text-base font-semibold text-ajag-verde-900">
+            Por jugador
+          </h3>
+          <p className="mt-0.5 text-xs text-ajag-gris-500">
+            Medias sobre los {est.confirmados} inscritos confirmados.
+          </p>
+          <div className="mt-3 grid grid-cols-3 gap-4">
+            <Dato label="Ingreso" valor={formatearPrecio(est.ingresoPorJugador)} />
+            <Dato label="Gasto" valor={formatearPrecio(est.gastoPorJugador)} />
+            <Dato label="Beneficio" valor={formatearPrecio(est.beneficioPorJugador)} />
+          </div>
+        </div>
+
+        <DesgloseCategorias
+          titulo="De dónde vienen los ingresos"
+          filas={est.ingresosPorCategoria}
+          variante="ingreso"
+        />
+        <DesgloseCategorias
+          titulo="En qué se van los gastos"
+          filas={est.gastosPorCategoria}
+          variante="gasto"
+        />
       </div>
 
-      <div className="mt-6 grid gap-4 lg:grid-cols-[minmax(0,1fr)_360px]">
+      <h2 className="mt-8 font-display text-lg font-semibold text-ajag-verde-900">
+        Movimientos del torneo
+      </h2>
+      <p className="mt-0.5 text-sm text-ajag-gris-500">
+        Los {formatearPrecio(resumen.ingresosInscripciones)} de las {est.confirmados}{" "}
+        inscripciones confirmadas se calculan solos y no se editan aquí. Añade en esta tabla lo
+        demás: pago al club, regalos, catering, patrocinios…
+      </p>
+
+      <div className="mt-3 grid gap-4 lg:grid-cols-[minmax(0,1fr)_360px]">
         <TablaMovimientos
           movimientos={movimientos}
           vacio="Todavía no hay gastos ni ingresos extra en este torneo."

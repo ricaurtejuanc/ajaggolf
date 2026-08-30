@@ -97,3 +97,55 @@ export async function eliminarMovimiento(movimientoId: string) {
   revalidatePath("/admin/economia");
   if (movimiento?.torneo_id) revalidatePath(`/admin/economia/${movimiento.torneo_id}`);
 }
+
+export async function actualizarMovimiento(
+  movimientoId: string,
+  _prevState: EstadoMovimientoForm,
+  formData: FormData,
+): Promise<EstadoMovimientoForm> {
+  const admin = await getUsuarioAdmin();
+  if (!admin?.organizador_id) return { ok: false, error: "No autorizado." };
+
+  const tipo = String(formData.get("tipo") ?? "") as TipoMovimiento;
+  if (tipo !== "ingreso" && tipo !== "gasto") return { ok: false, error: "Tipo no válido." };
+
+  const categoria = String(formData.get("categoria") ?? "");
+  if (!esCategoriaValida(tipo, categoria)) return { ok: false, error: "Categoría no válida." };
+
+  const concepto = String(formData.get("concepto") ?? "").trim();
+  if (!concepto) return { ok: false, error: "Escribe un concepto." };
+
+  const importeCents = importeAcentimos(String(formData.get("importe") ?? ""));
+  if (importeCents === null) return { ok: false, error: "El importe no es válido." };
+  if (importeCents === 0) return { ok: false, error: "El importe no puede ser 0." };
+
+  const fecha = String(formData.get("fecha") ?? "").trim();
+  if (!fecha) return { ok: false, error: "Indica una fecha." };
+
+  const supabase = await createClient();
+  // El torneo al que pertenece no se toca desde aquí: mover un movimiento de
+  // torneo es una operación distinta (y confusa dentro de una fila). Se lee
+  // solo para revalidar la ficha correcta.
+  const { data: previo } = await supabase
+    .from("movimientos_economicos")
+    .select("torneo_id")
+    .eq("id", movimientoId)
+    .maybeSingle();
+
+  const { error } = await supabase
+    .from("movimientos_economicos")
+    .update({
+      tipo,
+      categoria,
+      concepto,
+      importe_cents: importeCents,
+      fecha,
+      notas: String(formData.get("notas") ?? "").trim() || null,
+    })
+    .eq("id", movimientoId);
+  if (error) return { ok: false, error: error.message };
+
+  revalidatePath("/admin/economia");
+  if (previo?.torneo_id) revalidatePath(`/admin/economia/${previo.torneo_id}`);
+  return { ok: true, error: null };
+}

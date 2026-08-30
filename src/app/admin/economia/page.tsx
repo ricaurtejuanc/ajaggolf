@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { obtenerResumenEconomia } from "@/lib/data/economia";
 import { formatearPrecio, formatearFechaCorta } from "@/lib/format";
-import { KpisEconomia, TablaMovimientos } from "./componentes";
+import { KpisEconomia } from "./componentes";
+import { TablaMovimientos } from "./tabla-movimientos";
 import { MovimientoForm } from "./movimiento-form";
 import { FiltroAnio } from "./filtro-anio";
 
