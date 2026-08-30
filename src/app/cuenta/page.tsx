@@ -6,10 +6,11 @@ import { CheckCircle2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { asegurarJugadorParaUsuario } from "@/lib/data/jugadores";
 import { obtenerBizumNumero } from "@/lib/data/configuracion";
-import { PerfilForm } from "./perfil-form";
 import { SignOutButton } from "./sign-out-button";
 import { PedidosList } from "./pedidos-list";
 import { RondasList } from "./rondas-list";
+import { CuentaTabs } from "./tabs";
+import { PerfilEditor } from "./perfil-editor";
 import { listarMisRondas, mediaDifferentials, RONDAS_PARA_MEDIA } from "@/lib/data/rondas";
 
 export const metadata: Metadata = { title: "Mi cuenta" };
@@ -78,55 +79,52 @@ export default async function CuentaPage({
         </div>
       ) : null}
 
-      <section className="mt-8">
-        <h2 className="mb-3 font-display text-lg font-semibold text-ajag-verde-900">
-          Mi perfil
-        </h2>
-        <PerfilForm jugador={jugador} />
-      </section>
-
-      <section className="mt-10">
-        <h2 className="mb-3 font-display text-lg font-semibold text-ajag-verde-900">
-          Mis inscripciones
-        </h2>
-        {pedidos && pedidos.length > 0 ? (
-          <PedidosList
-            pedidos={pedidos as unknown as ComponentProps<typeof PedidosList>["pedidos"]}
-            bizumNumero={bizumNumero}
-          />
-        ) : (
-          <div className="card-ajag p-6 text-sm text-ajag-gris-500">
-            Todavía no te has inscrito en ningún torneo.{" "}
-            <Link href="/torneos" className="font-medium text-ajag-verde-700 underline">
-              Ver calendario
-            </Link>
-          </div>
-        )}
-      </section>
-
-      <section className="mt-10">
-        <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
-          <h2 className="font-display text-lg font-semibold text-ajag-verde-900">
-            Mis rondas
-          </h2>
-          {media !== null ? (
-            <p className="text-sm text-ajag-gris-500">
-              Media de los {RONDAS_PARA_MEDIA} mejores differentials:{" "}
-              <span className="font-medium text-ajag-verde-900">{media.toFixed(1)}</span>
-            </p>
-          ) : null}
-        </div>
-        {rondas.length > 0 ? (
-          <RondasList rondas={rondas} />
-        ) : (
-          <div className="card-ajag p-6 text-sm text-ajag-gris-500">
-            Todavía no has guardado ninguna ronda.{" "}
-            <Link href="/handicap" className="font-medium text-ajag-verde-700 underline">
-              Calcular mi hándicap
-            </Link>
-          </div>
-        )}
-      </section>
+      <div className="mt-8">
+        <CuentaTabs
+          children={{
+            datos: <PerfilEditor jugador={jugador} />,
+            inscripciones: (
+              <section>
+                {pedidos && pedidos.length > 0 ? (
+                  <PedidosList
+                    pedidos={pedidos as unknown as ComponentProps<typeof PedidosList>["pedidos"]}
+                    bizumNumero={bizumNumero}
+                  />
+                ) : (
+                  <div className="card-ajag p-6 text-sm text-ajag-gris-500">
+                    Todavía no te has inscrito en ningún torneo.{" "}
+                    <Link href="/torneos" className="font-medium text-ajag-verde-700 underline">
+                      Ver calendario
+                    </Link>
+                  </div>
+                )}
+              </section>
+            ),
+            rondas: (
+              <section>
+                <div className="mb-4 flex flex-wrap items-baseline justify-between gap-2">
+                  {media !== null ? (
+                    <p className="text-sm text-ajag-gris-500">
+                      Media de los {RONDAS_PARA_MEDIA} mejores differentials:{" "}
+                      <span className="font-medium text-ajag-verde-900">{media.toFixed(1)}</span>
+                    </p>
+                  ) : null}
+                </div>
+                {rondas.length > 0 ? (
+                  <RondasList rondas={rondas} />
+                ) : (
+                  <div className="card-ajag p-6 text-sm text-ajag-gris-500">
+                    Todavía no has guardado ninguna ronda.{" "}
+                    <Link href="/handicap" className="font-medium text-ajag-verde-700 underline">
+                      Calcular mi hándicap
+                    </Link>
+                  </div>
+                )}
+              </section>
+            ),
+          }}
+        />
+      </div>
     </div>
   );
 }

@@ -4,7 +4,12 @@ import { useActionState } from "react";
 import { actualizarPerfil } from "./actions";
 import type { Jugador } from "@/types/database";
 
-export function PerfilForm({ jugador }: { jugador: Jugador }) {
+interface PerfilFormProps {
+  jugador: Jugador;
+  onCancelEdit?: () => void;
+}
+
+export function PerfilForm({ jugador, onCancelEdit }: PerfilFormProps) {
   const [state, formAction, pending] = useActionState(actualizarPerfil, {
     ok: false,
     error: null,
@@ -115,13 +120,25 @@ export function PerfilForm({ jugador }: { jugador: Jugador }) {
       {state.error ? <p className="text-sm text-ajag-rojo-600">{state.error}</p> : null}
       {state.ok ? <p className="text-sm text-ajag-verde-700">Perfil actualizado.</p> : null}
 
-      <button
-        type="submit"
-        disabled={pending}
-        className="self-start rounded-xl bg-ajag-verde-700 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-ajag-verde-600 disabled:opacity-60"
-      >
-        {pending ? "Guardando..." : "Guardar cambios"}
-      </button>
+      <div className="flex items-center gap-3">
+        <button
+          type="submit"
+          disabled={pending}
+          className="rounded-xl bg-ajag-verde-700 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-ajag-verde-600 disabled:opacity-60"
+        >
+          {pending ? "Guardando..." : "Guardar cambios"}
+        </button>
+        {onCancelEdit ? (
+          <button
+            type="button"
+            onClick={onCancelEdit}
+            disabled={pending}
+            className="rounded-xl border border-ajag-gris-200 px-5 py-2.5 text-sm font-medium text-ajag-gris-700 transition hover:bg-ajag-gris-50 disabled:opacity-60"
+          >
+            Cancelar
+          </button>
+        ) : null}
+      </div>
     </form>
   );
 }
