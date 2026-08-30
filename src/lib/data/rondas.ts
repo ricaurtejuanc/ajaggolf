@@ -10,13 +10,24 @@ export const RONDAS_PARA_MEDIA = 8;
  * antigua. La RLS ya limita a las suyas; no hace falta filtrar por user_id.
  */
 export async function listarMisRondas(): Promise<Ronda[]> {
-  const supabase = await createClient();
-  const { data } = await supabase
-    .from("rondas")
-    .select("*")
-    .order("fecha", { ascending: false })
-    .order("created_at", { ascending: false });
-  return data ?? [];
+  try {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from("rondas")
+      .select("*")
+      .order("fecha", { ascending: false })
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      console.error("Error al listar rondas:", error);
+      return [];
+    }
+
+    return data ?? [];
+  } catch (err) {
+    console.error("Error fetching rondas:", err);
+    return [];
+  }
 }
 
 /**
