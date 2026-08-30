@@ -14,6 +14,21 @@ export async function updateSession(request: NextRequest, extraHeaders?: Record<
 
   let supabaseResponse = NextResponse.next({ request: construirRequestInit() });
 
+  // Sin cookie de sesión de Supabase no hay nada que refrescar: llamar de
+  // todos modos a auth.getUser() en cada visita (incluida la de bots,
+  // crawlers y visitantes anónimos a la landing pública) satura la API de
+  // Auth del proyecto — se han visto picos de 300+ req/min a /user que
+  // agotan el pool y hacen fallar (timeout) otras peticiones legítimas en
+  // curso, como la inscripción a un torneo. El nombre de cookie lo fija
+  // @supabase/ssr: "sb-<project-ref>-auth-token" (a veces partido en
+  // ".0"/".1" si supera el tamaño de una cookie).
+  const tieneCookieSesion = request.cookies
+    .getAll()
+    .some((c) => c.name.startsWith("sb-") && c.name.includes("-auth-token"));
+  if (!tieneCookieSesion) {
+    return supabaseResponse;
+  }
+
   const supabase = createServerClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
