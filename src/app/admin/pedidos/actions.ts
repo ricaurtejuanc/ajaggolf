@@ -6,6 +6,25 @@ import { getUsuarioAdmin } from "@/lib/auth";
 import { enviarEmailInscripcionConfirmada } from "@/lib/email";
 import { obtenerOrganizadorPorId, obtenerOrganizadorIdActual } from "@/lib/data/organizador";
 
+// pedidos_pago puede llevar su organizador de dos formas: por su propio
+// torneo_id (pedidos nuevos, desde "pagos por torneo"), o por el torneo de
+// sus inscripciones (pedidos antiguos, o uno cuyas inscripciones ya se
+// borraron pero el registro del torneo sigue). Hay que comprobar las dos
+// vías — comprobar solo una bloqueaba en falso pedidos legítimos que no
+// tenían esa vía concreta rellena (justo lo que impedía borrar pagos desde
+// el admin).
+function organizadoresDelPedido(pedido: {
+  torneos?: { organizador_id: string | null } | null;
+  inscripciones?: { torneos?: { organizador_id: string | null } | null } | { torneos?: { organizador_id: string | null } | null }[] | null;
+}): (string | null | undefined)[] {
+  const inscripciones = Array.isArray(pedido.inscripciones)
+    ? pedido.inscripciones
+    : pedido.inscripciones
+      ? [pedido.inscripciones]
+      : [];
+  return [pedido.torneos?.organizador_id, ...inscripciones.map((i) => i.torneos?.organizador_id)];
+}
+
 export async function confirmarPago(pedidoId: string) {
   const admin = await getUsuarioAdmin();
   if (!admin) return;
@@ -16,11 +35,12 @@ export async function confirmarPago(pedidoId: string) {
   const { data: pedidoDataRaw } = await supabase
     .from("pedidos_pago")
     .select(
-      "inscripciones(precio_cents, torneos(nombre, fecha, organizador_id), jugadores(nombre, email))",
+      "torneos(organizador_id), inscripciones(precio_cents, torneos(nombre, fecha, organizador_id), jugadores(nombre, email))",
     )
     .eq("id", pedidoId)
     .maybeSingle();
   const pedidoData = pedidoDataRaw as unknown as {
+    torneos: { organizador_id: string | null } | null;
     inscripciones: {
       precio_cents: number;
       torneos: { nombre: string; fecha: string; organizador_id: string | null } | null;
@@ -28,7 +48,10 @@ export async function confirmarPago(pedidoId: string) {
     }[];
   } | null;
 
-  if (!pedidoData?.inscripciones?.[0] || (organizadorIdActual && pedidoData.inscripciones[0].torneos?.organizador_id !== organizadorIdActual)) {
+  if (
+    !pedidoData?.inscripciones?.[0] ||
+    (organizadorIdActual && !organizadoresDelPedido(pedidoData).includes(organizadorIdActual))
+  ) {
     return;
   }
 
@@ -78,14 +101,15 @@ export async function rechazarPago(pedidoId: string) {
   // Validar que el pedido pertenece al organizador actual
   const { data: pedidoRaw } = await supabase
     .from("pedidos_pago")
-    .select("torneos(organizador_id)")
+    .select("torneos(organizador_id), inscripciones(torneos(organizador_id))")
     .eq("id", pedidoId)
     .maybeSingle();
   const pedido = pedidoRaw as unknown as {
     torneos: { organizador_id: string | null } | null;
+    inscripciones: { torneos: { organizador_id: string | null } | null }[];
   } | null;
 
-  if (!pedido || (organizadorIdActual && pedido.torneos?.organizador_id !== organizadorIdActual)) {
+  if (!pedido || (organizadorIdActual && !organizadoresDelPedido(pedido).includes(organizadorIdActual))) {
     return;
   }
 
@@ -106,14 +130,11 @@ export async function rechazarPago(pedidoId: string) {
 // inscripciones no tiene sentido guardarlo, y dejarlas huérfanas ocuparía
 // cupo sin un pago detrás) — para limpiar pedidos duplicados o de prueba.
 //
-// Orden importante: la policy de DELETE en pedidos_pago comprueba el
-// organizador vía las inscripciones ligadas (join a torneos). Si se
-// borraran las inscripciones primero, esa comprobación ya no encontraría
-// ninguna y el delete del pedido quedaría bloqueado por RLS sin dar
-// error — el pedido se quedaba huérfano en vez de desaparecer. Por eso se
-// capturan antes los ids de las inscripciones, se borra el pedido (la FK
-// `on delete set null` limpia pedido_pago_id sin pasar por RLS) y solo
-// entonces se borran las inscripciones por id.
+// Se borra el pedido antes que sus inscripciones (la FK `on delete set
+// null` en inscripciones.pedido_pago_id limpia esa columna sin pasar por
+// RLS) y solo entonces se borran las inscripciones por id: si se hiciera
+// al revés, un pedido cuya única vía de organizador fueran esas
+// inscripciones se quedaría sin forma de autorizar su propio delete.
 export async function eliminarPedido(pedidoId: string) {
   const admin = await getUsuarioAdmin();
   if (!admin) return;
@@ -124,14 +145,15 @@ export async function eliminarPedido(pedidoId: string) {
   // Validar que el pedido pertenece al organizador actual
   const { data: pedidoRaw } = await supabase
     .from("pedidos_pago")
-    .select("torneos(organizador_id)")
+    .select("torneos(organizador_id), inscripciones(torneos(organizador_id))")
     .eq("id", pedidoId)
     .maybeSingle();
   const pedido = pedidoRaw as unknown as {
     torneos: { organizador_id: string | null } | null;
+    inscripciones: { torneos: { organizador_id: string | null } | null }[];
   } | null;
 
-  if (!pedido || (organizadorIdActual && pedido.torneos?.organizador_id !== organizadorIdActual)) {
+  if (!pedido || (organizadorIdActual && !organizadoresDelPedido(pedido).includes(organizadorIdActual))) {
     return;
   }
 

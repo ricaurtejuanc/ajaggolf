@@ -50,12 +50,19 @@ export function PedidosList({
               })
             : null;
 
+        const nombresTorneos = [
+          ...new Set(pedido.inscripciones.map((insc) => insc.torneos?.nombre).filter(Boolean)),
+        ].join(", ");
+
         return (
           <li key={pedido.id} className="card-ajag p-5">
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <span className="text-xs text-ajag-gris-500">
-                Pedido del {formatearFechaCorta(pedido.created_at.slice(0, 10))}
-              </span>
+              <div>
+                <p className="font-medium text-ajag-verde-900">{nombresTorneos || "Torneo"}</p>
+                <p className="text-xs text-ajag-gris-500">
+                  Pedido del {formatearFechaCorta(pedido.created_at.slice(0, 10))}
+                </p>
+              </div>
               <span className={`rounded-full px-3 py-1 text-xs font-medium ${estado.clase}`}>
                 {estado.texto}
               </span>
