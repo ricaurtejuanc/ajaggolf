@@ -22,11 +22,12 @@ export async function SiteHeader() {
   const organizador = await obtenerOrganizadorActual();
 
   let itemsCarrito = 0;
-  if (user) {
+  if (user && organizador) {
     const { data: jugador } = await supabase
       .from("jugadores")
       .select("id")
       .eq("user_id", user.id)
+      .eq("organizador_id", organizador.id)
       .maybeSingle();
     if (jugador) {
       const { count } = await supabase

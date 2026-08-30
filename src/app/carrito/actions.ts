@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { enviarEmailInscripcionRecibida } from "@/lib/email";
-import { obtenerOrganizadorPorId } from "@/lib/data/organizador";
+import { obtenerOrganizadorPorId, obtenerOrganizadorIdActual } from "@/lib/data/organizador";
 
 export async function quitarDelCarrito(inscripcionId: string) {
   const supabase = await createClient();
@@ -37,10 +37,12 @@ export async function finalizarPedido(
     return { ok: false, error: "Método de pago inválido." };
   }
 
+  const organizadorId = await obtenerOrganizadorIdActual();
   const { data: jugador } = await supabase
     .from("jugadores")
     .select("id, nombre, email")
     .eq("user_id", user.id)
+    .eq("organizador_id", organizadorId as string)
     .maybeSingle();
   if (!jugador) redirect("/carrito");
 

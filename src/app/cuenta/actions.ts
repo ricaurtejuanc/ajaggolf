@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { obtenerOrganizadorIdActual } from "@/lib/data/organizador";
 
 export async function cerrarSesion() {
   const supabase = await createClient();
@@ -53,10 +54,12 @@ export async function actualizarPerfil(
     return { ok: false, error: "El hándicap debe ser un número." };
   }
 
+  const organizadorId = await obtenerOrganizadorIdActual();
   const { error } = await supabase
     .from("jugadores")
     .update({ nombre, apellidos, email, licencia_federativa, telefono, sexo, handicap })
-    .eq("user_id", user.id);
+    .eq("user_id", user.id)
+    .eq("organizador_id", organizadorId as string);
 
   if (error) {
     if (error.code === "23505" && error.message.includes("licencia_federativa")) {

@@ -11,10 +11,18 @@ export async function asegurarJugadorParaUsuario(
   supabase: SupabaseClient<Database>,
   user: User,
 ): Promise<Jugador> {
+  // Cada organizador tiene su propia ficha de jugador para el mismo usuario
+  // (jugadores.user_id ya no es unique en global, solo por organizador_id),
+  // así que toda esta resolución debe ir acotada al organizador actual: si
+  // no, un usuario con ficha en dos clubes distintos hace que
+  // `.maybeSingle()` reciba más de una fila y falle con un error de servidor.
+  const organizadorId = await obtenerOrganizadorIdActual();
+
   const { data: existente } = await supabase
     .from("jugadores")
     .select("*")
     .eq("user_id", user.id)
+    .eq("organizador_id", organizadorId as string)
     .maybeSingle();
 
   if (existente) return existente;
@@ -29,6 +37,7 @@ export async function asegurarJugadorParaUsuario(
       .select("*")
       .is("user_id", null)
       .eq("email", user.email)
+      .eq("organizador_id", organizadorId as string)
       .order("created_at", { ascending: true })
       .limit(1)
       .maybeSingle();
@@ -69,7 +78,7 @@ export async function asegurarJugadorParaUsuario(
       apellidos,
       email: user.email ?? null,
       telefono,
-      organizador_id: await obtenerOrganizadorIdActual(),
+      organizador_id: organizadorId,
     })
     .select("*")
     .single();
@@ -77,13 +86,15 @@ export async function asegurarJugadorParaUsuario(
   if (error) {
     // Otra petición concurrente para el mismo usuario (doble pestaña, doble
     // navegación antes de que la primera terminase) ganó la carrera y ya
-    // creó su ficha: jugadores.user_id es unique, así que esto no es un
-    // fallo real, solo hay que devolver la que ya existe en vez de duplicarla.
+    // creó su ficha: jugadores.(user_id, organizador_id) es unique, así que
+    // esto no es un fallo real, solo hay que devolver la que ya existe en
+    // vez de duplicarla.
     if (error.code === "23505") {
       const { data: yaCreado } = await supabase
         .from("jugadores")
         .select("*")
         .eq("user_id", user.id)
+        .eq("organizador_id", organizadorId as string)
         .single();
       if (yaCreado) return yaCreado;
     }

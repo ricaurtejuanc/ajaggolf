@@ -190,6 +190,7 @@ export async function inscribirse(
           .select("id, user_id, licencia_federativa")
           .is("user_id", null)
           .eq("email", email)
+          .eq("organizador_id", torneo.organizador_id as string)
           .order("created_at", { ascending: true })
           .limit(1)
           .maybeSingle()
@@ -197,6 +198,7 @@ export async function inscribirse(
           .from("jugadores")
           .select("id, user_id, licencia_federativa")
           .eq("licencia_federativa", licenciaEscrita)
+          .eq("organizador_id", torneo.organizador_id as string)
           .maybeSingle();
 
     let jugadorId: string;
