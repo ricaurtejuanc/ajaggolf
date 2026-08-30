@@ -7,8 +7,12 @@ import { createClient } from "@/lib/supabase/server";
 import { obtenerTorneoPorSlug } from "@/lib/data/torneos";
 import { formatearFecha } from "@/lib/format";
 import { CuadroDeHonor, hayCuadroDeHonor } from "@/components/torneos/cuadro-de-honor";
-import { PdfPreview } from "@/components/torneos/pdf-preview";
+import {
+  etiquetaCategoriaClasificacion,
+  ordenCategoriaClasificacion,
+} from "@/lib/resultados/categorias";
 import { ClasificacionTabs } from "./clasificacion-tabs";
+import { DocumentosCategoria, type DocumentoCategoria } from "./documentos-categoria";
 
 export async function generateMetadata({
   params,
@@ -38,21 +42,38 @@ export default async function ClasificacionPage({
   const hrefVolver = "/clasificaciones";
   const textoVolver = "Clasificaciones";
 
-  const { data: documento } = await supabase
+  const { data: documentosPublicados } = await supabase
     .from("resultados_pdf_uploads")
-    .select("storage_path, nombre_archivo")
+    .select("storage_path, nombre_archivo, categoria, created_at")
     .eq("torneo_id", torneo.id)
     .eq("estado", "publicado")
-    .order("created_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
+    .order("created_at", { ascending: false });
+
+  // Una categoría solo puede enseñar un documento: si el admin subió varios
+  // para la misma (una corrección, por ejemplo), vale el más reciente. El
+  // orden final es el de las categorías, no el de subida.
+  const documentos: DocumentoCategoria[] = [];
+  for (const doc of documentosPublicados ?? []) {
+    if (documentos.some((d) => d.categoria === doc.categoria)) continue;
+    const { data } = supabase.storage.from("resultados-pdf").getPublicUrl(doc.storage_path);
+    documentos.push({
+      categoria: doc.categoria,
+      etiqueta: etiquetaCategoriaClasificacion[doc.categoria],
+      url: data.publicUrl,
+      esPdf: doc.storage_path.toLowerCase().endsWith(".pdf"),
+    });
+  }
+  documentos.sort(
+    (a, b) => ordenCategoriaClasificacion(a.categoria) - ordenCategoriaClasificacion(b.categoria),
+  );
+  const hayDocumentos = documentos.length > 0;
 
   // La clasificación general con todos los jugadores solo sale del PDF/foto
   // publicado, o de la tabla rellenada a mano en el admin (marcada como
   // es_clasificacion_general, sea o no torneo de liga). Los puestos
   // guardados solo para puntuar en una liga/pool no cuentan aquí: esos se
   // ven en la clasificación de la liga, no en la ficha de este torneo.
-  const { data: resultados } = !documento
+  const { data: resultados } = !hayDocumentos
     ? await supabase
         .from("resultados")
         .select("*")
@@ -62,7 +83,7 @@ export default async function ClasificacionPage({
         .order("posicion", { ascending: true, nullsFirst: false })
     : { data: null };
 
-  if (!documento && (!resultados || resultados.length === 0) && !cuadroHonor) notFound();
+  if (!hayDocumentos && (!resultados || resultados.length === 0) && !cuadroHonor) notFound();
 
   let general: ReactNode = (
     <div className="card-ajag p-6 text-sm text-ajag-gris-500">
@@ -70,31 +91,8 @@ export default async function ClasificacionPage({
     </div>
   );
 
-  if (documento) {
-    const { data } = supabase.storage.from("resultados-pdf").getPublicUrl(documento.storage_path);
-    const esPdf = documento.storage_path.toLowerCase().endsWith(".pdf");
-    general = (
-      <div>
-        {esPdf ? (
-          <PdfPreview url={data.publicUrl} alt={`Clasificación de ${torneo.nombre}`} />
-        ) : (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={data.publicUrl}
-            alt={`Clasificación de ${torneo.nombre}`}
-            className="w-full rounded-2xl border border-ajag-gris-100"
-          />
-        )}
-        <a
-          href={data.publicUrl}
-          target="_blank"
-          rel="noreferrer"
-          className="mt-4 inline-block text-sm font-medium text-ajag-verde-700 hover:underline"
-        >
-          Abrir en una pestaña nueva ↗
-        </a>
-      </div>
-    );
+  if (hayDocumentos) {
+    general = <DocumentosCategoria documentos={documentos} nombreTorneo={torneo.nombre} />;
   } else if (resultados && resultados.length > 0) {
     const columnaPrincipal = torneo.formato_puntuacion === "stableford" ? "puntos" : "golpes";
     general = (

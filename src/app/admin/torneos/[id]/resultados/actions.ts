@@ -7,6 +7,8 @@ import { extraerFilasPdf } from "@/lib/resultados/extraer-pdf";
 import { recalcularClasificacionGlobal } from "@/lib/clasificacion/recalcular";
 import { leerPremiosDesdeFormData, leerPremiosHoyoDesdeFormData } from "@/lib/premios";
 import { obtenerInscritosConfirmadosParaResultados } from "@/lib/data/resultados";
+import { esCategoriaClasificacion } from "@/lib/resultados/categorias";
+import type { CategoriaClasificacionPdf } from "@/types/database";
 
 export type EstadoDocumento = { ok: boolean; error: string | null };
 
@@ -15,9 +17,13 @@ export async function subirDocumento(
   storagePath: string,
   nombreArchivo: string,
   esPdf: boolean,
+  categoria: CategoriaClasificacionPdf,
 ): Promise<EstadoDocumento> {
   const admin = await getUsuarioAdmin();
   if (!admin) return { ok: false, error: "No autorizado." };
+  if (!esCategoriaClasificacion(categoria)) {
+    return { ok: false, error: "Categoría no válida." };
+  }
 
   const supabase = await createClient();
 
@@ -44,6 +50,7 @@ export async function subirDocumento(
     nombre_archivo: nombreArchivo,
     mapeo_columnas: {},
     filas_extraidas: filasExtraidas,
+    categoria,
     estado: "preview",
     subido_por: admin.id,
   });
@@ -176,6 +183,35 @@ export async function despublicarDocumento(torneoId: string, documentoId: string
     .maybeSingle();
 
   revalidatePath(`/admin/torneos/${torneoId}/resultados`);
+  if (torneo) revalidatePath(`/torneos/${torneo.slug}/clasificacion`);
+}
+
+export async function eliminarDocumento(torneoId: string, documentoId: string) {
+  const admin = await getUsuarioAdmin();
+  if (!admin) return;
+
+  const supabase = await createClient();
+  const { data: documento } = await supabase
+    .from("resultados_pdf_uploads")
+    .select("storage_path")
+    .eq("id", documentoId)
+    .eq("torneo_id", torneoId)
+    .maybeSingle();
+  if (!documento) return;
+
+  await supabase.from("resultados_pdf_uploads").delete().eq("id", documentoId);
+  // El archivo del bucket se borra después de la fila: si esto fallara, lo
+  // que queda es un huérfano en Storage, no un documento visible sin fichero.
+  await supabase.storage.from("resultados-pdf").remove([documento.storage_path]);
+
+  const { data: torneo } = await supabase
+    .from("torneos")
+    .select("slug")
+    .eq("id", torneoId)
+    .maybeSingle();
+
+  revalidatePath(`/admin/torneos/${torneoId}/resultados`);
+  revalidatePath("/torneos");
   if (torneo) revalidatePath(`/torneos/${torneo.slug}/clasificacion`);
 }
 

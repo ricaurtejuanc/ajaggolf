@@ -1,10 +1,11 @@
 "use client";
 
 import { useTransition } from "react";
-import { FileText, Eye } from "lucide-react";
-import { publicarDocumento, despublicarDocumento } from "./actions";
+import { FileText, Eye, Trash2 } from "lucide-react";
+import { publicarDocumento, despublicarDocumento, eliminarDocumento } from "./actions";
 import { createClient } from "@/lib/supabase/client";
-import type { EstadoPdfResultados } from "@/types/database";
+import { etiquetaCategoriaClasificacion } from "@/lib/resultados/categorias";
+import type { CategoriaClasificacionPdf, EstadoPdfResultados } from "@/types/database";
 
 const etiquetaEstado: Record<EstadoPdfResultados, { texto: string; clase: string }> = {
   preview: { texto: "Sin publicar", clase: "bg-ajag-gris-100 text-ajag-gris-500" },
@@ -17,7 +18,13 @@ export function DocumentoActual({
   documento,
 }: {
   torneoId: string;
-  documento: { id: string; nombre_archivo: string; storage_path: string; estado: EstadoPdfResultados };
+  documento: {
+    id: string;
+    nombre_archivo: string;
+    storage_path: string;
+    estado: EstadoPdfResultados;
+    categoria: CategoriaClasificacionPdf;
+  };
 }) {
   const [pending, startTransition] = useTransition();
   const supabase = createClient();
@@ -26,11 +33,14 @@ export function DocumentoActual({
   const esPdf = documento.storage_path.toLowerCase().endsWith(".pdf");
 
   return (
-    <div className="card-ajag mb-6 p-4">
+    <div className="card-ajag p-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-2 text-sm text-ajag-verde-900">
+        <div className="flex flex-wrap items-center gap-2 text-sm text-ajag-verde-900">
           <FileText size={16} />
-          <span>{documento.nombre_archivo}</span>
+          <span className="font-medium">
+            {etiquetaCategoriaClasificacion[documento.categoria]}
+          </span>
+          <span className="text-ajag-gris-500">{documento.nombre_archivo}</span>
           <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${estado.clase}`}>
             {estado.texto}
           </span>
@@ -44,6 +54,17 @@ export function DocumentoActual({
           >
             <Eye size={15} /> Abrir en pestaña nueva
           </a>
+          <button
+            type="button"
+            disabled={pending}
+            onClick={() => {
+              if (!confirm("¿Eliminar este documento de la clasificación?")) return;
+              startTransition(() => eliminarDocumento(torneoId, documento.id));
+            }}
+            className="flex items-center gap-1 text-sm font-medium text-ajag-rojo-600 hover:underline disabled:opacity-50"
+          >
+            <Trash2 size={15} /> Eliminar
+          </button>
           {documento.estado === "publicado" ? (
             <button
               type="button"

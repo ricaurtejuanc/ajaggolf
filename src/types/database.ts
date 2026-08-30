@@ -32,6 +32,13 @@ export type EstadoPedidoPago =
 export type EstadoSalida = "borrador" | "publicado";
 export type EstadoResultado = "preview" | "publicado";
 export type EstadoPdfResultados = "preview" | "publicado" | "descartado";
+export type CategoriaClasificacionPdf =
+  | "primera"
+  | "segunda"
+  | "senior"
+  | "damas"
+  | "scratch"
+  | "unica";
 export type RolAdmin = "owner" | "admin";
 
 export type Organizador = {
@@ -260,6 +267,7 @@ export type ResultadoPdfUpload = {
   mapeo_columnas: Record<string, string>;
   filas_extraidas: unknown;
   estado: EstadoPdfResultados;
+  categoria: CategoriaClasificacionPdf;
   subido_por: string | null;
   created_at: string;
   publicado_at: string | null;
