@@ -13,6 +13,7 @@ import {
   UserRound,
   Flag,
   PiggyBank,
+  HelpCircle,
 } from "lucide-react";
 import { getUsuarioAdmin } from "@/lib/auth";
 import { obtenerOrganizadorActual } from "@/lib/data/organizador";
@@ -30,6 +31,7 @@ const adminLinks = [
   { href: "/admin/usuarios", label: "Usuarios", icon: UserRound },
   { href: "/admin/administradores", label: "Administradores", icon: Users },
   { href: "/admin/configuracion", label: "Configuración", icon: Settings },
+  { href: "/admin/manual", label: "Manual de uso", icon: HelpCircle },
 ];
 
 export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
