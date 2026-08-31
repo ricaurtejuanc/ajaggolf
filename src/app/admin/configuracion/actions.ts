@@ -35,6 +35,34 @@ export async function actualizarBizumNumero(
   return { ok: true, error: null };
 }
 
+export async function actualizarWhatsappTelefono(
+  _prevState: EstadoConfiguracion,
+  formData: FormData,
+): Promise<EstadoConfiguracion> {
+  const admin = await getUsuarioAdmin();
+  if (!admin?.organizador_id) return { ok: false, error: "No autorizado." };
+
+  const telefono = String(formData.get("whatsapp_telefono") ?? "").trim();
+
+  const supabase = await createClient();
+  const { error } = await supabase.from("configuracion").upsert(
+    {
+      clave: "whatsapp_telefono",
+      organizador_id: admin.organizador_id,
+      valor: telefono || null,
+      actualizado_por: admin.id,
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: "organizador_id,clave" },
+  );
+
+  if (error) return { ok: false, error: error.message };
+
+  revalidatePath("/admin/configuracion");
+  revalidatePath("/torneos", "layout");
+  return { ok: true, error: null };
+}
+
 export async function actualizarDatosPago(
   _prevState: EstadoConfiguracion,
   formData: FormData,

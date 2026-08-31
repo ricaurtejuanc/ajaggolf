@@ -2,6 +2,7 @@
 
 import { useActionState, useMemo, useState, useTransition } from "react";
 import { Pencil, Plus, Trash2, X, Check } from "lucide-react";
+import { colorDeBarra } from "@/lib/tee-color";
 import {
   actualizarRecorrido,
   actualizarTee,
@@ -435,9 +436,11 @@ function TeeRow({ tee }: { tee: TeeVista }) {
     );
   }
 
+  const color = colorDeBarra(tee.tee);
   return (
     <li className="flex items-center justify-between gap-2 text-xs text-ajag-gris-500">
-      <span className="min-w-0 truncate">
+      <span className="flex min-w-0 items-center gap-2 truncate">
+        <span aria-hidden className={`h-3 w-3 shrink-0 rounded-full ${color.bg} ${color.border ?? ""}`} />
         <span className="font-medium text-ajag-verde-900">{tee.tee}</span>{" "}
         {tee.genero === "H" ? "caballeros" : "damas"} · CR {tee.cr} · Slope {tee.slope} · Par{" "}
         {tee.par}

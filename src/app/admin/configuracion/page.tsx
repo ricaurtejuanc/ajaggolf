@@ -1,16 +1,23 @@
 import type { Metadata } from "next";
-import { obtenerBizumNumero, obtenerCategoriasExtras, obtenerDatosPago } from "@/lib/data/configuracion";
+import {
+  obtenerBizumNumero,
+  obtenerCategoriasExtras,
+  obtenerDatosPago,
+  obtenerWhatsappTelefono,
+} from "@/lib/data/configuracion";
 import { BizumForm } from "./bizum-form";
 import { CategoriasExtrasForm } from "./categorias-extras-form";
 import { MetodosPagoForm } from "./metodos-pago-form";
+import { WhatsappForm } from "./whatsapp-form";
 
 export const metadata: Metadata = { title: "Configuración · Admin" };
 
 export default async function AdminConfiguracionPage() {
-  const [bizumNumero, categoriasExtras, datosPago] = await Promise.all([
+  const [bizumNumero, categoriasExtras, datosPago, whatsappTelefono] = await Promise.all([
     obtenerBizumNumero(),
     obtenerCategoriasExtras(),
     obtenerDatosPago(),
+    obtenerWhatsappTelefono(),
   ]);
 
   return (
@@ -24,6 +31,7 @@ export default async function AdminConfiguracionPage() {
           transferenciaNombre={datosPago.transferencia_nombre}
         />}
         <BizumForm numeroActual={bizumNumero} />
+        <WhatsappForm telefonoActual={whatsappTelefono} />
         <CategoriasExtrasForm categoriasIniciales={categoriasExtras} />
       </div>
     </div>

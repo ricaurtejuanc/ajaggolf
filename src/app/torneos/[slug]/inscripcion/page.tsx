@@ -4,6 +4,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { obtenerTorneoPorSlug } from "@/lib/data/torneos";
 import { asegurarJugadorParaUsuario } from "@/lib/data/jugadores";
+import { obtenerWhatsappTelefono } from "@/lib/data/configuracion";
 import { formatearFecha } from "@/lib/format";
 import { InscripcionForm } from "./inscripcion-form";
 
@@ -29,6 +30,7 @@ export default async function InscripcionPage({
   } = await supabase.auth.getUser();
 
   const jugador = user ? await asegurarJugadorParaUsuario(supabase, user) : null;
+  const whatsappTelefono = await obtenerWhatsappTelefono();
 
   let lleno = false;
   if (torneo.cupo_maximo != null) {
@@ -112,6 +114,7 @@ export default async function InscripcionPage({
           precioCents={torneo.precio_cents}
           precioSocioCents={torneo.precio_socio_cents}
           pagaEnClub={torneo.modo_pago === "club"}
+          whatsappTelefono={whatsappTelefono}
         />
       </div>
     </div>

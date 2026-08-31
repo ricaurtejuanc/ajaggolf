@@ -17,6 +17,22 @@ export async function obtenerBizumNumero(): Promise<string> {
   return typeof data?.valor === "string" ? data.valor : "633 88 10 27 4";
 }
 
+/** Teléfono de WhatsApp para gestionar inscripciones fuera de la web, si el organizador lo ha configurado. */
+export async function obtenerWhatsappTelefono(): Promise<string | null> {
+  const organizadorId = await obtenerOrganizadorIdActual();
+  if (!organizadorId) return null;
+
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("configuracion")
+    .select("valor")
+    .eq("clave", "whatsapp_telefono")
+    .eq("organizador_id", organizadorId)
+    .maybeSingle();
+
+  return typeof data?.valor === "string" && data.valor.trim() ? data.valor : null;
+}
+
 export async function obtenerDatosPago() {
   const organizadorId = await obtenerOrganizadorIdActual();
   if (!organizadorId) return null;

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { guardarRonda, type EstadoGuardarRonda } from "./actions";
 import { MODALIDADES, handicapDeJuego, resultadoDeRonda } from "@/lib/handicap/calculo";
 import type { TeeCatalogo } from "@/lib/data/campos-tees";
+import { colorDeBarra } from "@/lib/tee-color";
 import { HoyosConGolpe } from "./hoyos-con-golpe";
 import { TarjetaModal } from "./tarjeta-modal";
 
@@ -414,22 +415,29 @@ export function CalculadoraHandicap({
                   <div className="mt-1 grid gap-2 sm:grid-cols-2">
                     {barrasDelRecorrido.map((t) => {
                       const activo = teeId === t.id;
+                      const color = colorDeBarra(t.tee);
                       return (
                         <button
                           key={t.id}
                           type="button"
                           onClick={() => elegirTee(t.id)}
-                          className={`rounded-xl px-4 py-2.5 text-left text-sm transition ${
+                          className={`flex items-center gap-3 rounded-xl px-4 py-2.5 text-left text-sm transition ${
                             activo
                               ? "bg-ajag-verde-700 text-white"
                               : "border border-ajag-gris-200 text-ajag-verde-900 hover:bg-ajag-verde-50"
                           }`}
                         >
-                          <span className="font-medium">
-                            {t.tee} ({t.genero === "H" ? "caballeros" : "damas"})
-                          </span>
-                          <span className={`block text-xs ${activo ? "text-white/80" : "text-ajag-gris-500"}`}>
-                            CR {t.cr} · Slope {t.slope} · Par {t.par}
+                          <span
+                            aria-hidden
+                            className={`h-6 w-1.5 shrink-0 rounded-full ${color.bg} ${color.border ?? ""}`}
+                          />
+                          <span>
+                            <span className="font-medium">
+                              {t.tee} ({t.genero === "H" ? "caballeros" : "damas"})
+                            </span>
+                            <span className={`block text-xs ${activo ? "text-white/80" : "text-ajag-gris-500"}`}>
+                              CR {t.cr} · Slope {t.slope} · Par {t.par}
+                            </span>
                           </span>
                         </button>
                       );

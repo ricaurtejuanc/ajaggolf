@@ -7,10 +7,9 @@ import { getUsuarioAdmin } from "@/lib/auth";
 import { enviarEmailInscripcionConfirmada } from "@/lib/email";
 import { obtenerOrganizadorPorId, obtenerOrganizadorIdActual } from "@/lib/data/organizador";
 
-// Borra el pedido y las inscripciones que llevaba (un pedido rechazado o
-// eliminado no debe dejar rastro: ni ocupar cupo ni quedar como
-// "Rechazado" en el historial — el admin quiere que desaparezca, igual
-// que al eliminar).
+// Borra el pedido y las inscripciones que llevaba, sin dejar rastro en el
+// historial. Solo la usa eliminarPedido (limpiar duplicados/pruebas):
+// rechazarPago cancela en vez de borrar, ver más abajo.
 //
 // Se borra el pedido antes que sus inscripciones (la FK `on delete set
 // null` en inscripciones.pedido_pago_id limpia esa columna sin pasar por
@@ -116,6 +115,10 @@ export async function confirmarPago(pedidoId: string) {
   revalidatePath("/admin/pedidos");
 }
 
+// Marca el pedido (y sus inscripciones) como cancelado, no lo borra: debe
+// quedar en el historial como "Cancelado" igual que "Cancelar" en la
+// pantalla de inscritos de un torneo. torneos_cupo excluye "cancelada" del
+// recuento, así que la plaza se libera sola sin tocar nada más.
 export async function rechazarPago(pedidoId: string) {
   const admin = await getUsuarioAdmin();
   if (!admin) return;
@@ -138,7 +141,8 @@ export async function rechazarPago(pedidoId: string) {
     return;
   }
 
-  await borrarPedidoYInscripciones(supabase, pedidoId);
+  await supabase.from("pedidos_pago").update({ estado: "cancelado" }).eq("id", pedidoId);
+  await supabase.from("inscripciones").update({ estado: "cancelada" }).eq("pedido_pago_id", pedidoId);
 
   revalidatePath("/admin/pedidos");
 }

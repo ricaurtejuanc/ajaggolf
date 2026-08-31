@@ -14,12 +14,14 @@ export function InscripcionForm({
   precioCents,
   precioSocioCents,
   pagaEnClub,
+  whatsappTelefono,
 }: {
   torneoSlug: string;
   jugador: Jugador | null;
   precioCents: number;
   precioSocioCents: number | null;
   pagaEnClub: boolean;
+  whatsappTelefono?: string | null;
 }) {
   const accionConSlug = inscribirse.bind(null, torneoSlug);
   const [state, formAction, pending] = useActionState<EstadoInscripcionForm, FormData>(
@@ -269,6 +271,20 @@ export function InscripcionForm({
             ? "Enviando..."
             : "Confirmar inscripción"}
       </button>
+
+      {whatsappTelefono ? (
+        <button
+          type="button"
+          onClick={() =>
+            alert(
+              `Las inscripciones de este torneo se gestionan vía WhatsApp en el teléfono ${whatsappTelefono}.`,
+            )
+          }
+          className="text-center text-sm font-medium text-ajag-rojo-600 hover:underline"
+        >
+          Gestionar la inscripción fuera de la web vía WhatsApp
+        </button>
+      ) : null}
     </form>
   );
 }
