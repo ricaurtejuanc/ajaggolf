@@ -102,6 +102,40 @@ are meant to be shown), separate from the super-admin-only INSERT/UPDATE policie
   unique index, `where licencia_federativa is not null`) still has a natural key for
   matching that player across future admin classification edits/imports.
 
+### Player accounts (`jugadores`) are independent per organizador
+
+The same person logging into two different clubs' sites gets **two separate** `jugadores`
+rows (name, hándicap, licencia federativa, contact info can all differ) — `jugadores` is
+unique on `(user_id, organizador_id)` and on `(licencia_federativa, organizador_id)`, not
+globally. This was a migration (`0064_jugadores_independientes_por_organizador`), not the
+original design: every query that resolves "the current player" must filter by
+`organizador_id_actual()` in addition to `user_id`/`email`/`licencia_federativa` —
+`asegurarJugadorParaUsuario()` (`src/lib/data/jugadores.ts`) does this and is the only
+entry point that should be used to resolve/create the logged-in user's player row.
+**Gotcha that already broke production once**: any `.eq("user_id", user.id).maybeSingle()`
+without the organizador filter throws once a user has a row in more than one organizador
+("multiple (or no) rows returned"); any `.update(...).eq("user_id", user.id)` without it
+silently overwrites that user's data in **every** club they've played at. Grep for
+`from("jugadores")` before adding a new call site and scope it.
+
+Reads/writes against Supabase can transiently fail under load (PostgREST killing a request
+thread, "Thread killed by timeout manager" in project logs); `conReintentos()`
+(`src/lib/supabase/retry.ts`) retries an idempotent query 3x with backoff and is used
+around the player-resolution and `/cuenta` reads for that reason — only wrap reads or
+upserts with a natural key in it, never something that would duplicate data on a retry.
+
+### The `/cuenta` account area
+
+Player-facing profile at `/cuenta`, three tabs (Mis Datos / Mis Inscripciones / Mis
+Rondas) rendered by `CuentaTabs` (`src/app/cuenta/tabs.tsx`). **Gotcha that already broke
+production once**: `CuentaTabs` is a Client Component, but the active-tab state must be
+owned *inside* it (`useState`, seeded from a `defaultTab` prop) — a Server Component like
+`cuenta/page.tsx` cannot pass an event-handler prop (e.g. `onTabChange={() => {}}`) to a
+Client Component; Next.js throws `"Event handlers cannot be passed to Client Component
+props"` at request time (not at build time), which took down every render of `/cuenta`
+until this was found. Any similar tabs/toggle component fed from a Server Component parent
+must manage its own transient UI state, not receive a setter from the server.
+
 ### Domain modules under `src/lib/`
 
 - `salidas/generar.ts` — tee-sheet group generator: balances group sizes (3-4), assigns by
@@ -136,6 +170,25 @@ are meant to be shown), separate from the super-admin-only INSERT/UPDATE policie
 - `pagos/index.ts` — payment method abstraction; only Bizum (manual, admin-confirmed) is
   implemented today, kept separate so another provider can be added without touching
   registration flow code.
+- `handicap/calculo.ts` — WHS-style hándicap de juego, resultado neto, puntos Stableford
+  and score differential, driven by a tee's CR/Slope/Par (either from the RFEG catalog,
+  `campo_tees`, or typed by hand). `tee-color.ts` maps a tee's name (BLANCAS/AMARILLAS/
+  ROJAS...) to the real white/yellow/red bar color shown next to it in the picker and in
+  `/admin/campos`, matching the physical scorecard.
+- `data/economia.ts` — per-tournament and per-organizador income/expense summary.
+  Registration income is **never** stored as a row — it's computed live from confirmed
+  `inscripciones` so it can't drift from their actual state; everything else (club fees,
+  catering, sponsorship, or registration income collected outside the platform) is a manual
+  `movimientos_economicos` row entered via `/admin/economia`, categorized through
+  `economia/categorias.ts`. Gated per organizador by `configuracion` (`economia_activa`).
+- `data/configuracion.ts` — thin wrapper over the generic `configuracion` table
+  (`clave`/`valor`/`organizador_id`, upserted on `(organizador_id, clave)`): the pattern for
+  any single per-organizador setting (Bizum number, WhatsApp phone, extra categories,
+  economía on/off) instead of adding a column to `organizadores` for each one. A tournament
+  opts into WhatsApp-managed registration via its own `torneos.gestion_whatsapp` boolean
+  (shows a red notice + the configured phone on its registration form instead of/alongside
+  the normal flow); its registration income then has to be entered by hand in that
+  tournament's Economía, same as any other off-platform income.
 - `email/index.ts` — all outbound mail goes through nodemailer using one shared SMTP
   account (`SMTP_HOST/PORT/USER/PASSWORD/FROM` env vars — sending silently returns `false`
   if any are missing, checked by callers to warn admins rather than claim success). The

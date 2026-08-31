@@ -47,13 +47,35 @@ Storage + RLS) · Tailwind CSS v4 · Vercel.
   publicados (una edición manual se pierde en el siguiente recálculo).
 - Cuadro de honor: premios por categoría de hándicap y premios por hoyo
   (drive más largo, bola más cercana...) de forma independiente.
+- Gestión de inscripción por WhatsApp: un torneo puede marcarse para
+  gestionar sus inscripciones fuera de la web — el formulario muestra un
+  aviso con el teléfono del club (configurable por organizador) en vez de
+  dejar inscribirse online; los ingresos de ese torneo se añaden a mano en
+  su Economía.
+- "Mi cuenta": área del jugador con tres pestañas — Mis Datos (editar
+  perfil), Mis Inscripciones (historial de pedidos/pagos) y Mis Rondas
+  (historial de diferenciales guardados desde la calculadora de hándicap).
+  Cada jugador tiene una ficha independiente por organizador (mismo email,
+  datos distintos en cada club).
+- Calculadora de hándicap (`/handicap`, pública): calcula hándicap de
+  juego y resultado neto/Stableford/differential a partir del catálogo
+  oficial de la RFEG (565 barras de Madrid y Andalucía, con su color real
+  blanco/amarillo/rojo) o de datos introducidos a mano; con sesión
+  iniciada, la ronda se guarda en "Mis Rondas".
+- Economía por torneo y del club: ingresos por inscripción calculados
+  automáticamente (sobre las confirmadas) más movimientos manuales de
+  ingreso/gasto por categoría (pago al club, catering, patrocinio,
+  inscripciones cobradas aparte...), con KPIs, desglose por categoría y
+  beneficio por jugador. Se activa/desactiva por organizador.
 - Formulario de contacto y panel de gestión de consultas (responder,
   marcar leída, eliminar), con email personalizado por organizador.
 - Panel admin por organizador (`/admin`): torneos, ligas, patrocinadores,
-  pedidos, consultas, configuración, y alta self-service de más admins del
-  propio organizador en `/admin/administradores`. Panel "god" (`/god`,
-  solo super-admins, servido únicamente desde el dominio de la
-  plataforma) para dar de alta y gestionar organizadores.
+  pedidos, economía, consultas, catálogo de campos/barras, usuarios
+  (gestión de cuentas de jugadores), configuración (Bizum, WhatsApp,
+  categorías extra), y alta self-service de más admins del propio
+  organizador en `/admin/administradores`. Panel "god" (`/god`, solo
+  super-admins, servido únicamente desde el dominio de la plataforma)
+  para dar de alta y gestionar organizadores.
 - Analítica de visitas propia + Vercel Analytics y Speed Insights.
 
 ## Puesta en marcha
@@ -141,7 +163,10 @@ src/lib/pagos/         Abstracción de método de pago (Bizum hoy, ampliable)
 src/lib/salidas/       Motor de generación de cuadros de salida
 src/lib/resultados/    Extracción de resultados desde PDF/foto
 src/lib/clasificacion/ Recálculo de la clasificación global de liga/ranking
+src/lib/handicap/      Cálculo WHS: hándicap de juego, neto, Stableford, differential
+src/lib/economia/      Categorías de movimientos económicos (ingreso/gasto)
 src/lib/email/         Envío de emails, personalizado por organizador
-src/lib/data/          Consultas de lectura reutilizadas por varias páginas
+src/lib/data/          Consultas de lectura reutilizadas por varias páginas (incluye
+                       jugadores.ts, economia.ts, campos-tees.ts, configuracion.ts)
 src/app/               Rutas públicas + /admin (panel por organizador) + /god (super-admin)
 ```
