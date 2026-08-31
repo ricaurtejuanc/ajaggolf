@@ -30,9 +30,9 @@ const secciones: Seccion[] = [
           que ves en <code>/admin</code> pertenece únicamente a tu club.
         </p>
         <p className={`${claseParrafo} mt-2`}>
-          Hay tres zonas separadas: la web pública (calendario, inscripción, cuenta del
-          jugador), el panel <code>/admin</code> que estás leyendo ahora (gestión de tu club) y
-          un panel &quot;god&quot; reservado a AfterGolf para dar de alta clubes nuevos.
+          Hay dos zonas separadas: la web pública (calendario, inscripción, cuenta del
+          jugador) y el panel <code>/admin</code> que estás leyendo ahora, donde gestionas todo
+          lo de tu club.
         </p>
       </>
     ),
@@ -135,7 +135,7 @@ const secciones: Seccion[] = [
   },
   {
     id: "resultados",
-    titulo: "Resultados y clasificaciones",
+    titulo: "Resultados",
     contenido: (
       <>
         <p className={claseParrafo}>Hay tres formas de meter los resultados de un torneo, y las tres acaban en la misma tabla:</p>
@@ -148,13 +148,47 @@ const secciones: Seccion[] = [
           Un jugador retirado o no presentado no cuenta como un 0 en la clasificación de liga,
           aunque en la tabla se vea un &quot;0&quot; por claridad.
         </p>
-        <p className={claseSubtitulo}>Ligas y Pool</p>
+      </>
+    ),
+  },
+  {
+    id: "ligas",
+    titulo: "Ligas y ranking",
+    contenido: (
+      <>
         <p className={claseParrafo}>
-          Una liga agrupa varios torneos y calcula una clasificación global, con tres formas de
-          puntuar: tabla de puntos por posición, suma de puntos Stableford, o suma de golpes netos
-          (medal play). Puedes limitar la clasificación oficial a los mejores N resultados de cada
-          jugador. La clasificación se recalcula sola cada vez que publicas resultados de un
-          torneo de la liga — si la editas a mano, ese cambio se pierde en el siguiente recálculo.
+          Puedes crear tantas ligas o pools como quieras: una liga anual, un ranking de
+          verano, una liga de parejas... cada una es independiente, con su propio nombre y su
+          propia clasificación. Al crear o editar un torneo, lo asignas a una liga desde su
+          propio formulario — un torneo pertenece a una liga o a ninguna, nunca a varias.
+        </p>
+        <p className={claseSubtitulo}>Cómo se calcula la clasificación</p>
+        <p className={claseParrafo}>
+          En cuanto publicas los resultados de un torneo de la liga, su clasificación se
+          recalcula sola, de principio a fin, sumando los resultados publicados de todos sus
+          torneos. Hay tres formas de puntuar, que eliges al crear la liga:
+        </p>
+        <ul className={claseLista}>
+          <li><strong>Tabla de puntos</strong>: cada posición final da unos puntos fijos (1º más que 2º, etc.), y se suman.</li>
+          <li><strong>Suma de Stableford</strong>: se suman directamente los puntos Stableford de cada torneo.</li>
+          <li><strong>Suma de golpes netos</strong> (medal play): se suman los golpes netos (menos es mejor).</li>
+        </ul>
+        <p className={claseSubtitulo}>Mejores N pruebas</p>
+        <p className={claseParrafo}>
+          Si tu liga tiene muchas pruebas, puedes limitar el cálculo final a los N mejores
+          resultados de cada jugador (por ejemplo, &quot;los 5 mejores de 8 torneos&quot;) — así
+          un mal resultado puntual, o no poder jugar alguna prueba, no penaliza el ranking de
+          toda la temporada. Con ese límite activado, la clasificación muestra dos columnas:{" "}
+          <strong>Puntos totales</strong> (solo con las N mejores, es la que decide el orden) y{" "}
+          <strong>Mejores Resultados</strong> (la suma de todo lo jugado, a modo informativo).
+          Sin límite activado, ambas columnas coincidirían, así que solo se muestra una.
+        </p>
+        <p className={claseSubtitulo}>Editar a mano</p>
+        <p className={claseParrafo}>
+          Puedes tocar la clasificación a mano (por ejemplo para corregir un caso puntual) y
+          descargarla/subirla en XLS, igual que con los resultados de un torneo. Ten en cuenta
+          que es un ajuste temporal: en cuanto se publiquen o modifiquen resultados de
+          cualquier torneo de esa liga, se recalcula desde cero y ese ajuste manual se pierde.
         </p>
       </>
     ),
@@ -273,6 +307,14 @@ const secciones: Seccion[] = [
             nada): calcula hándicap de juego, resultado neto, puntos Stableford y differential, a
             partir del catálogo oficial de la RFEG o de datos escritos a mano. Con sesión
             iniciada, puede guardar la ronda en su historial.
+          </li>
+          <li>
+            <strong>Clasificaciones</strong>: la clasificación de cada torneo y el ranking
+            oficial de cada liga, públicas para cualquiera, sin necesidad de cuenta.
+          </li>
+          <li>
+            <strong>Patrocinadores</strong>: también ve, en la web pública, los logos y enlaces
+            de los patrocinadores de tu club.
           </li>
         </ul>
       </>
