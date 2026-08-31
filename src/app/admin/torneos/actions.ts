@@ -74,6 +74,7 @@ function leerCamposTorneo(formData: FormData) {
     modo_pago: String(formData.get("modo_pago") ?? "organizador") as ModoPagoTorneo,
     extras,
     inscripcion_url_externa: String(formData.get("inscripcion_url_externa") ?? "").trim() || null,
+    gestion_whatsapp: formData.get("gestion_whatsapp") === "on",
   };
 }
 

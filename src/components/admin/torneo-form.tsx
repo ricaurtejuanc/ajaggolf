@@ -428,6 +428,23 @@ export function TorneoForm({
         ) : null}
       </div>
 
+      <div>
+        <label className="flex items-center gap-2 text-sm font-medium text-ajag-verde-900">
+          <input
+            type="checkbox"
+            name="gestion_whatsapp"
+            defaultChecked={torneo?.gestion_whatsapp ?? false}
+          />
+          Gestionar inscripciones por WhatsApp
+        </label>
+        <p className="mt-1 text-xs text-ajag-gris-500">
+          Muestra en el formulario de inscripción de este torneo, en rojo, la opción de gestionar
+          la inscripción por WhatsApp al teléfono configurado en Configuración. Los ingresos de
+          este torneo se añaden entonces a mano en su Economía (categoría &quot;Inscripciones
+          cobradas aparte&quot;).
+        </p>
+      </div>
+
       {state.error ? <p className="text-sm text-ajag-rojo-600">{state.error}</p> : null}
 
       <div className="flex items-center gap-3">

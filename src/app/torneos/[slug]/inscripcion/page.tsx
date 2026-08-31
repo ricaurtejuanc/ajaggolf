@@ -30,7 +30,7 @@ export default async function InscripcionPage({
   } = await supabase.auth.getUser();
 
   const jugador = user ? await asegurarJugadorParaUsuario(supabase, user) : null;
-  const whatsappTelefono = await obtenerWhatsappTelefono();
+  const whatsappTelefono = torneo.gestion_whatsapp ? await obtenerWhatsappTelefono() : null;
 
   let lleno = false;
   if (torneo.cupo_maximo != null) {

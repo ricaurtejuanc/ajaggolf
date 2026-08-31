@@ -185,6 +185,7 @@ export type Torneo = {
   premios_ganadores: Record<string, string[]>;
   horarios_pdf_url: string | null;
   inscripcion_url_externa: string | null;
+  gestion_whatsapp: boolean;
   liga_pool_id: string | null;
   estado: EstadoTorneo;
   created_by: string | null;
