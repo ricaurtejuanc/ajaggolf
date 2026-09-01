@@ -7,6 +7,7 @@ import { obtenerTorneoPorSlug } from "@/lib/data/torneos";
 import { createClient } from "@/lib/supabase/server";
 import { formatearFecha, formatearHora, formatearPrecio } from "@/lib/format";
 import { PosterLightbox } from "@/components/torneos/poster-lightbox";
+import { NormasModal } from "@/components/torneos/normas-modal";
 import { obtenerCategoriasExtras } from "@/lib/data/configuracion";
 import { hayCuadroDeHonor } from "@/components/torneos/cuadro-de-honor";
 
@@ -202,6 +203,8 @@ export default async function TorneoDetallePage({
           </p>
         </div>
       ) : null}
+
+      {torneo.normas ? <NormasModal normas={torneo.normas} /> : null}
 
       {torneo.premios.length > 0 ? (
         <div className="mt-6 card-ajag p-5">

@@ -48,6 +48,7 @@ function leerCamposTorneo(formData: FormData) {
     nombre,
     descripcion: String(formData.get("descripcion") ?? "").trim() || null,
     info_adicional: String(formData.get("info_adicional") ?? "").trim() || null,
+    normas: String(formData.get("normas") ?? "").trim() || null,
     campo_golf: String(formData.get("campo_golf") ?? "").trim(),
     recorrido: String(formData.get("recorrido") ?? "").trim() || null,
     tees_masculino: leerTees("tees_masculino"),

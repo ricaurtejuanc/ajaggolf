@@ -161,6 +161,7 @@ export type Torneo = {
   slug: string;
   descripcion: string | null;
   info_adicional: string | null;
+  normas: string | null;
   campo_golf: string;
   recorrido: string | null;
   tees_masculino: string[];

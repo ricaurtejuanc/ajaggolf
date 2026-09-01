@@ -367,6 +367,24 @@ export function TorneoForm({
       </div>
 
       <div>
+        <label htmlFor="normas" className="block text-sm font-medium text-ajag-verde-900">
+          Normas del torneo
+        </label>
+        <textarea
+          id="normas"
+          name="normas"
+          rows={6}
+          placeholder="Reglas de juego, desempates, condiciones de campo..."
+          defaultValue={torneo?.normas ?? ""}
+          className="mt-1 w-full rounded-xl border border-ajag-gris-200 px-4 py-2.5 text-sm outline-none focus:border-ajag-verde-600"
+        />
+        <p className="mt-1 text-xs text-ajag-gris-500">
+          Texto tan largo como haga falta. En la ficha pública del torneo se muestra en una
+          ventana emergente, no en la página en sí. Déjalo vacío para no mostrar el botón.
+        </p>
+      </div>
+
+      <div>
         <span className="text-sm font-medium text-ajag-verde-900">
           Extras que se mostrarán en la ficha del torneo
         </span>

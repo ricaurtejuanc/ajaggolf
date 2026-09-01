@@ -60,6 +60,10 @@ const secciones: Seccion[] = [
           </li>
           <li>Cómo se paga: al organizador (Bizum/transferencia) o directamente en el club.</li>
           <li>Premios por categoría de hándicap y premios por hoyo (drive más largo, bola más cercana...).</li>
+          <li>
+            Normas del torneo (opcional): un texto tan largo como haga falta que en la ficha
+            pública se muestra en una ventana emergente, no en la propia página.
+          </li>
         </ul>
         <p className={claseSubtitulo}>Inscripciones fuera de la web</p>
         <p className={claseParrafo}>
