@@ -204,7 +204,7 @@ export default async function TorneoDetallePage({
         </div>
       ) : null}
 
-      {torneo.normas ? <NormasModal normas={torneo.normas} /> : null}
+      <NormasModal normas={torneo.normas} />
 
       {torneo.premios.length > 0 ? (
         <div className="mt-6 card-ajag p-5">

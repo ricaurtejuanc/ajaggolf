@@ -380,7 +380,8 @@ export function TorneoForm({
         />
         <p className="mt-1 text-xs text-ajag-gris-500">
           Texto tan largo como haga falta. En la ficha pública del torneo se muestra en una
-          ventana emergente, no en la página en sí. Déjalo vacío para no mostrar el botón.
+          ventana emergente, no en la página en sí. Si lo dejas vacío, esa ventana avisa de que
+          el torneo no tiene normas específicas.
         </p>
       </div>
 

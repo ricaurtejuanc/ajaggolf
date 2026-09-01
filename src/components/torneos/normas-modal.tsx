@@ -9,7 +9,7 @@ import { ScrollText } from "lucide-react";
  * vez de recibir un onClose desde un Server Component: un Server Component
  * no puede pasarle una función a un Client Component (ver /cuenta).
  */
-export function NormasModal({ normas }: { normas: string }) {
+export function NormasModal({ normas }: { normas: string | null }) {
   const [abierto, setAbierto] = useState(false);
 
   return (
@@ -53,7 +53,7 @@ export function NormasModal({ normas }: { normas: string }) {
               </button>
             </div>
             <p className="mt-4 max-h-[65vh] overflow-y-auto whitespace-pre-line text-sm text-ajag-gris-500">
-              {normas}
+              {normas || "Este torneo no tiene normas específicas."}
             </p>
           </div>
         </div>
