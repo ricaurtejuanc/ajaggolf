@@ -1,9 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { headers } from "next/headers";
+import { MessageCircle } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { getUsuarioAdmin } from "@/lib/auth";
 import { economiaActiva } from "@/lib/data/configuracion";
 import { formatearFechaCorta, formatearPrecio } from "@/lib/format";
+import { construirMensajeWhatsapp, urlCompartirWhatsapp } from "@/lib/whatsapp";
 import { EliminarTorneoButton } from "./eliminar-button";
 
 export const metadata: Metadata = { title: "Torneos · Admin" };
@@ -22,6 +25,11 @@ const claseBoton =
 export default async function AdminTorneosPage() {
   const admin = await getUsuarioAdmin();
   const conEconomia = admin?.organizador_id ? await economiaActiva(admin.organizador_id) : false;
+
+  // El dominio actual es el propio del organizador (proxy.ts ya lo resolvió
+  // para servir esta página): sirve tal cual para armar el link de la
+  // ficha pública que se comparte por WhatsApp, sin otra consulta.
+  const host = (await headers()).get("host");
 
   const supabase = await createClient();
   const { data: torneos } = await supabase
@@ -77,6 +85,19 @@ export default async function AdminTorneosPage() {
               <Link href={`/admin/torneos/${torneo.id}/resultados`} className={claseBoton}>
                 Calificaciones
               </Link>
+              {torneo.estado === "publicado" && host ? (
+                <a
+                  href={urlCompartirWhatsapp(
+                    construirMensajeWhatsapp(torneo, `https://${host}/torneos/${torneo.slug}`),
+                  )}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={`${claseBoton} flex items-center gap-1.5`}
+                >
+                  <MessageCircle size={15} />
+                  Compartir
+                </a>
+              ) : null}
               {conEconomia ? (
                 <Link href={`/admin/economia/${torneo.id}`} className={claseBoton}>
                   Economía

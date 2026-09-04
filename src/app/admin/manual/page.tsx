@@ -80,6 +80,14 @@ const secciones: Seccion[] = [
           añádelos a mano en la <a href="#economia" className="text-ajag-verde-700 underline">Economía</a>{" "}
           de ese torneo, categoría &quot;Inscripciones cobradas aparte&quot;.
         </p>
+        <p className={claseSubtitulo}>Compartir por WhatsApp</p>
+        <p className={claseParrafo}>
+          Un torneo publicado tiene, en el listado de <strong>Torneos</strong>, un botón{" "}
+          <em>&quot;Compartir&quot;</em> que abre WhatsApp con un mensaje ya redactado (fecha,
+          campo, precio, cupo y el link a la ficha del torneo) para que elijas a qué grupo o
+          difusión de tu comunidad enviarlo. No se envía nada automáticamente ni hace falta
+          darse de alta en ningún sitio — tú decides el destino cada vez.
+        </p>
         <p className={claseSubtitulo}>Estados de un torneo</p>
         <ul className={claseLista}>
           <li><strong>Borrador</strong>: oculto en la web pública, para prepararlo con calma.</li>

@@ -33,7 +33,22 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { slug } = await params;
   const torneo = await obtenerTorneoPorSlug(slug);
-  return { title: torneo?.nombre ?? "Torneo" };
+  if (!torneo) return { title: "Torneo" };
+
+  // og:image con el cartel: es lo que hace que compartir el link por
+  // WhatsApp (o cualquier red) muestre una miniatura en vez de un enlace
+  // pelado — wa.me solo manda texto, así que esta es la única vía para
+  // que el cartel "viaje" con el mensaje.
+  const descripcion = `${formatearFecha(torneo.fecha)} · ${torneo.campo_golf}`;
+  return {
+    title: torneo.nombre,
+    description: descripcion,
+    openGraph: {
+      title: torneo.nombre,
+      description: descripcion,
+      images: torneo.poster_url ? [{ url: torneo.poster_url }] : undefined,
+    },
+  };
 }
 
 export default async function TorneoDetallePage({
