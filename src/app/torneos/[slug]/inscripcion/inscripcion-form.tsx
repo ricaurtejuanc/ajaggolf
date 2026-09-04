@@ -87,11 +87,22 @@ export function InscripcionForm({
             Licencia federativa {sinLicencia ? "" : "*"}
           </label>
           {sinLicencia ? (
-            <p className="mt-1 w-full rounded-xl border border-dashed border-ajag-gris-200 px-4 py-2.5 text-sm text-ajag-gris-500">
-              {jugador?.licencia_federativa?.startsWith("AJAG")
-                ? jugador.licencia_federativa
-                : "Se generará automáticamente al confirmar"}
-            </p>
+            // Sin "name": el valor es solo informativo (se genera en el
+            // servidor, ver actions.ts), así que no debe ir en el FormData.
+            // readOnly y no disabled: un campo disabled queda fuera del
+            // FormData igualmente, pero además rompería el desplazamiento
+            // de índices si este patrón se copia alguna vez a una tabla
+            // dinámica (ver CLAUDE.md).
+            <input
+              id="licencia_federativa"
+              readOnly
+              value={
+                jugador?.licencia_federativa?.startsWith("AJAG")
+                  ? jugador.licencia_federativa
+                  : "Se generará automáticamente al confirmar"
+              }
+              className="mt-1 w-full cursor-not-allowed rounded-xl border border-ajag-gris-200 bg-ajag-gris-100 px-4 py-2.5 text-sm text-ajag-gris-500 outline-none"
+            />
           ) : (
             <input
               id="licencia_federativa"
